@@ -673,9 +673,9 @@ Vertices with a tight in-edge from an unaffected vertex keep their distance; tha
 **2. Objective.** The data structure repair operates on, with a from-scratch checker for it.
 
 **3. Tasks to Complete.**
-- [ ] `SPTState.build(g, src, counter)`: run Dijkstra, then compute `tight` and `children` by scanning in-edges.
-- [ ] Record `F_ops` = total rebuild work (Dijkstra plus the in-edge scan that computes `tight`), the cost of doing this build again.
-- [ ] Extend `verify.py` with `check_state(g, state)` that recomputes everything from scratch and compares.
+- [x] `SPTState.build(g, src, counter)`: run Dijkstra, then compute `tight` and `children` by scanning in-edges.
+- [x] Record `F_ops` = total rebuild work (Dijkstra plus the in-edge scan that computes `tight`), the cost of doing this build again.
+- [x] Extend `verify.py` with `check_state(g, state)` that recomputes everything from scratch and compares.
 
 **4. Files / Modules Affected.** New: `src/graphpulse/spt.py`, `tests/test_spt.py`. Modified: `src/graphpulse/verify.py`.
 
@@ -685,19 +685,19 @@ Vertices with a tight in-edge from an unaffected vertex keep their distance; tha
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.1-01 | Diamond (positive) | g1 | Build | `tight[3]==2`, `tight[1]==tight[2]==1` | ☐ |
-| T3.1-02 | Chain (positive) | g2 | Build | Every non-source `tight==1`; children form a path | ☐ |
-| T3.1-03 | Unreachable (edge case) | g3 | Build | Vertex 4: `tight=0`, `parent=-1`, not in any children set | ☐ |
-| T3.1-04 | INF guard (edge case) | Two unreachable vertices joined by an edge | Build | That edge is NOT counted as tight | ☐ |
-| T3.1-05 | Edge into source (edge case) | Cycle back to the source | Build | `tight[src]==0` | ☐ |
-| T3.1-06 | From-scratch equality (property) | Hypothesis, 300 graphs | Build then `check_state` | Passes | ☐ |
-| T3.1-07 | Corruption detected (mutation) | Correct state | Change one `tight` count; then one child link | `check_state` raises each time | ☐ |
-| T3.1-08 | F equals rebuild work (validation) | Random graph | Compare `F_ops` with a standalone counted Dijkstra | `F_ops == dijkstra_work + sum of in-degrees of reachable non-source vertices` | ☐ |
-| T3.1-09 | Parent/children consistency (validation) | Random graphs | Check | `v in children[parent[v]]` for every reachable non-source `v` | ☐ |
+| T3.1-01 | Diamond (positive) | g1 | Build | `tight[3]==2`, `tight[1]==tight[2]==1` | ☑ |
+| T3.1-02 | Chain (positive) | g2 | Build | Every non-source `tight==1`; children form a path | ☑ |
+| T3.1-03 | Unreachable (edge case) | g3 | Build | Vertex 4: `tight=0`, `parent=-1`, not in any children set | ☑ |
+| T3.1-04 | INF guard (edge case) | Two unreachable vertices joined by an edge | Build | That edge is NOT counted as tight | ☑ |
+| T3.1-05 | Edge into source (edge case) | Cycle back to the source | Build | `tight[src]==0` | ☑ |
+| T3.1-06 | From-scratch equality (property) | Hypothesis, 300 graphs | Build then `check_state` | Passes | ☑ |
+| T3.1-07 | Corruption detected (mutation) | Correct state | Change one `tight` count; then one child link | `check_state` raises each time | ☑ |
+| T3.1-08 | F equals rebuild work (validation) | Random graph | Compare `F_ops` with a standalone counted Dijkstra | `F_ops == dijkstra_work + sum of in-degrees of reachable non-source vertices` | ☑ |
+| T3.1-09 | Parent/children consistency (validation) | Random graphs | Check | `v in children[parent[v]]` for every reachable non-source `v` | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; regression: all Phase 1 and 2 tests still pass.
-- [ ] `docs/proofs/P1_repair_correctness.md` started with the definition of tight edges and the DAG claim.
+- [x] All tests pass; regression: all Phase 1 and 2 tests still pass.
+- [x] `docs/proofs/P1_repair_correctness.md` started with the definition of tight edges and the DAG claim.
 
 **8. Milestone Completion Criteria.** `check_state` accepts every built state and rejects every corruption.
 

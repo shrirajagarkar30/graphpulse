@@ -121,3 +121,117 @@ def check_spt(
                     f"Condition (c) violated: dist[parent[{v}]={p}] = {dist[p]} "
                     f">= dist[{v}] = {dist[v]}"
                 )
+
+
+class StateViolation(InvariantViolation):
+    """Raised by check_state when SPTState does not match the graph."""
+
+
+def check_state(g: DiGraph, state: Any) -> None:
+    """Certify that *state* (an SPTState) is valid for graph *g*.
+
+    Verifies:
+    1. Valid source and attribute shapes (dist, parent, children, tight, F_ops).
+    2. SPT conditions (a)-(d) via check_spt (optimality, triangle inequality, feasibility).
+    3. tight[src] == 0 and tight[v] == 0 for all unreachable v.
+    4. For all reachable v != src: tight[v] equals the exact count of tight in-edges,
+       and parent[v] is one of those tight in-neighbors.
+    5. Bidirectional parent <-> children consistency:
+       - Every c in children[u] has parent[c] == u.
+       - Every reachable non-source v has v in children[parent[v]].
+       - Unreachable vertices and src are not in any children set.
+       - Unreachable vertices have empty children sets.
+    6. F_ops is a non-negative integer.
+
+    Raises
+    ------
+    StateViolation
+        If any invariant or structural check fails.
+    ValueError
+        If inputs have invalid types or lengths.
+    """
+    n = g.n
+    src = getattr(state, "src", None)
+    if isinstance(src, bool) or not isinstance(src, int) or not (0 <= src < n):
+        raise ValueError(f"Source vertex {src!r} out of range [0, {n - 1}]")
+
+    dist = getattr(state, "dist", None)
+    parent = getattr(state, "parent", None)
+    tight = getattr(state, "tight", None)
+    children = getattr(state, "children", None)
+    F_ops = getattr(state, "F_ops", None)
+
+    if dist is None or len(dist) != n:
+        raise ValueError(f"state.dist must have length {n}")
+    if parent is None or len(parent) != n:
+        raise ValueError(f"state.parent must have length {n}")
+    if tight is None or len(tight) != n:
+        raise ValueError(f"state.tight must have length {n}")
+    if children is None or len(children) != n:
+        raise ValueError(f"state.children must have length {n}")
+    if not isinstance(F_ops, int) or isinstance(F_ops, bool) or F_ops < 0:
+        raise StateViolation(f"state.F_ops must be a non-negative int, got {F_ops!r}")
+
+    # (1) Check SPT invariants (optimality, triangle inequality, feasibility)
+    try:
+        check_spt(g, src, dist, parent)
+    except InvariantViolation as exc:
+        raise StateViolation(str(exc)) from exc
+
+    # (2) Source tight count must be 0
+    if tight[src] != 0:
+        raise StateViolation(f"tight[src={src}] = {tight[src]}, expected 0")
+
+    # (3) Verify tight counts and parent tight-in-neighbor property
+    for v in range(n):
+        if v == src:
+            continue
+        if dist[v] == INF:
+            if tight[v] != 0:
+                raise StateViolation(
+                    f"Unreachable vertex {v} has tight={tight[v]}, expected 0"
+                )
+        else:
+            # Count incoming tight edges from scratch (with INF guard)
+            tight_preds: list[int] = []
+            for u, w in g.in_edges(v):
+                if dist[u] != INF and dist[u] + w == dist[v]:
+                    tight_preds.append(u)
+
+            if tight[v] != len(tight_preds):
+                raise StateViolation(
+                    f"tight[{v}] = {tight[v]}, expected {len(tight_preds)} "
+                    f"(tight in-neighbors: {tight_preds})"
+                )
+            if parent[v] not in tight_preds:
+                raise StateViolation(
+                    f"parent[{v}] = {parent[v]} is not a tight in-neighbor of {v} "
+                    f"(tight in-neighbors: {tight_preds})"
+                )
+
+    # (4) Bidirectional parent <-> children consistency
+    for u in range(n):
+        c_set = children[u]
+        if not isinstance(c_set, (set, frozenset)):
+            raise StateViolation(f"children[{u}] is {type(c_set)}, expected set")
+        if dist[u] == INF and len(c_set) > 0:
+            raise StateViolation(
+                f"Unreachable vertex {u} has non-empty children set: {c_set}"
+            )
+        for c in c_set:
+            if not isinstance(c, int) or isinstance(c, bool) or not (0 <= c < n):
+                raise StateViolation(f"children[{u}] contains invalid vertex {c!r}")
+            if parent[c] != u:
+                raise StateViolation(
+                    f"Inconsistent child link: {c} is in children[{u}], "
+                    f"but parent[{c}] = {parent[c]}"
+                )
+
+    for v in range(n):
+        p = parent[v]
+        if p != -1:
+            if v not in children[p]:
+                raise StateViolation(
+                    f"Inconsistent parent link: parent[{v}] = {p}, "
+                    f"but {v} is not in children[{p}]"
+                )
