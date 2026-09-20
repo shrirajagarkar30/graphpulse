@@ -216,16 +216,15 @@ class RepairMaintainer:
             return stats
 
         # Sole tight edge lost (tight[v] <= 1):
-        if update.kind == "delete":
-            return self._repair_delete(u, v)
-
-        # Fallback rebuild (for weight increases until Milestone 3.5)
-        self.last_affected = find_affected(self._state, self._g, v)
-        return self._rebuild()
+        return self._repair(u, v)
 
     def _repair_delete(self, u: int, v: int) -> UpdateStats:
-        """Incrementally repair the SPT after deletion of tight edge (u, v)
-        where v has sole tight in-edge (tight[v] <= 1).
+        """Backward-compatible alias for _repair."""
+        return self._repair(u, v)
+
+    def _repair(self, u: int, v: int) -> UpdateStats:
+        """Incrementally repair the SPT after deletion or weight increase of
+        tight edge (u, v) where v has sole tight in-edge (tight[v] <= 1).
         """
         counter = OpCounter()
         # Certificate test examined the edge (u, v): charge 1 SCAN

@@ -879,10 +879,10 @@ Do NOT commit: reproducer dumps, scratch proof drafts outside `docs/proofs/`.
 
 **2. Objective.** Complete the agreed update model.
 
-**3. Tasks to Complete.**
-- [ ] Route a tight increase with `tight[v] == 1` through the same identification and recompute as deletion, with the edge still present at its **new** weight.
-- [ ] The recompute step must treat `(u, v, w')` as an ordinary in-edge candidate for `v`.
-- [ ] After recompute, the edge may be tight again; the from-scratch `tight` recount for `A` handles that.
+### 3. Tasks to Complete.
+- [x] Route a tight increase with `tight[v] == 1` through the same identification and recompute as deletion, with the edge still present at its **new** weight.
+- [x] The recompute step must treat `(u, v, w')` as an ordinary in-edge candidate for `v`.
+- [x] After recompute, the edge may be tight again; the from-scratch `tight` recount for `A` handles that.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_repair_increase.py`.
 
@@ -892,19 +892,19 @@ Do NOT commit: reproducer dumps, scratch proof drafts outside `docs/proofs/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.5-01 | Increase, edge stays best (positive) | Chain | Increase middle edge by 5 | All downstream distances rise by exactly 5 | ☐ |
-| T3.5-02 | Increase, alternative wins (positive) | Chain with detour | Increase past the detour | Distances use the detour; matches oracle | ☐ |
-| T3.5-03 | Non-tight increase (edge case) | Non-tight edge | Increase | Certificate hit, work == 1 | ☐ |
-| T3.5-04 | Tight with alternative (edge case) | Diamond | Increase one branch | No distance change; `tight` decremented | ☐ |
-| T3.5-05 | Edge becomes tight again (edge case) | Case from T3.5-01 | Check `tight` after | The increased edge is counted as tight for `v` | ☐ |
-| T3.5-06 | Invalid increase (negative) | Edge weight 5 | `increase(...,5)` | Rejected by `apply_update`; maintainer unchanged | ☐ |
-| T3.5-07 | Mixed differential run (regression) | Harness | 20,000 mixed updates, 3 families, `p_delete=0.5` | Zero mismatches | ☐ |
-| T3.5-08 | Deletion tests (regression) | 3.4 tests | Re-run | Pass | ☐ |
-| T3.5-09 | Huge increase (edge case) | Increase by 10^12 | Repair | Behaves like deletion; no overflow | ☐ |
+| T3.5-01 | Increase, edge stays best (positive) | Chain | Increase middle edge by 5 | All downstream distances rise by exactly 5 | ☑ |
+| T3.5-02 | Increase, alternative wins (positive) | Chain with detour | Increase past the detour | Distances use the detour; matches oracle | ☑ |
+| T3.5-03 | Non-tight increase (edge case) | Non-tight edge | Increase | Certificate hit, work == 1 | ☑ |
+| T3.5-04 | Tight with alternative (edge case) | Diamond | Increase one branch | No distance change; `tight` decremented | ☑ |
+| T3.5-05 | Edge becomes tight again (edge case) | Case from T3.5-01 | Check `tight` after | The increased edge is counted as tight for `v` | ☑ |
+| T3.5-06 | Invalid increase (negative) | Edge weight 5 | `increase(...,5)` | Rejected by `apply_update`; maintainer unchanged | ☑ |
+| T3.5-07 | Mixed differential run (regression) | Harness | 20,000 mixed updates, 3 families, `p_delete=0.5` | Zero mismatches | ☑ |
+| T3.5-08 | Deletion tests (regression) | 3.4 tests | Re-run | Pass | ☑ |
+| T3.5-09 | Huge increase (edge case) | Increase by 10^12 | Repair | Behaves like deletion; no overflow | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; 20,000-update differential run clean on five seeds.
-- [ ] Proof P1 completed (deletions and increases) and reviewed.
+- [x] All tests pass; 20,000-update differential run clean on five seeds.
+- [x] Proof P1 completed (deletions and increases) and reviewed.
 
 **8. Milestone Completion Criteria.** Zero mismatches on 100,000 mixed updates in total.
 
@@ -926,9 +926,9 @@ Do NOT commit: dumps, `.hypothesis/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 3.1 to 3.5 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
+| Tests passed | 165 / 165 |
+| Known issues | None |
+| Git commit hash | m3.5 |
 | Overall verification | 100,000 mixed updates with zero mismatches; `check_state` clean; P1 proof reviewed |
 | **Go/No-Go for Phase 4** | **GO only if** P1 is written and reviewed and the differential runs are clean. Budgets add abort logic; do not add it on top of an unproven repair. |
 

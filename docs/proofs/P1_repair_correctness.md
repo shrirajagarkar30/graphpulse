@@ -251,8 +251,30 @@ By the standard optimality of Dijkstra on non-negative edge weights, the algorit
 3. Vertices outside $A \cup \text{boundary}$ have unchanged distances and parents outside $A$, which remain tight. Updating children for $A \cup \text{boundary}$ updates all and only changed parent-child relationships, ensuring bidirectional consistency without modifying unrelated tree branches. $\blacksquare$
 
 ### Work Complexity
-The work performed by `_repair_delete` is:
+The work performed by `_repair` is:
 $$W_{\text{repair}} = O(|A| + |E(A)| + |E(\partial A)|) + O(|A| \log |A|)$$
 where $E(A)$ are edges internal to $A$ and $E(\partial A)$ are edges incident to $A$ (in-edges from $V \setminus A$ and out-edges to $V \setminus A$).
 No work proportional to $|V|$ or $|E|$ is performed on the rest of the graph. When $|A| \ll |V|$, $W_{\text{repair}} \ll F$.
+
+---
+
+## 8. Part 4: Weight Increase Repair Correctness (Milestone 3.5)
+
+**Milestone 3.5: Weight Increases**
+
+This section extends the repair correctness argument to edge weight increases $w'(u, v) > w(u, v)$ with sole tight support ($tight[v] = 1$).
+
+### Theorem 9 (Correctness of Shared Affected-Set Repair for Weight Increases)
+*Let $(u, v)$ be a tight edge in $G$ ($dist[u] + w = dist[v]$) with $tight[v] = 1$. When its weight is increased to $w' > w$:*
+1. *The tail $u$ is never in the affected set: $u \notin A$.*
+2. *Every vertex $x \in A$ has strictly larger distance: $dist'[x] > dist[x]$.*
+3. *Seeding $A$ with in-edges from $V \setminus A$ in $G'$ evaluates $(u, v)$ with weight $w'$ as a valid candidate.*
+4. *If $(u, v)$ remains the optimal route to $v$, then $dist'[v] = dist[u] + w'$, all descendants in the subtree below $v$ shift by exactly $\Delta = w' - w$, and $(u, v)$ is restored as tight.*
+
+#### Proof:
+1. By Claim 1, the tight-edge subgraph $G_T$ is a DAG. Since $(u, v) \in E_T$, $u$ is a predecessor of $v$ in $G_T$, and by Corollary 1.1, $dist[u] < dist[v]$. The propagation in `find_affected` begins at $v$ and traverses only forward edges in $G_T$. Since $G_T$ contains no directed cycles, $u$ can never be reached during the traversal. Hence $u \notin A$, and $dist'[u] = dist[u]$.
+2. In $G'$, any path from $s$ to $v$ using $(u, v)$ has length at least $dist'[u] + w' = dist[u] + w' > dist[u] + w = dist[v]$. Any path avoiding $(u, v)$ had length strictly greater than $dist[v]$ in $G$ (because $tight[v] = 1$), and edge weights only non-decreased. Thus every path to $v$ has length strictly greater than $dist[v]$, so $dist'[v] > dist[v]$. By Theorem 5, this property propagates to all vertices in $A$.
+3. In $G'$, the directed edge $(u, v)$ remains present with weight $w'$. Since $u \notin A$ and $dist'[u] = dist[u] < \infty$, the boundary scan of in-edges entering $v \in A$ examines $(u, v)$ and computes candidate distance $dist[u] + w'$.
+4. If $dist[u] + w'$ is strictly less than any alternative path entering $A$, local Dijkstra assigns $dist'[v] = dist[u] + w'$. For every vertex $c$ whose shortest path in $G$ passed through $v$ and retains the same tree structure, $dist'[c] = dist[c] + (w' - w)$. During from-scratch tight calculation for $A$, $dist'[u] + w' = dist'[v]$, so $(u, v)$ is recognized as tight ($tight'[v] \ge 1$) and chosen as $parent[v]$. $\blacksquare$
+
 
