@@ -134,12 +134,49 @@ Therefore, every path from $s$ to $v$ in $G'$ has length strictly greater than $
 
 ---
 
-## 5. Algorithmic Implications for Incremental Maintenance
+## 5. Part 2: Propagation Correctness of `find_affected`
+
+### Lemma 4 (Distance Preservation via Unaffected In-Neighbor)
+*A vertex $v \in V_T$ with at least one tight in-edge from an unaffected vertex $u \notin A$ keeps its distance: $dist'[v] = dist[v]$.*
+
+#### Proof:
+Since $u \notin A$, $dist'[u] = dist[u]$.
+The tight in-edge $(u, v) \in E_T$ remains present in $G'$ with unchanged weight $w(u, v)$ (since only the edge $(x, y)$ was modified, and $u \ne x$ or the edge wasn't $(x, y)$).
+Hence, the path from $s$ to $u$ in $G'$ of length $dist'[u] = dist[u]$ extended by $(u, v)$ achieves length:
+$$dist'[u] + w(u, v) = dist[u] + w(u, v) = dist[v]$$
+Since edge deletions and weight increases cannot decrease shortest-path distances ($dist'[v] \ge dist[v]$), it follows that $dist'[v] = dist[v]$. Thus $v \notin A$. $\blacksquare$
+
+### Theorem 5 (Distance Increase upon Loss of All Tight Support)
+*A vertex $v \in V_T$ all of whose tight in-edges in $G_T$ originate from affected vertices (or are removed/weakened) has strictly larger distance: $dist'[v] > dist[v]$ (or becomes unreachable, $dist'[v] = \infty$).*
+
+#### Proof:
+By Claim 1, $G_T$ is a DAG. We proceed by induction on the topological order induced by $dist$ on $G_T$.
+
+**Base case:** $v$ is the head of the updated edge $(x, y)$ that lost its sole tight in-edge. By hypothesis, $tight[v] = 1$, and $(x, y)$ is either deleted or increased to $w' > w$. In $G'$, no edge entering $v$ achieves $dist'[u] + w(u, v) = dist[v]$. Any other edge in $G$ entering $v$ was strictly non-tight ($dist[u] + w(u, v) > dist[v]$). Thus every path from $s$ to $v$ in $G'$ has length strictly greater than $dist[v]$ (or no path exists), so $dist'[v] > dist[v]$. Thus $v \in A$.
+
+**Inductive step:** Consider any vertex $z$ where all tight in-edges $(u, z) \in E_T$ have $u \in A$. By the inductive hypothesis, $dist'[u] > dist[u]$ for every such predecessor $u$.
+Any path from $s$ to $z$ in $G'$ either:
+1. Ends with an edge $(u, z)$ that was tight in $G$. Then its length is at least $dist'[u] + w(u, z) > dist[u] + w(u, z) = dist[z]$.
+2. Ends with an edge $(u', z)$ that was non-tight in $G$. Then its length is at least $dist'[u'] + w(u', z) \ge dist[u'] + w(u', z) > dist[z]$.
+Therefore, every path in $G'$ from $s$ to $z$ has length strictly greater than $dist[z]$ (or $z$ is disconnected from $s$).
+Thus $dist'[z] > dist[z]$, which proves $z \in A$. $\blacksquare$
+
+### Corollary 5.1 (Exactness and Termination of `find_affected`)
+*The procedure `find_affected(state, g, v)` terminates and returns exactly the set $A$.*
+1. **Termination:** Because $G_T$ is a DAG, each vertex $z$ is enqueued at most once when its in-support counter reaches 0. Since $|V_T|$ is finite, the queue empties in finite steps without cycles.
+2. **Exactness:** By Lemma 4 and Theorem 5, a vertex enters $A$ if and only if all its tight predecessors are in $A$. Since the search tracks the exact in-degree support in $G_T$, the set discovered is precisely $A$.
+3. **Work Complexity:** Each $x \in A$ is enqueued once and dequeued once, so $QUEUE = 2 \cdot |A|$. For each dequeued vertex, each out-edge in $g$ is examined once, so $SCAN = \sum_{x \in A} \deg^+(x)$.
+
+---
+
+## 6. Algorithmic Implications for Incremental Maintenance
 
 1. **Zero-Work Certificate ($O(1)$ ops):**
    If the modified edge $(x, y)$ satisfies $dist[x] = \infty$ or $dist[x] + w(x, y) \ne dist[y]$, the certificate immediately returns without modifying distances.
 2. **Alternative Support ($O(1)$ amortized / $O(\deg^-(y))$ worst-case):**
    If $(x, y)$ is tight and $tight[y] > 1$, $y$ remains unaffected if another in-neighbor is unaffected.
    If $(x, y)$ was the tree parent of $y$, selecting another tight in-neighbor $u$ of $y$ preserves a valid SPT without changing any distances in the graph.
-3. **Bounded Affected Set Propagation:**
-   Because $G_T$ is a DAG (Claim 1), finding the set of vertices that lose all tight support can be done via a topological traversal / queue in $G_T$ in work proportional only to the size and degree of the affected subgraph, avoiding full Dijkstra whenever $|A| \ll |V|$.
+3. **Exact Affected Set Propagation:**
+   `find_affected` identifies the exact set of vertices whose shortest-path distance strictly increases in machine-independent cost:
+   $$W_{\text{affected}} = 2 \cdot |A| \text{ (QUEUE)} + \sum_{x \in A} \deg^+(x) \text{ (SCAN)}$$
+   This avoids touching any unaffected vertex outside the boundary of $A$.

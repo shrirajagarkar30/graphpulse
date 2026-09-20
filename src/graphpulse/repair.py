@@ -17,12 +17,73 @@ In Milestone 3.2, cheap updates are resolved immediately:
 
 from __future__ import annotations
 
+from collections import deque
+
 from graphpulse.dijkstra import INF
 from graphpulse.generators import Update, apply_update
 from graphpulse.graph import DiGraph
 from graphpulse.maintainer import Maintainer, UpdateStats
 from graphpulse.opcount import OpCounter
 from graphpulse.spt import SPTState
+
+
+def find_affected(
+    state: SPTState,
+    g: DiGraph,
+    v: int,
+    counter: OpCounter | None = None,
+) -> set[int]:
+    """Identify the exact set of vertices whose shortest-path distance changes.
+
+    This function is pure: it never mutates *state* or *g*.
+
+    Parameters
+    ----------
+    state   : SPTState before the update.
+    g       : DiGraph after the edge removal/increase.
+    v       : Head of the updated edge that lost its sole tight in-edge.
+    counter : Optional OpCounter charging QUEUE (enqueue + dequeue) and SCAN
+              (out-edge examination).
+
+    Returns
+    -------
+    set[int]
+        The exact set of affected vertices A.
+    """
+    if counter is None:
+        counter = OpCounter()
+
+    if v == state.src or state.dist[v] == INF:
+        return set()
+
+    A: set[int] = {v}
+    queue: deque[int] = deque([v])
+    counter.queue += 1  # Enqueue v
+
+    scratch_tight: dict[int, int] = {}
+
+    while queue:
+        x = queue.popleft()
+        counter.queue += 1  # Dequeue x
+        dist_x = state.dist[x]
+
+        for z, w in g.out_edges(x):
+            counter.scan += 1
+
+            if z == state.src or z in A:
+                continue
+
+            dist_z = state.dist[z]
+            # Edge must be tight under the OLD distances
+            if dist_x != INF and dist_x + w == dist_z:
+                current_tight = scratch_tight.get(z, state.tight[z]) - 1
+                scratch_tight[z] = current_tight
+                if current_tight == 0:
+                    A.add(z)
+                    queue.append(z)
+                    counter.queue += 1  # Enqueue z
+
+    return A
 
 
 class RepairMaintainer:
@@ -36,6 +97,7 @@ class RepairMaintainer:
             raise ValueError(f"Source vertex {src!r} out of range [0, {g.n - 1}]")
         self._g = g.copy()
         self._src = src
+        self.last_affected: set[int] | None = None
         counter = OpCounter()
         self._state = SPTState.build(self._g, self._src, counter)
         self._last_stats = UpdateStats(
@@ -103,6 +165,7 @@ class RepairMaintainer:
         # Certificate 1: Edge into source or non-tight edge
         # An edge into source is never tight (dist[src] == 0 and weights >= 1).
         if v == self._src:
+            self.last_affected = set()
             stats = UpdateStats(work=1, scan=1, strategy="cert")
             self._last_stats = stats
             return stats
@@ -112,6 +175,7 @@ class RepairMaintainer:
 
         # Non-tight edge: unreachable u or dist[u] + old_w != dist[v]
         if dist_u == INF or dist_u + old_w != dist_v:
+            self.last_affected = set()
             stats = UpdateStats(work=1, scan=1, strategy="cert")
             self._last_stats = stats
             return stats
@@ -121,6 +185,7 @@ class RepairMaintainer:
         # Now (u, v) is no longer tight (deleted, or increased so dist[u] + new_w > dist[v]).
         if self._state.tight[v] > 1:
             # Alternative support case: v has at least one other tight in-edge
+            self.last_affected = set()
             self._state.tight[v] -= 1
 
             if self._state.parent[v] != u:
@@ -146,5 +211,6 @@ class RepairMaintainer:
             self._last_stats = stats
             return stats
 
-        # Sole tight edge lost (tight[v] <= 1): fallback to full rebuild
+        # Sole tight edge lost (tight[v] <= 1): compute affected set for inspection
+        self.last_affected = find_affected(self._state, self._g, v)
         return self._rebuild()

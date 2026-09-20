@@ -776,9 +776,9 @@ Do NOT commit: harness reproducer dumps.
 **2. Objective.** Isolate and verify the hardest piece of logic before recomputing anything.
 
 **3. Tasks to Complete.**
-- [ ] Implement propagation: start with `A = {v}` (where `tight[v] == 1` and its sole tight edge was removed). For each `x` dequeued (QUEUE op), scan out-edges `(x, z)` (SCAN). If the edge is tight under the **old** distances and `z` not in `A`, decrement a *scratch* copy of `tight[z]`; when it reaches 0, add `z` to `A` and enqueue it.
-- [ ] The function is **pure**: it never modifies `SPTState`.
-- [ ] Wire it into `RepairMaintainer` only in a test harness (the rebuild fallback still performs the actual update).
+- [x] Implement propagation: start with `A = {v}` (where `tight[v] == 1` and its sole tight edge was removed). For each `x` dequeued (QUEUE op), scan out-edges `(x, z)` (SCAN). If the edge is tight under the **old** distances and `z` not in `A`, decrement a *scratch* copy of `tight[z]`; when it reaches 0, add `z` to `A` and enqueue it.
+- [x] The function is **pure**: it never modifies `SPTState`.
+- [x] Wire it into `RepairMaintainer` only in a test harness (the rebuild fallback still performs the actual update).
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_affected.py`.
 
@@ -788,19 +788,19 @@ Do NOT commit: harness reproducer dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.3-01 | Chain (positive) | g2, delete `1→2` | `find_affected` | `A == {2, 3}` | ☐ |
-| T3.3-02 | Disconnection (edge case) | Delete the only in-edge of a subtree | Find | `A` = whole subtree (these become INF) | ☐ |
-| T3.3-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Find | `\|A\| == 199` | ☐ |
-| T3.3-04 | Vertex with two tight parents survives (edge case) | Diamond below the deleted edge | Find | The shared vertex is **not** in `A` if a tight in-edge remains from an unaffected vertex | ☐ |
-| T3.3-05 | Purity (validation) | Snapshot of state | Call `find_affected` | State deep-equals snapshot | ☐ |
-| T3.3-06 | Oracle equality (property) | Hypothesis, 500 cases, deleting only edges with `tight[v]==1` | Compare `A` to `A_expected` | Equal | ☐ |
-| T3.3-07 | Source never affected (edge case) | Graph with cycles through the source | Find | Source not in `A` | ☐ |
-| T3.3-08 | Exact work (validation) | Any case | Read counter | `queue == 2*\|A\|` and `scan == sum(outdeg(x) for x in A)` | ☐ |
-| T3.3-09 | Cyclic graphs terminate (edge case) | Random graphs with cycles | Find | Terminates; equals oracle | ☐ |
+| T3.3-01 | Chain (positive) | g2, delete `1→2` | `find_affected` | `A == {2, 3}` | ☑ |
+| T3.3-02 | Disconnection (edge case) | Delete the only in-edge of a subtree | Find | `A` = whole subtree (these become INF) | ☑ |
+| T3.3-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Find | `\|A\| == 199` | ☑ |
+| T3.3-04 | Vertex with two tight parents survives (edge case) | Diamond below the deleted edge | Find | The shared vertex is **not** in `A` if a tight in-edge remains from an unaffected vertex | ☑ |
+| T3.3-05 | Purity (validation) | Snapshot of state | Call `find_affected` | State deep-equals snapshot | ☑ |
+| T3.3-06 | Oracle equality (property) | Hypothesis, 500 cases, deleting only edges with `tight[v]==1` | Compare `A` to `A_expected` | Equal | ☑ |
+| T3.3-07 | Source never affected (edge case) | Graph with cycles through the source | Find | Source not in `A` | ☑ |
+| T3.3-08 | Exact work (validation) | Any case | Read counter | `queue == 2*\|A\|` and `scan == sum(outdeg(x) for x in A)` | ☑ |
+| T3.3-09 | Cyclic graphs terminate (edge case) | Random graphs with cycles | Find | Terminates; equals oracle | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; earlier tests still pass.
-- [ ] Proof P1 part 2 written: "a vertex with a tight in-edge from an unaffected vertex keeps its distance; a vertex all of whose tight in-edges are lost has strictly larger distance."
+- [x] All tests pass; earlier tests still pass.
+- [x] Proof P1 part 2 written: "a vertex with a tight in-edge from an unaffected vertex keeps its distance; a vertex all of whose tight in-edges are lost has strictly larger distance."
 
 **8. Milestone Completion Criteria.** T3.3-06 passes on 500 cases with zero disagreement.
 
