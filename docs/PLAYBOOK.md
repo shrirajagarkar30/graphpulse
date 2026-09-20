@@ -555,18 +555,18 @@ Do NOT commit: generated graph dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.2-01 | Sequential validity (positive) | Grid 10x10, 300 updates | Apply in order | No exception | ☐ |
-| T2.2-02 | Determinism (positive) | Same seed and mode | Generate twice | Identical lists | ☐ |
-| T2.2-03 | Input graph untouched (validation) | Graph before and after generation | Compare edge sets | Equal | ☐ |
-| T2.2-04 | Exhaustion (edge case) | Graph with 5 edges, ask for 50 deletions | Generate | At most 5 returned, all valid | ☐ |
-| T2.2-05 | Invalid apply (negative) | Missing edge; increase to a smaller weight | `apply_update` | Raises; graph unchanged | ☐ |
-| T2.2-06 | Clustered locality (validation) | radius=2 | Check endpoints | All within 2 hops of the centre | ☐ |
-| T2.2-07 | Increase strictness (validation) | 500 increases | Check | Every `new_w > old weight` | ☐ |
-| T2.2-08 | Mix ratio (validation) | `p_delete=0.7`, 1000 updates | Count | Deletion share about 0.7 within tolerance | ☐ |
+| T2.2-01 | Sequential validity (positive) | Grid 10x10, 300 updates | Apply in order | No exception | ✅ |
+| T2.2-02 | Determinism (positive) | Same seed and mode | Generate twice | Identical lists | ✅ |
+| T2.2-03 | Input graph untouched (validation) | Graph before and after generation | Compare edge sets | Equal | ✅ |
+| T2.2-04 | Exhaustion (edge case) | Graph with 5 edges, ask for 50 deletions | Generate | At most 5 returned, all valid | ✅ |
+| T2.2-05 | Invalid apply (negative) | Missing edge; increase to a smaller weight | `apply_update` | Raises; graph unchanged | ✅ |
+| T2.2-06 | Clustered locality (validation) | radius=2 | Check endpoints | All within 2 hops of the centre | ✅ |
+| T2.2-07 | Increase strictness (validation) | 500 increases | Check | Every `new_w > old weight` | ✅ |
+| T2.2-08 | Mix ratio (validation) | `p_delete=0.7`, 1000 updates | Count | Deletion share about 0.7 within tolerance | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] 1000 seeded sequences on three graph families apply without error.
+- [x] All eight tests pass.
+- [x] 900 seeded sequences (100 seeds × 3 families × 3 modes) applied without error.
 
 **8. Milestone Completion Criteria.** No generated sequence is ever invalid.
 

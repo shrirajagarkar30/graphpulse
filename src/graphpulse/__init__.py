@@ -1,7 +1,15 @@
 """GraphPulse-R: Certificate-Driven, Budgeted Reoptimization for Dynamic Delivery Routing."""
 
 from graphpulse.dijkstra import dijkstra
-from graphpulse.generators import comb_adversarial, grid, hub_spoke, random_sparse
+from graphpulse.generators import (
+    Update,
+    apply_update,
+    comb_adversarial,
+    grid,
+    hub_spoke,
+    random_sparse,
+    random_updates,
+)
 from graphpulse.graph import DiGraph
 from graphpulse.opcount import CountedHeap, OpCounter, OpSnapshot
 from graphpulse.verify import InvariantViolation, check_spt
@@ -19,5 +27,8 @@ __all__ = [
     "random_sparse",
     "hub_spoke",
     "comb_adversarial",
+    "Update",
+    "apply_update",
+    "random_updates",
     "__version__",
 ]
