@@ -160,7 +160,7 @@ class DemoFlowController {
       },
       {
         title: "8. Affected Set A Highlight & Local Dijkstra",
-        desc: "The affected vertices are highlighted in amber. In typical local road closures, |A| << n, yielding orders of magnitude fewer operations than a full Dijkstra rebuild."
+        desc: "The affected vertices are highlighted in amber. In typical local edge deletions, |A| << n, yielding orders of magnitude fewer operations than a full Dijkstra rebuild."
       },
       {
         title: "9. Decision 4: Adversarial Disruption & Fallback Rebuild",

@@ -22,6 +22,9 @@ class GraphRenderer {
     this.zoom = 1.0;
     this.panX = 0;
     this.panY = 0;
+    this.baseCenterX = 400;
+    this.baseCenterY = 250;
+
     this.isDragging = false;
     this.dragStartX = 0;
     this.dragStartY = 0;
@@ -38,13 +41,54 @@ class GraphRenderer {
     this._startAnimationLoop();
   }
 
-  setData(data) {
+  setData(data, isNewGraph = false) {
     this.nodes = data.nodes || [];
     this.edges = data.edges || [];
     this.src = data.src;
     this.target = data.target;
     this.path = data.path || [];
     this.lastUpdate = data.last_update || null;
+
+    if (isNewGraph || this.nodes.length === 0) {
+      this.fitGraph();
+    } else {
+      this.render();
+    }
+  }
+
+  fitGraph() {
+    if (!this.nodes || this.nodes.length === 0) return;
+
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    for (const n of this.nodes) {
+      if (n.x < minX) minX = n.x;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.y > maxY) maxY = n.y;
+    }
+
+    this.baseCenterX = (minX + maxX) / 2;
+    this.baseCenterY = (minY + maxY) / 2;
+
+    const w = this.canvas.clientWidth || 800;
+    const h = this.canvas.clientHeight || 500;
+
+    const spanX = Math.max(maxX - minX, 50);
+    const spanY = Math.max(maxY - minY, 50);
+
+    const margin = 80;
+    const availW = Math.max(w - 2 * margin, 200);
+    const availH = Math.max(h - 2 * margin, 150);
+
+    const scaleX = availW / spanX;
+    const scaleY = availH / spanY;
+
+    // Choose optimal zoom so graph occupies ~80% of canvas
+    this.zoom = Math.min(scaleX, scaleY, 1.6);
+    this.panX = 0;
+    this.panY = 0;
     this.render();
   }
 
@@ -64,28 +108,26 @@ class GraphRenderer {
   }
 
   resetView() {
-    this.zoom = 1.0;
-    this.panX = 0;
-    this.panY = 0;
-    this.render();
+    this.fitGraph();
   }
 
   zoomIn() {
-    this.zoom = Math.min(3.0, this.zoom * 1.2);
+    this.zoom = Math.min(3.5, this.zoom * 1.25);
     this.render();
   }
 
   zoomOut() {
-    this.zoom = Math.max(0.4, this.zoom / 1.2);
+    this.zoom = Math.max(0.3, this.zoom / 1.25);
     this.render();
   }
 
   _setupEvents() {
-    // Resize handling
     window.addEventListener('resize', () => this._resize());
-    setTimeout(() => this._resize(), 50);
+    setTimeout(() => {
+      this._resize();
+      this.fitGraph();
+    }, 80);
 
-    // Pan & Drag
     this.canvas.addEventListener('mousedown', (e) => {
       this.isDragging = true;
       this.dragStartX = e.clientX - this.panX;
@@ -110,15 +152,13 @@ class GraphRenderer {
       this.isDragging = false;
     });
 
-    // Zoom
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      this.zoom = Math.max(0.4, Math.min(3.0, this.zoom * delta));
+      this.zoom = Math.max(0.3, Math.min(3.5, this.zoom * delta));
       this.render();
     }, { passive: false });
 
-    // Click handler for nodes/edges
     this.canvas.addEventListener('click', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -141,8 +181,8 @@ class GraphRenderer {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
     return {
-      x: (x - 400) * this.zoom + w / 2 + this.panX,
-      y: (y - 250) * this.zoom + h / 2 + this.panY,
+      x: (x - this.baseCenterX) * this.zoom + w / 2 + this.panX,
+      y: (y - this.baseCenterY) * this.zoom + h / 2 + this.panY,
     };
   }
 
@@ -150,8 +190,8 @@ class GraphRenderer {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
     return {
-      x: (sx - w / 2 - this.panX) / this.zoom + 400,
-      y: (sy - h / 2 - this.panY) / this.zoom + 250,
+      x: (sx - w / 2 - this.panX) / this.zoom + this.baseCenterX,
+      y: (sy - h / 2 - this.panY) / this.zoom + this.baseCenterY,
     };
   }
 
@@ -160,11 +200,10 @@ class GraphRenderer {
     let foundNode = null;
     let foundEdge = null;
 
-    // Check nodes
+    const hitRadius = Math.max(18, 16 / this.zoom);
+
     for (const node of this.nodes) {
-      const dx = node.x - x;
-      const dy = node.y - y;
-      if (Math.hypot(dx, dy) <= 18) {
+      if (Math.hypot(node.x - x, node.y - y) <= hitRadius) {
         foundNode = node;
         break;
       }
@@ -178,23 +217,22 @@ class GraphRenderer {
 
   _handleClick(mx, my) {
     const { x, y } = this._fromScreen(mx, my);
+    const hitRadius = Math.max(18, 16 / this.zoom);
 
-    // Node click
     for (const node of this.nodes) {
-      if (Math.hypot(node.x - x, node.y - y) <= 18) {
+      if (Math.hypot(node.x - x, node.y - y) <= hitRadius) {
         if (this.onNodeClick) this.onNodeClick(node);
         return;
       }
     }
 
-    // Edge click
     for (const edge of this.edges) {
       const uNode = this.nodes.find((n) => n.id === edge.u);
       const vNode = this.nodes.find((n) => n.id === edge.v);
       if (!uNode || !vNode) continue;
 
       const distToSeg = this._distToSegment({ x, y }, uNode, vNode);
-      if (distToSeg <= 8) {
+      if (distToSeg <= Math.max(10, 8 / this.zoom)) {
         if (this.onEdgeClick) this.onEdgeClick(edge);
         return;
       }
@@ -226,16 +264,10 @@ class GraphRenderer {
 
     ctx.clearRect(0, 0, w, h);
 
-    // Draw background network styling
     this._renderBackground(ctx, w, h);
-
-    // Draw edges
     this._renderEdges(ctx);
-
-    // Draw nodes
     this._renderNodes(ctx);
 
-    // Draw node tooltip if hovered
     if (this.hoveredNode) {
       this._renderTooltip(ctx, this.hoveredNode);
     }
@@ -243,7 +275,6 @@ class GraphRenderer {
 
   _renderBackground(ctx, w, h) {
     ctx.save();
-    // Grid pattern
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 0.5;
     const gridSize = 40 * this.zoom;
@@ -261,10 +292,9 @@ class GraphRenderer {
     }
     ctx.stroke();
 
-    // Subtle illustrative watermark
     ctx.font = '11px Inter, sans-serif';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Illustrative Network View — Abstract GraphPulse-R Engine', 16, h - 36);
+    ctx.fillText('Abstract Network View — Not geographical road data', 16, h - 36);
     ctx.restore();
   }
 
@@ -294,32 +324,26 @@ class GraphRenderer {
       ctx.lineTo(p2.x, p2.y);
 
       if (isPath) {
-        // Highlighted Active Path (Bright Blue)
         ctx.strokeStyle = '#2563eb';
-        ctx.lineWidth = 4.5 * this.zoom;
+        ctx.lineWidth = Math.max(3.5, 4.5 * this.zoom);
         ctx.lineCap = 'round';
         ctx.stroke();
 
-        // Subtle glowing outer pulse
         ctx.strokeStyle = 'rgba(37, 99, 235, 0.25)';
-        ctx.lineWidth = 9 * this.zoom;
+        ctx.lineWidth = Math.max(7, 9 * this.zoom);
         ctx.stroke();
       } else if (isTree) {
-        // Shortest Path Tree Edge
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2.5 * this.zoom;
+        ctx.lineWidth = Math.max(2, 2.8 * this.zoom);
         ctx.stroke();
       } else {
-        // Normal Road / Alternative Edge
         ctx.strokeStyle = '#cbd5e1';
-        ctx.lineWidth = 1.5 * this.zoom;
+        ctx.lineWidth = Math.max(1, 1.5 * this.zoom);
         ctx.stroke();
       }
 
-      // Draw arrow head
       this._drawArrow(ctx, p1, p2, isPath ? '#2563eb' : isTree ? '#3b82f6' : '#94a3b8');
 
-      // Draw weight badge if enabled
       if (this.showWeights) {
         const mx = (p1.x + p2.x) / 2;
         const my = (p1.y + p2.y) / 2;
@@ -329,7 +353,6 @@ class GraphRenderer {
       ctx.restore();
     }
 
-    // Draw last update overlay badge (e.g. Road Closed)
     if (this.lastUpdate) {
       const uNode = this.nodes.find((n) => n.id === this.lastUpdate.u);
       const vNode = this.nodes.find((n) => n.id === this.lastUpdate.v);
@@ -341,17 +364,15 @@ class GraphRenderer {
 
         ctx.save();
         if (this.lastUpdate.kind === 'delete') {
-          // Closed Road Red Dashed Line
           ctx.beginPath();
           ctx.setLineDash([6, 4]);
           ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 3 * this.zoom;
+          ctx.lineWidth = Math.max(2.5, 3 * this.zoom);
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
 
-          // Road Closed Badge
-          this._drawRoadClosedBadge(ctx, mx, my);
+          this._drawEdgeRemovedBadge(ctx, mx, my);
         } else if (this.lastUpdate.kind === 'increase') {
           this._drawWeightChangeBadge(ctx, mx, my, this.lastUpdate.old_w, this.lastUpdate.new_w);
         }
@@ -361,10 +382,9 @@ class GraphRenderer {
   }
 
   _drawArrow(ctx, from, to, color) {
-    const headLen = 8 * this.zoom;
+    const headLen = Math.max(6, 8 * this.zoom);
     const angle = Math.atan2(to.y - from.y, to.x - from.x);
-    // Shorten end point so arrow touches node boundary
-    const nodeRadius = 14 * this.zoom;
+    const nodeRadius = Math.max(14, 17 * this.zoom);
     const endX = to.x - nodeRadius * Math.cos(angle);
     const endY = to.y - nodeRadius * Math.sin(angle);
 
@@ -387,12 +407,12 @@ class GraphRenderer {
 
   _drawWeightBadge(ctx, x, y, weight, isPrimary) {
     ctx.save();
-    ctx.font = `600 ${Math.max(9, 11 * this.zoom)}px 'JetBrains Mono', monospace`;
+    const fontSize = Math.max(9, Math.min(12, 11 * this.zoom));
+    ctx.font = `600 ${fontSize}px 'JetBrains Mono', monospace`;
     const text = String(weight);
     const metrics = ctx.measureText(text);
-    const padding = 3 * this.zoom;
-    const bw = metrics.width + padding * 3;
-    const bh = 14 * this.zoom;
+    const bw = metrics.width + 8;
+    const bh = fontSize + 4;
 
     ctx.fillStyle = isPrimary ? '#eff6ff' : '#ffffff';
     ctx.strokeStyle = isPrimary ? '#93c5fd' : '#cbd5e1';
@@ -409,52 +429,50 @@ class GraphRenderer {
     ctx.restore();
   }
 
-  _drawRoadClosedBadge(ctx, x, y) {
+  _drawEdgeRemovedBadge(ctx, x, y) {
     ctx.save();
-    const text = 'Road Closed';
-    ctx.font = `700 ${11 * this.zoom}px Inter, sans-serif`;
+    const text = 'Edge Removed';
+    ctx.font = `700 ${Math.max(10, 11 * this.zoom)}px Inter, sans-serif`;
     const metrics = ctx.measureText(text);
-    const bw = metrics.width + 24 * this.zoom;
-    const bh = 22 * this.zoom;
+    const bw = metrics.width + 20;
+    const bh = 20;
 
-    // Red pill container
     ctx.fillStyle = '#ef4444';
     ctx.shadowColor = 'rgba(239, 68, 68, 0.4)';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 6;
     ctx.beginPath();
-    ctx.roundRect(x - bw / 2, y - bh / 2 - 12, bw, bh, 12);
+    ctx.roundRect(x - bw / 2, y - bh / 2 - 10, bw, bh, 10);
     ctx.fill();
 
-    // X icon + text
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`✖ ${text}`, x, y - 12);
+    ctx.fillText(`✖ ${text}`, x, y - 10);
     ctx.restore();
   }
 
   _drawWeightChangeBadge(ctx, x, y, old_w, new_w) {
     ctx.save();
     const text = `+${new_w - old_w} (${old_w}→${new_w})`;
-    ctx.font = `700 ${11 * this.zoom}px 'JetBrains Mono', monospace`;
+    ctx.font = `700 ${Math.max(10, 11 * this.zoom)}px 'JetBrains Mono', monospace`;
     const metrics = ctx.measureText(text);
-    const bw = metrics.width + 16 * this.zoom;
-    const bh = 20 * this.zoom;
+    const bw = metrics.width + 14;
+    const bh = 18;
 
     ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
-    ctx.roundRect(x - bw / 2, y - bh / 2 - 12, bw, bh, 6);
+    ctx.roundRect(x - bw / 2, y - bh / 2 - 10, bw, bh, 5);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y - 12);
+    ctx.fillText(text, x, y - 10);
     ctx.restore();
   }
 
   _renderNodes(ctx) {
-    const r = 14 * this.zoom;
+    const baseR = Math.max(13, 16 * this.zoom);
 
     for (const node of this.nodes) {
       const p = this._toScreen(node.x, node.y);
@@ -462,63 +480,66 @@ class GraphRenderer {
       const isTgt = node.is_target;
       const isAff = node.is_affected;
       const inPath = this.path.includes(node.id);
+      const r = isSrc || isTgt ? baseR + 2 : baseR;
 
       ctx.save();
-
-      // Node shadow
-      ctx.shadowColor = 'rgba(0,0,0,0.1)';
+      ctx.shadowColor = 'rgba(0,0,0,0.08)';
       ctx.shadowBlur = 4;
 
-      // Circle Fill & Border
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
 
       if (isSrc) {
-        // Source node: vibrant green beacon
         ctx.fillStyle = '#10b981';
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3 * this.zoom;
+        ctx.lineWidth = 3;
         ctx.fill();
         ctx.stroke();
 
-        // Outer pulsing ring
         ctx.beginPath();
-        ctx.arc(p.x, p.y, r + 4 * this.zoom, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-        ctx.lineWidth = 2 * this.zoom;
+        ctx.arc(p.x, p.y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+        ctx.lineWidth = 2;
         ctx.stroke();
       } else if (isTgt) {
-        // Target node: vibrant red beacon
         ctx.fillStyle = '#ef4444';
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3 * this.zoom;
+        ctx.lineWidth = 3;
         ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+        ctx.lineWidth = 2;
         ctx.stroke();
       } else if (isAff) {
-        // Affected Set node: amber warning
         ctx.fillStyle = '#f59e0b';
         ctx.strokeStyle = '#b45309';
-        ctx.lineWidth = 2 * this.zoom;
+        ctx.lineWidth = 2;
         ctx.fill();
         ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       } else if (inPath) {
-        // Active Path node
         ctx.fillStyle = '#2563eb';
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5 * this.zoom;
+        ctx.lineWidth = 2.5;
         ctx.fill();
         ctx.stroke();
       } else {
-        // Normal Node
         ctx.fillStyle = node.reachable ? '#ffffff' : '#f1f5f9';
         ctx.strokeStyle = node.reachable ? '#94a3b8' : '#cbd5e1';
-        ctx.lineWidth = 2 * this.zoom;
+        ctx.lineWidth = 2;
         ctx.fill();
         ctx.stroke();
       }
 
-      // Label inside node
-      ctx.font = `600 ${Math.max(9, 11 * this.zoom)}px Inter, sans-serif`;
+      ctx.font = `600 ${Math.max(9, Math.min(13, 11 * this.zoom))}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if (isSrc) {
@@ -532,11 +553,10 @@ class GraphRenderer {
         ctx.fillText(String(node.id), p.x, p.y);
       }
 
-      // External node badge label
       if (isSrc || isTgt) {
-        ctx.font = `700 ${10.5 * this.zoom}px Inter, sans-serif`;
+        ctx.font = `700 10.5px Inter, sans-serif`;
         ctx.fillStyle = isSrc ? '#047857' : '#b91c1c';
-        ctx.fillText(isSrc ? 'Source' : 'Target', p.x, p.y + r + 10 * this.zoom);
+        ctx.fillText(isSrc ? 'Source' : 'Target', p.x, p.y + r + 10);
       }
 
       ctx.restore();
@@ -562,14 +582,14 @@ class GraphRenderer {
 
     ctx.font = '11px Inter, sans-serif';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`Shortest dist : `, tx + 12, ty + 38);
+    ctx.fillText(`Shortest cost : `, tx + 12, ty + 38);
     ctx.fillText(`Parent node   : `, tx + 12, ty + 54);
     ctx.fillText(`Tight in-edges: `, tx + 12, ty + 70);
     ctx.fillText(`Reachable     : `, tx + 12, ty + 86);
 
     ctx.font = '600 11px JetBrains Mono, monospace';
     ctx.fillStyle = '#60a5fa';
-    ctx.fillText(node.dist !== null ? String(node.dist) : 'INF', tx + 98, ty + 38);
+    ctx.fillText(node.dist !== null ? `${node.dist} units` : 'INF', tx + 98, ty + 38);
     ctx.fillText(node.parent !== -1 ? String(node.parent) : 'None', tx + 98, ty + 54);
     ctx.fillText(String(node.tight), tx + 98, ty + 70);
     ctx.fillStyle = node.reachable ? '#34d399' : '#f87171';

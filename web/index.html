@@ -164,10 +164,18 @@
       </div>
 
       <div class="header-right">
+        <!-- Preset and graph stats info badge -->
+        <div class="header-graph-badge" id="headerGraphInfo">Loading graph...</div>
+
         <div class="badge-dev-mode">
           <div class="pulse-dot"></div>
-          <span id="headerStatusText">Development Mode (50%)</span>
+          <span id="headerStatusText">Connected (50%)</span>
         </div>
+
+        <button class="btn-header-glossary" id="btnOpenGlossary" title="Open Research Glossary of Key Terms">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Glossary</span>
+        </button>
 
         <div class="header-clock" id="headerClock">Sep 19, 2026 02:34 PM</div>
 
@@ -175,7 +183,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
-          <span>Research Demo</span>
+          <span>🎓 Research Demo — Walk through an update</span>
         </button>
 
         <div class="btn-icon-circle" title="Theme Toggle">
@@ -208,7 +216,7 @@
       <section class="hero-section">
         <div class="hero-text">
           <h1>Welcome to GraphPulse-R</h1>
-          <p>Analyze and maintain shortest paths under dynamic road updates.</p>
+          <p>Analyze and maintain shortest paths under dynamic edge updates in directed graphs.</p>
         </div>
 
         <div class="hero-cards-row">
@@ -265,7 +273,10 @@
                 <line x1="2" y1="12" x2="22" y2="12"></line>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-              <h3 class="card-title">Road Network Visualization</h3>
+              <div>
+                <h3 class="card-title">Dynamic Graph Visualization</h3>
+                <div class="badge-abstract-notice">Abstract network — not geographical road data</div>
+              </div>
             </div>
 
             <div class="card-actions">
@@ -301,7 +312,7 @@
             <div class="canvas-legend">
               <div class="legend-item">
                 <div class="legend-line normal"></div>
-                <span>Normal Road</span>
+                <span>Normal Edge</span>
               </div>
               <div class="legend-item">
                 <div class="legend-line shortest"></div>
@@ -313,7 +324,7 @@
               </div>
               <div class="legend-item">
                 <div class="legend-line closed"></div>
-                <span>Closed Road</span>
+                <span>Deleted / Closed Edge</span>
               </div>
               <div class="legend-item" style="margin-top:2px;">
                 <div class="legend-dot source"></div>
@@ -331,18 +342,26 @@
               <button class="btn-canvas-ctrl" id="btnZoomOut" title="Zoom Out">−</button>
             </div>
 
-            <!-- Reset View Button -->
-            <button class="canvas-reset-btn" id="btnResetView">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-              </svg>
-              <span>Reset View</span>
-            </button>
+            <!-- Canvas Action Buttons (Fit & Reset) -->
+            <div class="canvas-action-btns">
+              <button class="canvas-reset-btn" id="btnFitGraph" title="Fit graph to canvas area">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                </svg>
+                <span>Fit Graph</span>
+              </button>
+              <button class="canvas-reset-btn" id="btnResetView" title="Reset view">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg>
+                <span>Reset View</span>
+              </button>
+            </div>
 
             <!-- Scale Indicator -->
             <div class="canvas-scale-bar">
               <div class="scale-ticks"></div>
-              <span>0&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;4 km</span>
+              <span>0&nbsp;&nbsp;&nbsp;&nbsp;10&nbsp;&nbsp;&nbsp;&nbsp;20 units</span>
             </div>
           </div>
         </div>
@@ -363,7 +382,7 @@
 
             <!-- Segmented Control -->
             <div class="segmented-tabs" style="margin-top:14px;">
-              <button class="seg-tab active" id="tabCloseRoad">Close Road</button>
+              <button class="seg-tab active" id="tabCloseRoad">Close Edge</button>
               <button class="seg-tab" id="tabIncreaseWeight">Increase Weight</button>
               <button class="seg-tab" id="tabResetGraph" title="Reset graph to pre-update state">Reset</button>
             </div>
@@ -371,24 +390,24 @@
             <!-- Form -->
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">From Node</label>
+                <label class="form-label">From Node (u)</label>
                 <input class="form-input" id="inputFromNode" type="number" value="12" placeholder="u">
               </div>
               <div class="form-group">
-                <label class="form-label">To Node</label>
+                <label class="form-label">To Node (v)</label>
                 <input class="form-input" id="inputToNode" type="number" value="27" placeholder="v">
               </div>
             </div>
 
             <div class="form-row" id="groupWeightInput" style="display:none;">
               <div class="form-group">
-                <label class="form-label">New Edge Weight (Congestion)</label>
+                <label class="form-label">New Edge Weight (Increase)</label>
                 <input class="form-input" id="inputWeight" type="number" value="15" placeholder="weight > old_w">
               </div>
             </div>
 
             <button class="btn-primary" id="btnApplyUpdate">
-              <span>▶ Apply Update</span>
+              <span>✖ Close Edge & Reoptimize</span>
             </button>
 
             <!-- Live Decision Banner -->
@@ -403,7 +422,10 @@
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                <h4 class="card-title" style="font-size:14.5px;">Current Shortest Path</h4>
+                <div>
+                  <h4 class="card-title" style="font-size:14.5px;">Current Shortest Path</h4>
+                  <div class="sub-label">Select target for path inspection (or click node on canvas)</div>
+                </div>
               </div>
             </div>
 
@@ -414,11 +436,14 @@
               </div>
               <div class="path-info-row">
                 <span class="path-info-label">Target (Optional)</span>
-                <span class="path-info-val" id="valTargetNode" style="color:#dc2626;">Node 35</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="path-info-val" id="valTargetNode" style="color:#dc2626;">Node 35</span>
+                  <button id="btnClearTarget" class="btn-clear-target" title="Clear target to inspect complete SSSP tree">✕ Clear</button>
+                </div>
               </div>
               <div class="path-info-row">
-                <span class="path-info-label">Distance</span>
-                <span class="path-info-val" id="valDistance">8.4 km</span>
+                <span class="path-info-label">Shortest-path cost</span>
+                <span class="path-info-val" id="valDistance">32 units</span>
               </div>
 
               <div style="margin-top:10px; font-size:11.5px; color:#64748b; font-weight:600;">PATH SEQUENCE:</div>
@@ -479,36 +504,26 @@
             <h4 class="card-title" style="font-size:14.5px;">Algorithm Status</h4>
           </div>
 
-          <div class="status-badge-ready">
+          <div class="status-badge-ready" id="statusBadgeReady">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            <span>Shortest-path engine ready</span>
+            <span>Backend connected & SPT ready</span>
           </div>
 
-          <ul class="status-check-list">
-            <li class="status-check-item">
-              <span>Dijkstra (counted)</span>
-              <span class="check-icon">✔</span>
-            </li>
-            <li class="status-check-item">
-              <span>Incremental repair</span>
-              <span class="check-icon">✔</span>
-            </li>
-            <li class="status-check-item">
-              <span>Budget controller</span>
-              <span class="check-icon">✔</span>
-            </li>
-            <li class="status-check-item">
-              <span>Verifier</span>
-              <span class="check-icon">✔</span>
-            </li>
-          </ul>
+          <div class="status-tags-grid">
+            <div class="status-tag active"><span class="tag-dot green"></span>Backend connected</div>
+            <div class="status-tag active"><span class="tag-dot green"></span>Graph loaded</div>
+            <div class="status-tag active"><span class="tag-dot green"></span>SPT initialized</div>
+            <div class="status-tag active" id="tagVerified"><span class="tag-dot green"></span>Last update verified</div>
+            <div class="status-tag" id="tagFallback"><span class="tag-dot blue"></span>Fallback not triggered</div>
+            <div class="status-tag active"><span class="tag-dot green"></span>4/4 Invariants hold</div>
+          </div>
         </div>
 
         <!-- Card 2: Performance (Last Run) -->
         <div class="card">
-          <div class="card-title-group" style="margin-bottom:12px;">
+          <div class="card-title-group" style="margin-bottom:8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
               <line x1="18" y1="20" x2="18" y2="10"></line>
               <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -516,26 +531,29 @@
             </svg>
             <h4 class="card-title" style="font-size:14.5px;">Performance (Last Run)</h4>
           </div>
+          <div class="perf-clarification-note">
+            Operations represent machine-independent work (SCAN, PUSH, POP, QUEUE).
+          </div>
 
-          <div>
+          <div style="margin-top:8px;">
             <div class="metric-row">
-              <span class="metric-label">Operations (repair)</span>
-              <span class="metric-val" id="valRepairOps">12,340</span>
+              <span class="metric-label" title="Bounded Dijkstra within affected set">Incremental repair ops</span>
+              <span class="metric-val" id="valRepairOps">0</span>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Operations (fallback)</span>
+              <span class="metric-label" title="Full rebuild if budget was exceeded">Fallback rebuild ops</span>
               <span class="metric-val" id="valFallbackOps">0</span>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Total operations</span>
-              <span class="metric-val" id="valTotalOps" style="color:#2563eb;">12,340</span>
+              <span class="metric-label" style="font-weight:600; color:#1e293b;">Total algorithmic ops</span>
+              <span class="metric-val" id="valTotalOps" style="color:#2563eb; font-weight:700;">0</span>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Time (wall clock)</span>
-              <span class="metric-val" id="valWallTime">0.18 ms</span>
+              <span class="metric-label" title="Platform-dependent measurement for this run">Wall-clock time</span>
+              <span class="metric-val" id="valWallTime">0.00 ms (single run)</span>
             </div>
             <div class="metric-row">
-              <span class="metric-label">Result verified</span>
+              <span class="metric-label">Invariant verification</span>
               <span class="metric-val" id="badgeVerified" style="color:#10b981;">✔ Verified</span>
             </div>
           </div>
@@ -728,6 +746,84 @@
         <button class="btn-primary" id="btnDemoNext" style="width:auto; padding:8px 20px;">
           Next Step →
         </button>
+      </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 5: Research Terminology Glossary
+     ==================================================================== -->
+<div class="modal-overlay" id="glossaryModal">
+  <div class="modal-container" style="max-width:720px;">
+    <div class="modal-header">
+      <div class="card-title-group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <h3 class="modal-title">GraphPulse-R Research Glossary</h3>
+      </div>
+      <button class="modal-close" id="btnCloseGlossary">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="glossary-grid">
+
+        <div class="glossary-card">
+          <div class="glossary-term">Tight Edge</div>
+          <div class="glossary-formula">dist[u] + w(u, v) = dist[v]</div>
+          <div class="glossary-def">
+            An edge on which the triangle inequality holds with exact equality. Shortest paths consist exclusively of tight edges. In GraphPulse-R, every node tracks <code>tight[v]</code>, the number of tight in-edges.
+          </div>
+        </div>
+
+        <div class="glossary-card">
+          <div class="glossary-term">Affected Set (A)</div>
+          <div class="glossary-formula">A = { v &isin; V : dist&apos;[v] &gt; dist[v] }</div>
+          <div class="glossary-def">
+            The precise subset of vertices whose shortest-path distance from the source root strictly increases following an edge deletion or weight increase. Computed efficiently by subtree BFS down the SPT.
+          </div>
+        </div>
+
+        <div class="glossary-card">
+          <div class="glossary-term">Certificate Hit</div>
+          <div class="glossary-formula">dist[u] + w &gt; dist[v] (non-tight)</div>
+          <div class="glossary-def">
+            Pre-condition verification confirming that the modified edge was not tight or not in the tree. Proves distances and parents are unaffected with zero graph repair operations.
+          </div>
+        </div>
+
+        <div class="glossary-card">
+          <div class="glossary-term">Alternative Support</div>
+          <div class="glossary-formula">tight[v] &gt; 1 after edge removal</div>
+          <div class="glossary-def">
+            When a tree edge is removed but vertex <code>v</code> has at least one other tight incoming edge, <code>v</code> is immediately re-parented with zero change to downstream distances.
+          </div>
+        </div>
+
+        <div class="glossary-card">
+          <div class="glossary-term">Budgeted Repair</div>
+          <div class="glossary-formula">Work &le; B = &lceil; c &middot; F &rceil;</div>
+          <div class="glossary-def">
+            Incremental Dijkstra restricted strictly to the affected subgraph <code>A</code>. If repair work reaches the budget cap <code>B</code>, execution aborts to prevent worst-case degradation.
+          </div>
+        </div>
+
+        <div class="glossary-card">
+          <div class="glossary-term">Fallback Rebuild</div>
+          <div class="glossary-formula">Abort + Dijkstra(V, E) from scratch</div>
+          <div class="glossary-def">
+            If budgeted repair aborts, the copy-on-write overlay is discarded and a full rebuild is executed. Guarantees competitive ratio: total work is strictly bounded by <code>(1 + c) &middot; F + 1</code>.
+          </div>
+        </div>
+
+        <div class="glossary-card" style="grid-column: 1 / -1;">
+          <div class="glossary-term">Algorithmic Operations vs. Wall-Clock Time</div>
+          <div class="glossary-def">
+            <strong>Algorithmic Operations</strong> (SCAN, PUSH, POP, QUEUE) measure fundamental graph operations independently of hardware, CPU throttling, or language interpreter. <strong>Wall-clock time</strong> measures real elapsed milliseconds for that single run on the testing machine.
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

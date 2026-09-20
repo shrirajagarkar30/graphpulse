@@ -335,6 +335,40 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
 
+.header-graph-badge {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1e40af;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+}
+
+.btn-header-glossary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background-color: #ffffff;
+  color: #334155;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-header-glossary:hover {
+  background-color: #f1f5f9;
+  color: var(--primary);
+  border-color: #93c5fd;
+}
+
 .header-clock {
   font-size: 12.5px;
   color: var(--text-muted);
@@ -577,44 +611,46 @@ body {
 /* Canvas Overlays: Legend & Controls */
 .canvas-legend {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  background: rgba(255, 255, 255, 0.94);
+  top: 12px;
+  left: 14px;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 11.5px;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 10.5px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   z-index: 10;
+  max-width: 220px;
+  pointer-events: none;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--text-muted);
 }
 
 .legend-line {
-  width: 18px;
-  height: 3px;
+  width: 14px;
+  height: 2.5px;
   border-radius: 2px;
 }
 
 .legend-line.normal { background-color: #cbd5e1; }
-.legend-line.shortest { background-color: #2563eb; height: 3.5px; }
+.legend-line.shortest { background-color: #2563eb; height: 3px; }
 .legend-line.updated { background-color: #ef4444; }
 .legend-line.closed {
-  background: repeating-linear-gradient(90deg, #ef4444 0, #ef4444 4px, transparent 4px, transparent 8px);
+  background: repeating-linear-gradient(90deg, #ef4444 0, #ef4444 3px, transparent 3px, transparent 6px);
 }
 
 .legend-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 .legend-dot.source { background-color: #10b981; }
@@ -623,8 +659,8 @@ body {
 
 .canvas-controls-zoom {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
+  bottom: 14px;
+  left: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -632,8 +668,8 @@ body {
 }
 
 .btn-canvas-ctrl {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -652,28 +688,36 @@ body {
   background-color: #f1f5f9;
 }
 
-.canvas-reset-btn {
+.canvas-action-btns {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
-  padding: 6px 12px;
+  bottom: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.canvas-reset-btn {
+  padding: 6px 11px;
   background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-muted);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  z-index: 10;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  transition: all 0.15s ease;
 }
 
 .canvas-reset-btn:hover {
   background-color: #f8fafc;
-  color: var(--text-main);
+  color: var(--primary);
+  border-color: #cbd5e1;
 }
 
 .canvas-scale-bar {
@@ -1099,12 +1143,155 @@ body {
   font-family: var(--font-mono);
 }
 
+/* Refined Research UI Tokens & Components */
+.badge-abstract-notice {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 2px;
+  display: inline-block;
+}
+
+.sub-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.btn-clear-target {
+  font-size: 11px;
+  font-weight: 600;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-clear-target:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Distinct Toggle States */
+.btn-pill.active-toggle {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+/* Status Tags Grid */
+.status-tags-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.status-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.status-tag.active {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+  font-weight: 600;
+}
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.tag-dot.green { background-color: #10b981; }
+.tag-dot.blue { background-color: #3b82f6; }
+
+.perf-clarification-note {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Research Glossary Modal */
+.glossary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.glossary-card {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.glossary-term {
+  font-family: var(--font-heading);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.glossary-formula {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563eb;
+  background-color: #eff6ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.glossary-def {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.glossary-def code {
+  font-family: var(--font-mono);
+  background-color: #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
   .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+  .glossary-grid {
     grid-template-columns: 1fr;
   }
 }

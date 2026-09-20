@@ -27,7 +27,6 @@ class DashboardController {
     };
 
     this.renderer.onNodeClick = (node) => {
-      // If clicking a node, optionally offer to set as target or source
       if (node.id !== this.currentData.src) {
         this.setTargetNode(node.id);
       }
@@ -39,8 +38,8 @@ class DashboardController {
     // 4. Start live header clock
     this._startClock();
 
-    // 5. Initial data load
-    await this.refreshAll();
+    // 5. Initial data load (sets isNewGraph = true for auto-fit)
+    await this.refreshAll(true);
   }
 
   _startClock() {
@@ -48,7 +47,7 @@ class DashboardController {
     const update = () => {
       const now = new Date();
       const options = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
-      clockEl.textContent = now.toLocaleString('en-US', options);
+      if (clockEl) clockEl.textContent = now.toLocaleString('en-US', options);
     };
     update();
     setInterval(update, 10000);
@@ -62,7 +61,7 @@ class DashboardController {
         const preset = e.target.value;
         try {
           await this.api.loadPreset(preset);
-          await this.refreshAll();
+          await this.refreshAll(true);
         } catch (err) {
           alert(`Error loading preset: ${err.message}`);
         }
@@ -89,10 +88,23 @@ class DashboardController {
     document.getElementById('btnZoomIn')?.addEventListener('click', () => this.renderer.zoomIn());
     document.getElementById('btnZoomOut')?.addEventListener('click', () => this.renderer.zoomOut());
     document.getElementById('btnResetView')?.addEventListener('click', () => this.renderer.resetView());
+    document.getElementById('btnFitGraph')?.addEventListener('click', () => this.renderer.fitGraph());
 
     // Toggle Weights & Tree
-    document.getElementById('btnToggleWeights')?.addEventListener('click', () => this.renderer.toggleWeights());
-    document.getElementById('btnToggleTree')?.addEventListener('click', () => this.renderer.toggleTree());
+    const btnWeights = document.getElementById('btnToggleWeights');
+    if (btnWeights) {
+      btnWeights.classList.add('active-toggle'); // on by default
+      btnWeights.addEventListener('click', () => {
+        this.renderer.toggleWeights();
+        btnWeights.classList.toggle('active-toggle', this.renderer.showWeights);
+      });
+    }
+
+    const btnTree = document.getElementById('btnToggleTree');
+    btnTree?.addEventListener('click', () => {
+      this.renderer.toggleTree();
+      btnTree.classList.toggle('active-toggle', this.renderer.showTreeOnly);
+    });
 
     // Update Control Segmented Tabs
     const tabClose = document.getElementById('tabCloseRoad');
@@ -105,7 +117,7 @@ class DashboardController {
       tabClose.classList.add('active');
       tabIncrease.classList.remove('active');
       weightGroup.style.display = 'none';
-      document.getElementById('btnApplyUpdate').innerHTML = '<span>✖ Close Road & Reoptimize</span>';
+      document.getElementById('btnApplyUpdate').innerHTML = '<span>✖ Close Edge & Reoptimize</span>';
     });
 
     tabIncrease?.addEventListener('click', () => {
@@ -119,8 +131,7 @@ class DashboardController {
     tabReset?.addEventListener('click', async () => {
       try {
         await this.api.resetGraph();
-        await this.refreshAll();
-        this._showNotification('Graph reset to initial state');
+        await this.refreshAll(false);
       } catch (err) {
         alert(err.message);
       }
@@ -129,6 +140,9 @@ class DashboardController {
     // Apply Update Button
     const btnApply = document.getElementById('btnApplyUpdate');
     btnApply?.addEventListener('click', () => this.handleApplyUpdate());
+
+    // Clear Target Button
+    document.getElementById('btnClearTarget')?.addEventListener('click', () => this.clearTarget());
 
     // Navigation Menu Items
     document.getElementById('navLoadGraph')?.addEventListener('click', () => {
@@ -146,25 +160,32 @@ class DashboardController {
     document.getElementById('btnHeaderDemo')?.addEventListener('click', () => {
       window.DemoFlow?.start();
     });
+    document.getElementById('btnOpenGlossary')?.addEventListener('click', () => {
+      document.getElementById('glossaryModal')?.classList.add('active');
+    });
+    document.getElementById('btnCloseGlossary')?.addEventListener('click', () => {
+      document.getElementById('glossaryModal')?.classList.remove('active');
+    });
   }
 
-  async refreshAll() {
+  async refreshAll(isNewGraph = false) {
     try {
-      // 1. Fetch graph
       const graphData = await this.api.getGraph();
       this.currentData = graphData;
-      this.renderer.setData(graphData);
+      this.renderer.setData(graphData, isNewGraph);
 
-      // 2. Fetch metrics
       const metricsData = await this.api.getMetrics();
 
-      // 3. Update UI Cards
       this._updateShortestPathCard(graphData);
       this._updatePerformanceCard(metricsData, graphData.last_update);
+      this._updateAlgorithmStatusCard(graphData);
       this._updateRecentTable(metricsData.last_run);
       this._updateDecisionBanner(graphData.last_update);
+      this._updateHeaderGraphInfo(graphData);
 
-      // Pre-fill update input with suggested candidate if empty
+      const statusText = document.getElementById('headerStatusText');
+      if (statusText) statusText.textContent = 'Connected (50%)';
+
       const uInput = document.getElementById('inputFromNode');
       const vInput = document.getElementById('inputToNode');
       if (!uInput.value && graphData.edges.length > 0) {
@@ -174,6 +195,22 @@ class DashboardController {
       }
     } catch (err) {
       console.error('Error refreshing dashboard:', err);
+      const statusText = document.getElementById('headerStatusText');
+      if (statusText) statusText.textContent = 'Offline / Error';
+    }
+  }
+
+  _updateHeaderGraphInfo(data) {
+    const infoEl = document.getElementById('headerGraphInfo');
+    if (infoEl) {
+      const presetNames = {
+        grid: 'Grid Graph (6x6)',
+        comb: 'Adversarial Comb',
+        hub_spoke: 'Hub-Spoke Topology',
+        random_sparse: 'Random Sparse Graph',
+      };
+      const name = presetNames[data.preset] || data.preset;
+      infoEl.textContent = `${name} | ${data.n} nodes, ${data.m} edges | Source: Node ${data.src}`;
     }
   }
 
@@ -183,10 +220,23 @@ class DashboardController {
       this.currentData.target = targetId;
       this.currentData.path = res.path;
       this.currentData.path_dist = res.path_dist;
-      this.renderer.setData(this.currentData);
+      this.renderer.setData(this.currentData, false);
       this._updateShortestPathCard(this.currentData);
     } catch (err) {
       console.error('Error setting target node:', err);
+    }
+  }
+
+  async clearTarget() {
+    try {
+      await this.api.setTarget(null);
+      this.currentData.target = null;
+      this.currentData.path = [];
+      this.currentData.path_dist = null;
+      this.renderer.setData(this.currentData, false);
+      this._updateShortestPathCard(this.currentData);
+    } catch (err) {
+      console.error('Error clearing target:', err);
     }
   }
 
@@ -205,28 +255,40 @@ class DashboardController {
     btn.innerHTML = '<span>Processing Reoptimization...</span>';
 
     try {
-      const res = await this.api.applyUpdate(this.currentUpdateMode, u, v, newW);
-      await this.refreshAll();
-      this._showNotification(`Update applied: strategy ${res.update.strategy}`);
+      await this.api.applyUpdate(this.currentUpdateMode, u, v, newW);
+      // Keep user's zoom and pan during incremental update!
+      await this.refreshAll(false);
     } catch (err) {
       alert(`Update Error: ${err.message}`);
     } finally {
       btn.disabled = false;
-      const label = this.currentUpdateMode === 'delete' ? '✖ Close Road & Reoptimize' : '▲ Increase Weight & Reoptimize';
+      const label = this.currentUpdateMode === 'delete' ? '✖ Close Edge & Reoptimize' : '▲ Increase Weight & Reoptimize';
       btn.innerHTML = `<span>${label}</span>`;
     }
   }
 
   _updateShortestPathCard(data) {
     document.getElementById('valSourceNode').textContent = `Node ${data.src}`;
-    document.getElementById('valTargetNode').textContent = data.target !== null ? `Node ${data.target}` : 'None (SSSP)';
-    document.getElementById('valDistance').textContent = data.path_dist !== null ? `${data.path_dist} km` : 'Unreachable';
-
+    const targetEl = document.getElementById('valTargetNode');
+    const distEl = document.getElementById('valDistance');
     const pathBox = document.getElementById('valPathSequence');
-    if (data.path && data.path.length > 0) {
-      pathBox.textContent = data.path.join(' → ');
+    const clearBtn = document.getElementById('btnClearTarget');
+
+    if (data.target !== null) {
+      targetEl.textContent = `Node ${data.target}`;
+      distEl.textContent = data.path_dist !== null ? `${data.path_dist} units` : 'Unreachable';
+      if (clearBtn) clearBtn.style.display = 'inline-block';
+
+      if (data.path && data.path.length > 0) {
+        pathBox.textContent = data.path.join(' → ');
+      } else {
+        pathBox.textContent = 'No route available (Unreachable)';
+      }
     } else {
-      pathBox.textContent = 'No route available';
+      targetEl.textContent = 'None (Full Tree)';
+      distEl.textContent = 'Complete SSSP Tree';
+      if (clearBtn) clearBtn.style.display = 'none';
+      pathBox.textContent = `Showing complete single-source shortest-path tree rooted at Node ${data.src}`;
     }
   }
 
@@ -241,15 +303,42 @@ class DashboardController {
       valRepairOps.textContent = lastUpdate.repair_work.toLocaleString();
       valFallbackOps.textContent = lastUpdate.fallback_work.toLocaleString();
       valTotalOps.textContent = lastUpdate.work.toLocaleString();
-      valWallTime.textContent = `${lastUpdate.wall_time_ms} ms`;
+      valWallTime.textContent = `${lastUpdate.wall_time_ms} ms (single run)`;
       badgeVerified.innerHTML = lastUpdate.verified ? '✔ Verified' : '✖ Mismatch';
       badgeVerified.style.color = lastUpdate.verified ? '#10b981' : '#ef4444';
     } else {
       valRepairOps.textContent = '0';
       valFallbackOps.textContent = '0';
       valTotalOps.textContent = '0';
-      valWallTime.textContent = '0.00 ms';
+      valWallTime.textContent = '0.00 ms (single run)';
       badgeVerified.innerHTML = '✔ Initialized';
+      badgeVerified.style.color = '#10b981';
+    }
+  }
+
+  _updateAlgorithmStatusCard(data) {
+    const statusReady = document.getElementById('statusBadgeReady');
+    if (statusReady) {
+      statusReady.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Backend connected & SPT ready (F=${data.F_ops} ops)</span>
+      `;
+    }
+
+    const tagVerified = document.getElementById('tagVerified');
+    if (tagVerified) {
+      const isVer = data.last_update ? data.last_update.verified : true;
+      tagVerified.className = `status-tag ${isVer ? 'active' : ''}`;
+      tagVerified.innerHTML = `<span class="tag-dot ${isVer ? 'green' : 'blue'}"></span>Last update ${isVer ? 'verified' : 'unverified'}`;
+    }
+
+    const tagFallback = document.getElementById('tagFallback');
+    if (tagFallback) {
+      const isFallback = data.last_update?.strategy === 'fallback';
+      tagFallback.className = `status-tag ${isFallback ? 'active' : ''}`;
+      tagFallback.innerHTML = `<span class="tag-dot ${isFallback ? 'blue' : 'green'}"></span>Fallback ${isFallback ? 'triggered (Cap B reached)' : 'not triggered'}`;
     }
   }
 
@@ -315,10 +404,6 @@ class DashboardController {
         ${lastUpdate.work} ops
       </div>
     `;
-  }
-
-  _showNotification(msg) {
-    console.log('[Notification]:', msg);
   }
 }
 
