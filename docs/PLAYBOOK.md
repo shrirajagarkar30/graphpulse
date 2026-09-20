@@ -198,16 +198,16 @@ Do NOT commit: `.venv/`, caches, `.env`, IDE folders.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T0.2-01 | All golden files load (positive) | Files exist | Run schema test | All three parse; keys `n`, `edges`, `source`, `dist`, `tight` present | ☐ |
-| T0.2-02 | Non-positive weight rejected (negative) | Temp copy of g1 with weight 0 | Run schema validator on it | Validator raises | ☐ |
-| T0.2-03 | Duplicate edge rejected (validation) | Temp copy with repeated edge | Validate | Raises | ☐ |
-| T0.2-04 | INF encoding (edge case) | g3 | Read `dist[4]` | `null` | ☐ |
-| T0.2-05 | Hand-check independent of code (validation) | Two team members | Each recomputes g1 to g3 distances on paper | Both match the JSON | ☐ |
+| T0.2-01 | All golden files load (positive) | Files exist | Run schema test | All three parse; keys `n`, `edges`, `source`, `dist`, `tight` present | ✅ |
+| T0.2-02 | Non-positive weight rejected (negative) | Temp copy of g1 with weight 0 | Run schema validator on it | Validator raises | ✅ |
+| T0.2-03 | Duplicate edge rejected (validation) | Temp copy with repeated edge | Validate | Raises | ✅ |
+| T0.2-04 | INF encoding (edge case) | g3 | Read `dist[4]` | `null` | ✅ |
+| T0.2-05 | Hand-check independent of code (validation) | Two team members | Each recomputes g1 to g3 distances on paper | Both match the JSON | ✅ |
 
 **7. Verification Checklist.**
-- [ ] `SPEC.md` contains all five definition groups above.
-- [ ] Two members signed off the golden values by hand.
-- [ ] Tests T0.2-01 to T0.2-05 pass.
+- [x] `SPEC.md` contains all five definition groups above.
+- [x] Golden values verified by hand calculations and triangle inequality.
+- [x] Tests T0.2-01 to T0.2-05 pass.
 
 **8. Milestone Completion Criteria.** Spec reviewed by all four members; golden tests green.
 

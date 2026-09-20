@@ -1,0 +1,13 @@
+{
+  "name": "g3_unreachable",
+  "description": "Graph with unreachable vertex 4 having no incoming edges",
+  "n": 5,
+  "source": 0,
+  "edges": [
+    [0, 1, 2],
+    [1, 2, 3],
+    [2, 3, 4]
+  ],
+  "dist": [0, 2, 5, 9, null],
+  "tight": [0, 1, 1, 1, 0]
+}

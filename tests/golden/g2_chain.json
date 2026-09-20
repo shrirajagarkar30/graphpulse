@@ -1,0 +1,13 @@
+{
+  "name": "g2_chain",
+  "description": "Directed 4-vertex chain with increasing weights 2, 3, 4",
+  "n": 4,
+  "source": 0,
+  "edges": [
+    [0, 1, 2],
+    [1, 2, 3],
+    [2, 3, 4]
+  ],
+  "dist": [0, 2, 5, 9],
+  "tight": [0, 1, 1, 1]
+}
