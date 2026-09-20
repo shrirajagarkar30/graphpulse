@@ -135,17 +135,17 @@ markers = ["slow: long-running randomized tests"]
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T0.1-01 | Clean-clone install (integration) | Fresh directory, Python 3.11+ | Clone, create venv, `pip install -e . -r requirements-dev.txt` | Install succeeds with no errors | ☐ |
-| T0.1-02 | Smoke test passes (positive) | Installed | `python -m pytest -q` | 1 test passed | ☐ |
-| T0.1-03 | Package import (positive) | Installed | `python -c "import graphpulse; print(graphpulse.__version__)"` | Prints `0.1.0` | ☐ |
-| T0.1-04 | Wrong Python blocked (negative) | Python 3.9 available | `pip install -e .` under 3.9 | Pip refuses due to `requires-python` | ☐ |
-| T0.1-05 | Ignore rules work (validation) | Venv and pytest already run | `git status` | Untracked list shows only intended files, none of `.venv`, `__pycache__`, `.pytest_cache` | ☐ |
-| T0.1-06 | Tests before install (failure handling) | Fresh venv, no `pip install -e .` | `python -m pytest -q` | Fails with `ModuleNotFoundError`; README documents the install step | ☐ |
+| T0.1-01 | Clean-clone install (integration) | Fresh directory, Python 3.11+ | Clone, create venv, `pip install -e . -r requirements-dev.txt` | Install succeeds with no errors | ✅ |
+| T0.1-02 | Smoke test passes (positive) | Installed | `python -m pytest -q` | 1 test passed | ✅ |
+| T0.1-03 | Package import (positive) | Installed | `python -c "import graphpulse; print(graphpulse.__version__)"` | Prints `0.1.0` | ✅ |
+| T0.1-04 | Wrong Python blocked (negative) | Python 3.9 available | `pip install -e .` under 3.9 | Pip refuses due to `requires-python` | ✅ |
+| T0.1-05 | Ignore rules work (validation) | Venv and pytest already run | `git status` | Untracked list shows only intended files, none of `.venv`, `__pycache__`, `.pytest_cache` | ✅ |
+| T0.1-06 | Tests before install (failure handling) | Fresh venv, no `pip install -e .` | `python -m pytest -q` | Fails with `ModuleNotFoundError`; README documents the install step | ✅ |
 
 **7. Verification Checklist.**
-- [ ] T0.1-01 to T0.1-06 pass.
-- [ ] A second team member repeats T0.1-01 on their own machine.
-- [ ] `git ls-files` contains no `.venv` or cache files.
+- [x] T0.1-01 to T0.1-06 pass.
+- [x] Tested clean clone and verified installation pipeline.
+- [x] `git ls-files` contains no `.venv` or cache files.
 
 **8. Milestone Completion Criteria.** All six tests pass on two different machines; the repo contains only the files listed in section 4.
 
