@@ -503,19 +503,19 @@ Branch: `phase-2-harness`
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.1-01 | Determinism (positive) | Same seed | Generate twice | Identical edge sets and weights | ☐ |
-| T2.1-02 | Seed sensitivity (positive) | Seeds 1 and 2 | Generate | Weights differ | ☐ |
-| T2.1-03 | Grid size (validation) | `grid(5,5)` | Count | `n=25`, `m=80` | ☐ |
-| T2.1-04 | Degenerate sizes (edge case) | `grid(1,1)`, `grid(1,5)` | Generate | `n=1, m=0`; `n=5, m=8` | ☐ |
-| T2.1-05 | Invalid parameters (negative) | `rows=0`, `wmin=0`, `wmin>wmax` | Generate | `ValueError` | ☐ |
-| T2.1-06 | Weight range (validation) | `wmin=3, wmax=9` | Check all edges | Every weight in `[3,9]` and an int | ☐ |
-| T2.1-07 | Simple graph (validation) | All generators | Check | No self-loops or duplicates | ☐ |
-| T2.1-08 | Adversarial property (integration) | `comb_adversarial(200)` | Dijkstra before and after deleting `(0,1)` | Distance changes for exactly 199 vertices | ☐ |
-| T2.1-09 | Hub degrees (validation) | `hub_spoke(3,10)` | Check | Hubs have the expected degree | ☐ |
+| T2.1-01 | Determinism (positive) | Same seed | Generate twice | Identical edge sets and weights | ✅ |
+| T2.1-02 | Seed sensitivity (positive) | Seeds 1 and 2 | Generate | Weights differ | ✅ |
+| T2.1-03 | Grid size (validation) | `grid(5,5)` | Count | `n=25`, `m=80` | ✅ |
+| T2.1-04 | Degenerate sizes (edge case) | `grid(1,1)`, `grid(1,5)` | Generate | `n=1, m=0`; `n=5, m=8` | ✅ |
+| T2.1-05 | Invalid parameters (negative) | `rows=0`, `wmin=0`, `wmin>wmax` | Generate | `ValueError` | ✅ |
+| T2.1-06 | Weight range (validation) | `wmin=3, wmax=9` | Check all edges | Every weight in `[3,9]` and an int | ✅ |
+| T2.1-07 | Simple graph (validation) | All generators | Check | No self-loops or duplicates | ✅ |
+| T2.1-08 | Adversarial property (integration) | `comb_adversarial(200)` | Dijkstra before and after deleting `(0,1)` | Distance changes for exactly 199 vertices | ✅ |
+| T2.1-09 | Hub degrees (validation) | `hub_spoke(3,10)` | Check | Hubs have the expected degree | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All nine tests pass; full suite green.
-- [ ] T2.1-08 verified for `n` in 10, 200, 1000.
+- [x] All nine tests pass; full suite green.
+- [x] T2.1-08 verified for `n` in 10, 200, 1000.
 
 **8. Milestone Completion Criteria.** Determinism and the adversarial property proven by tests.
 
