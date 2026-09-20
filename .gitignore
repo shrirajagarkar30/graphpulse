@@ -1,0 +1,35 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Testing & hypothesis
+.pytest_cache/
+.hypothesis/
+tests/failures/
+
+# Experiments outputs
+experiments/output/
+
+# Environment variables & secrets
+.env
+.env.*
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Logs
+*.log

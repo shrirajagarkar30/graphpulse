@@ -1,0 +1,4 @@
+# Developer dependencies for GraphPulse-R (pinned)
+pytest==9.1.1
+hypothesis==6.168.0
+networkx==3.6.1
