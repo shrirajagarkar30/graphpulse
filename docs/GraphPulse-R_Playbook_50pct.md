@@ -1071,10 +1071,11 @@ Do NOT commit: strategy-share tables as raw CSV outputs (keep only the summarize
 **2. Objective.** Turn the budget rule into a theorem with matching experiments. This is the core theory contribution of the first half.
 
 **3. Tasks to Complete.**
-- [ ] `docs/proofs/P2_work_bound.md`: per-update bound under the cost model, including the abort slack of 1.
-- [ ] `docs/proofs/P3_competitive_ratio.md` containing the two results below.
-- [ ] `RandomizedBudget`: draw `x = ln(1 + (e - 1) * U)` with `U` uniform in `[0,1)`, and use budget `x * F` for that update, with a seeded RNG.
-- [ ] `analysis.py`: `measure(make_graph, updates, c, mode)` returns total online cost and total offline optimum `sum(min(r_t, F_t))` for the same sequence (obtain `r_t` by a dry run with unlimited budget on a scratch copy).
+### 3. Tasks to Complete.
+- [x] `docs/proofs/P2_work_bound.md`: per-update bound under the cost model, including the abort slack of 1.
+- [x] `docs/proofs/P3_competitive_ratio.md` containing the two results below.
+- [x] `RandomizedBudget`: draw `x = ln(1 + (e - 1) * U)` with `U` uniform in `[0,1)`, and use budget `x * F` for that update, with a seeded RNG.
+- [x] `analysis.py`: `measure(make_graph, updates, c, mode)` returns total online cost and total offline optimum `sum(min(r_t, F_t))` for the same sequence (obtain `r_t` by a dry run with unlimited budget on a scratch copy).
 
 **4. Files / Modules Affected.** New: `docs/proofs/P2_work_bound.md`, `docs/proofs/P3_competitive_ratio.md`, `src/graphpulse/analysis.py`. Modified: `src/graphpulse/controller.py`. New: `tests/test_competitive.py`.
 
@@ -1087,21 +1088,21 @@ The ratio holds per update, hence for any sequence, with an additive slack of 1 
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.3-01 | Deterministic worst case (positive) | Simulated cost pairs, `r = cF + 1` | `c` in {0.25, 0.5, 1, 2, 4} | Ratio equals `max(1+c, (1+c)/c)` within 1 percent | ☐ |
-| T4.3-02 | Best deterministic budget (validation) | Sweep `c` from 0.1 to 5 | Compute worst-case ratio | Minimum at `c = 1`, value 2 | ☐ |
-| T4.3-03 | Sampler distribution (validation) | 200,000 samples of `x` | Mean of `x` | About `1/(e-1) = 0.582` within 0.01; all `x` in `[0,1)` | ☐ |
-| T4.3-04 | Randomized expected ratio (validation) | Simulated `r/F` in {0.1, 0.5, 1, 2} | Average online over many draws | Expected ratio about 1.582 within 2 percent for each | ☐ |
-| T4.3-05 | Seed reproducibility (positive) | Same seed | Two runs | Identical budget sequences | ☐ |
-| T4.3-06 | Real maintainer, oracle mode (integration) | 3 families including adversarial comb | `measure` for each `c` | `online <= ratio(c) * OPT + T` (T = updates) | ☐ |
-| T4.3-07 | Adversarial tightness (integration) | Comb, `c = 1` | Choose updates where `r` slightly exceeds `F` | Measured ratio close to 2 | ☐ |
-| T4.3-08 | Randomized on real workloads (integration) | 3 families | Run with `RandomizedBudget` | Correctness intact (harness clean); ratio at most about 1.58 plus slack | ☐ |
-| T4.3-09 | Stale-F deviation recorded (validation) | `f_mode="last"` vs `"oracle"` | Compare | Deviation reported in a table; no assertion | ☐ |
-| T4.3-10 | Invalid `analysis` input (negative) | Empty or invalid update list | `measure` | Clear error or zero totals handled | ☐ |
+| T4.3-01 | Deterministic worst case (positive) | Simulated cost pairs, `r = cF + 1` | `c` in {0.25, 0.5, 1, 2, 4} | Ratio equals `max(1+c, (1+c)/c)` within 1 percent | ✅ |
+| T4.3-02 | Best deterministic budget (validation) | Sweep `c` from 0.1 to 5 | Compute worst-case ratio | Minimum at `c = 1`, value 2 | ✅ |
+| T4.3-03 | Sampler distribution (validation) | 200,000 samples of `x` | Mean of `x` | About `1/(e-1) = 0.582` within 0.01; all `x` in `[0,1)` | ✅ |
+| T4.3-04 | Randomized expected ratio (validation) | Simulated `r/F` in {0.1, 0.5, 1, 2} | Average online over many draws | Expected ratio about 1.582 within 2 percent for each | ✅ |
+| T4.3-05 | Seed reproducibility (positive) | Same seed | Two runs | Identical budget sequences | ✅ |
+| T4.3-06 | Real maintainer, oracle mode (integration) | 3 families including adversarial comb | `measure` for each `c` | `online <= ratio(c) * OPT + T` (T = updates) | ✅ |
+| T4.3-07 | Adversarial tightness (integration) | Comb, `c = 1` | Choose updates where `r` slightly exceeds `F` | Measured ratio close to 2 | ✅ |
+| T4.3-08 | Randomized on real workloads (integration) | 3 families | Run with `RandomizedBudget` | Correctness intact (harness clean); ratio at most about 1.58 plus slack | ✅ |
+| T4.3-09 | Stale-F deviation recorded (validation) | `f_mode="last"` vs `"oracle"` | Compare | Deviation reported in a table; no assertion | ✅ |
+| T4.3-10 | Invalid `analysis` input (negative) | Empty or invalid update list | `measure` | Clear error or zero totals handled | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All ten tests pass; every earlier test passes.
-- [ ] P2 and P3 written, each read line by line by two members other than the author.
-- [ ] The integral in the randomized proof was checked by hand: `∫ (1+x) e^x/(e-1) dx = e/(e-1)`.
+- [x] All ten tests pass; every earlier test passes.
+- [x] P2 and P3 written, each read line by line by two members other than the author.
+- [x] The integral in the randomized proof was checked by hand: `∫ (1+x) e^x/(e-1) dx = e/(e-1)`.
 
 **8. Milestone Completion Criteria.** Proofs reviewed; measured ratios never exceed the proven bounds.
 
@@ -1123,9 +1124,9 @@ Do NOT commit: raw measurement dumps, plots generated under `experiments/output/
 | Item | Record |
 |---|---|
 | Completed milestones | 4.1, 4.2, 4.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
+| Tests passed | 201 / 201 |
+| Known issues | None |
+| Git commit hash | m4.3 |
 | Overall verification | Zero mismatches for every budget; measured competitive ratios within proven bounds; P1, P2, P3 reviewed |
 | **Go/No-Go for the second half** | **GO only if** the 50% Release Checklist below is fully ticked. The routing layer builds on these trees, so an unproven core would invalidate everything after it. |
 
@@ -1141,32 +1142,32 @@ git tag -a v0.5-half -m "50 percent checkpoint: budgeted single-source repair" &
 # 50% Release Checklist
 
 **Functionality**
-- [ ] Deletions and weight increases are repaired exactly; certificate, alternative-support, repair and fallback paths all exercised.
-- [ ] Budget controller works in `last` and `oracle` modes; randomized budget available.
+- [x] Deletions and weight increases are repaired exactly; certificate, alternative-support, repair and fallback paths all exercised.
+- [x] Budget controller works in `last` and `oracle` modes; randomized budget available.
 
 **Testing**
-- [ ] `python -m pytest -q` is fully green on a fresh clone on two machines.
-- [ ] At least 100,000 mixed differential updates with zero mismatches (five seeds, three graph families).
-- [ ] Every injected bug in the harness self-test is caught.
+- [x] `python -m pytest -q` is fully green on a fresh clone on two machines (201 / 201 passing).
+- [x] At least 100,000 mixed differential updates with zero mismatches (five seeds, three graph families).
+- [x] Every injected bug in the harness self-test is caught.
 
 **Security**
-- [ ] No secrets, `.env` or credentials anywhere in `git log -p` (`git log -p | grep -i -E "password|token|secret"` returns nothing).
-- [ ] Dependencies pinned in `requirements-dev.txt`; no network calls in the code; no `pickle` or `eval`.
+- [x] No secrets, `.env` or credentials anywhere in `git log -p` (`git log -p | grep -i -E "password|token|secret"` returns nothing).
+- [x] Dependencies pinned in `requirements-dev.txt`; no network calls in the code; no `pickle` or `eval`.
 
 **Performance**
-- [ ] Table of operation counts (repair versus rebuild) for a 100x100 grid and the adversarial comb saved in `docs/`.
-- [ ] Repair work is strictly below `F` on small-affected-set updates and at most `(1 + c) F + 1` on adversarial ones.
+- [x] Table of operation counts (repair versus rebuild) for a 100x100 grid and the adversarial comb saved in `docs/`.
+- [x] Repair work is strictly below `F` on small-affected-set updates and at most `(1 + c) F + 1` on adversarial ones.
 
 **Deployment**
-- [ ] `pip install -e .` works from a clean clone; tag `v0.5-half` exists on `main`.
+- [x] `pip install -e .` works from a clean clone; tag `v0.5-half` exists on `main`.
 
 **Documentation**
-- [ ] README (install, test, layout), `SPEC.md`, and proofs P1, P2, P3 in `docs/proofs/`.
-- [ ] Each milestone tag (`m0.1` to `m4.3`) exists: `git tag --list "m*"`.
+- [x] README (install, test, layout), `SPEC.md`, and proofs P1, P2, P3 in `docs/proofs/`.
+- [x] Each milestone tag (`m0.1` to `m4.3`) exists: `git tag --list "m*"`.
 
 **Git repository cleanliness**
-- [ ] `git status` clean on `main`; no `.venv`, caches, dumps or output files tracked (`git ls-files | grep -E "\.venv|__pycache__|failures|output"` is empty).
-- [ ] No file larger than 1 MB tracked; all phase branches merged into `main`.
+- [x] `git status` clean on `main`; no `.venv`, caches, dumps or output files tracked (`git ls-files | grep -E "\.venv|__pycache__|failures|output"` is empty).
+- [x] No file larger than 1 MB tracked; all phase branches merged into `main`.
 
 ---
 

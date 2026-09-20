@@ -15,6 +15,7 @@ f_mode:
 from __future__ import annotations
 
 import math
+import random
 
 from graphpulse.dijkstra import INF
 from graphpulse.generators import Update, apply_update
@@ -26,6 +27,36 @@ from graphpulse.spt import SPTState
 from graphpulse.verify import check_state
 
 
+class RandomizedBudget:
+    """Randomized budget generator for online shortest-path repair.
+
+    Draws x = ln(1 + (e - 1) * U) where U ~ Uniform[0, 1).
+    Multiplier x has probability density f(x) = e^x / (e - 1) on [0, 1],
+    achieving the optimal expected competitive ratio e / (e - 1) ≈ 1.582.
+    """
+
+    __slots__ = ("_rng", "_seed")
+
+    def __init__(self, seed: int = 42) -> None:
+        self._seed = seed
+        self._rng: random.Random = random.Random(seed)
+
+    @property
+    def seed(self) -> int:
+        """RNG seed."""
+        return self._seed
+
+    def sample_x(self) -> float:
+        """Sample multiplier x in [0, 1)."""
+        u = self._rng.random()
+        return math.log(1.0 + (math.e - 1.0) * u)
+
+    def budget(self, F: int) -> int:
+        """Return integer budget B = ceil(x * F)."""
+        x = self.sample_x()
+        return math.ceil(x * F)
+
+
 class BudgetedMaintainer:
     """Dynamic shortest-path maintainer with certificate checking, budgeted repair,
     and automatic rebuild fallback on budget exhaustion.
@@ -35,9 +66,10 @@ class BudgetedMaintainer:
         self,
         g: DiGraph,
         src: int,
-        c: float = 1.0,
+        c: float | str | RandomizedBudget = 1.0,
         f_mode: str = "last",
         verify: bool = False,
+        seed: int | None = None,
     ) -> None:
         """Initialize BudgetedMaintainer.
 
@@ -45,24 +77,34 @@ class BudgetedMaintainer:
         ----------
         g      : DiGraph to maintain.
         src    : Single source vertex ID.
-        c      : Competitive budget multiplier (c >= 0, float or int, inf allowed).
+        c      : Competitive budget multiplier (c >= 0, float or int, inf allowed,
+                 or 'random' / RandomizedBudget instance).
         f_mode : Rebuild cost estimation mode: 'last' or 'oracle'.
         verify : If True, runs check_state after every single update.
+        seed   : Optional RNG seed when c='random'.
         """
         if isinstance(src, bool) or not isinstance(src, int) or not (0 <= src < g.n):
             raise ValueError(f"Source vertex {src!r} out of range [0, {g.n - 1}]")
 
-        if isinstance(c, bool) or not isinstance(c, (int, float)):
-            raise TypeError(f"Multiplier c must be a non-negative number, got {c!r}")
-        if c < 0:
-            raise ValueError(f"Multiplier c must be non-negative, got {c!r}")
+        if isinstance(c, RandomizedBudget):
+            self._c: float | str = "random"
+            self._random_budget: RandomizedBudget | None = c
+        elif isinstance(c, str) and c.lower() == "random":
+            self._c = "random"
+            self._random_budget = RandomizedBudget(seed=42 if seed is None else seed)
+        else:
+            if isinstance(c, bool) or not isinstance(c, (int, float)):
+                raise TypeError(f"Multiplier c must be a non-negative number, got {c!r}")
+            if c < 0:
+                raise ValueError(f"Multiplier c must be non-negative, got {c!r}")
+            self._c = float(c)
+            self._random_budget = None
 
         if f_mode not in ("last", "oracle"):
             raise ValueError(f"Unknown f_mode {f_mode!r}; expected 'last' or 'oracle'")
 
         self._g: DiGraph = g.copy()
         self._src: int = src
-        self._c: float = float(c)
         self._f_mode: str = f_mode
         self._verify: bool = verify
 
@@ -110,9 +152,14 @@ class BudgetedMaintainer:
         return self._F
 
     @property
-    def c(self) -> float:
-        """Return budget multiplier."""
+    def c(self) -> float | str:
+        """Return budget multiplier (float or 'random')."""
         return self._c
+
+    @property
+    def random_budget(self) -> RandomizedBudget | None:
+        """Return RandomizedBudget instance if randomized mode, else None."""
+        return self._random_budget
 
     @property
     def f_mode(self) -> str:
@@ -135,7 +182,9 @@ class BudgetedMaintainer:
         return self._F
 
     def _compute_budget(self, F_val: int) -> int | None:
-        """Calculate the budget B = ceil(c * F)."""
+        """Calculate the budget B = ceil(c * F) or sample from RandomizedBudget."""
+        if self._random_budget is not None:
+            return self._random_budget.budget(F_val)
         if math.isinf(self._c):
             return None
         return math.ceil(self._c * F_val)
@@ -291,4 +340,4 @@ class BudgetedMaintainer:
             return stats
 
 
-__all__ = ["BudgetedMaintainer"]
+__all__ = ["BudgetedMaintainer", "RandomizedBudget"]
