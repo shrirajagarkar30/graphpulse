@@ -180,3 +180,79 @@ Thus $dist'[z] > dist[z]$, which proves $z \in A$. $\blacksquare$
    `find_affected` identifies the exact set of vertices whose shortest-path distance strictly increases in machine-independent cost:
    $$W_{\text{affected}} = 2 \cdot |A| \text{ (QUEUE)} + \sum_{x \in A} \deg^+(x) \text{ (SCAN)}$$
    This avoids touching any unaffected vertex outside the boundary of $A$.
+
+---
+
+## 7. Part 3: Correctness of Incremental Recomputation (Deletions)
+
+**Milestone 3.4: Recompute the Affected Region and Commit**
+
+This section proves the correctness of the local Dijkstra recomputation, boundary tight count updates, and tree re-parenting performed during incremental repair of edge deletions.
+
+### Theorem 6 (Strict Looseness of Boundary Edges)
+*Let $A$ be the affected set resulting from the deletion of an edge. For any edge $(x, z) \in E$ directed from an affected vertex $x \in A$ to a non-affected vertex $z \in V \setminus A$, $(x, z)$ cannot be tight under the post-update distance vector $dist'$:*
+$$dist'[x] + w(x, z) > dist'[z]$$
+
+#### Proof:
+By definition of the affected set $A$:
+1. For $x \in A$, the distance strictly increases: $dist'[x] > dist[x]$ (or $dist'[x] = \infty$).
+2. For $z \in V \setminus A$, the distance is unchanged: $dist'[z] = dist[z] < \infty$.
+3. The edge weight $w(x, z) \ge 1$ is unchanged.
+
+By the triangle inequality on the pre-update distances in $G$, $dist[x] + w(x, z) \ge dist[z]$.
+Substituting $dist'[x] > dist[x]$ and $dist'[z] = dist[z]$:
+$$dist'[x] + w(x, z) > dist[x] + w(x, z) \ge dist[z] = dist'[z]$$
+Hence:
+$$dist'[x] + w(x, z) > dist'[z]$$
+This inequality is strict. Therefore:
+- No edge from $A$ to $V \setminus A$ can be tight in $G'$.
+- Any edge $(x, z)$ with $x \in A$ and $z \notin A$ that was tight before the update ($dist[x] + w = dist[z]$) is strictly loose after the update.
+- No edge from $A$ to $V \setminus A$ can become newly tight. $\blacksquare$
+
+### Corollary 6.1 (Tight In-Counts for Non-Affected Vertices Only Decrease)
+*For every non-affected vertex $z \in V \setminus A$, its new tight in-count $tight'[z]$ is strictly less than or equal to its old tight in-count $tight[z]$, and is given exactly by:*
+$$tight'[z] = tight[z] - |\{ x \in A : (x, z) \in E_T \}| = scratch\_tight[z]$$
+
+#### Proof:
+The tight in-edges of $z$ in $G'$ satisfy $dist'[y] + w(y, z) = dist'[z]$.
+- By Theorem 6, no vertex $x \in A$ can provide a tight in-edge to $z$.
+- For any vertex $y \in V \setminus A$, both $dist'[y] = dist[y]$ and $dist'[z] = dist[z]$, so $(y, z)$ is tight in $G'$ if and only if it was tight in $G$.
+
+Thus, $z$ loses exactly those tight in-edges that originated from vertices in $A$.
+During `find_affected(state, g, v)`, every vertex $x \in A$ is dequeued, and every outgoing edge $(x, z)$ that was tight under $dist$ causes a decrement to $scratch\_tight[z]$.
+Since $z \notin A$, $scratch\_tight[z] > 0$ (otherwise $z$ would have lost all tight support and entered $A$).
+Therefore, applying $tight[z] = scratch\_tight[z]$ for all $z \in V \setminus A$ exactly restores the true tight count without scanning the in-edges of unaffected vertices outside the boundary. $\blacksquare$
+
+### Theorem 7 (Optimality of Restricted Dijkstra inside $A$)
+*Let $s \notin A$. Any path from $s$ to a vertex $x \in A$ in $G'$ must cross the boundary from $V \setminus A$ into $A$. Seeding each $a \in A$ with:*
+$$best\_cand[a] = \min \{ dist[y] + w(y, a) : y \in V \setminus A, (y, a) \in E, dist[y] \ne \infty \}$$
+*and running Dijkstra's algorithm restricted to relaxing edges within $A$ computes the exact shortest-path distance $dist'[x]$ for every $x \in A$.*
+
+#### Proof:
+Consider any optimal path $P'$ from $s$ to $x \in A$ in $G'$.
+Since $s \notin A$ and $x \in A$, path $P'$ must contain a first vertex $a \in A$.
+Let $(y, a)$ be the directed edge entering $a$ along $P'$.
+Since $a$ is the first vertex in $A$, $y \in V \setminus A$.
+Because $y \notin A$, $dist'[y] = dist[y]$.
+The subpath from $s$ to $y$ has length $dist'[y] = dist[y]$, so the prefix of $P'$ up to $a$ has length $dist[y] + w(y, a) \ge best\_cand[a]$.
+The remaining suffix of $P'$ from $a$ to $x$ lies entirely within $A$.
+Because edge weights are strictly positive ($w \ge 1$), Dijkstra's algorithm initialized with $dist'[a] = best\_cand[a]$ for all $a \in A$ and relaxing only edges $(u, v)$ with $u, v \in A$ is equivalent to running Dijkstra from an artificial source connected to each $a \in A$ with weight $best\_cand[a]$.
+By the standard optimality of Dijkstra on non-negative edge weights, the algorithm terminates with $dist'[x]$ equal to the exact shortest-path distance in $G'$ for all $x \in A$ (or $dist'[x] = \infty$ if no path reaches $x$). $\blacksquare$
+
+### Theorem 8 (Re-parenting and Structural Tree Invariants)
+*After distance recomputation:*
+1. *For each $x \in A$ with $dist'[x] < \infty$, scanning in-edges in $G'$ and choosing $parent'[x] = \min \{ y : dist'[y] + w(y, x) = dist'[x] \}$ yields a valid, deterministic tight parent.*
+2. *For each $z \in V \setminus A$ whose previous parent was in $A$ ($parent[z] \in A$), scanning in-edges of $z$ and choosing $parent'[z] = \min \{ y \in V \setminus A : dist'[y] + w(y, z) = dist'[z] \}$ restores a valid tight parent.*
+3. *Updating $children$ links for all changed parents ($A \cup \text{boundary}$) restores complete bidirectional consistency: $v \in children[u] \iff parent[v] = u$.*
+
+#### Proof:
+1. For $x \in A$: if $dist'[x] < \infty$, by Theorem 7 there exists at least one tight in-edge supporting $dist'[x]$. Scanning all in-edges $(y, x)$ identifies all such tight predecessors, and the minimum vertex ID is selected. If $dist'[x] = \infty$, $tight'[x] = 0$ and $parent'[x] = -1$.
+2. For $z \in V \setminus A$ with $parent[z] \in A$: by Theorem 6, the edge $(parent[z], z)$ is no longer tight. By Corollary 6.1, $tight'[z] \ge 1$, guaranteeing that at least one tight in-edge exists from some $y \in V \setminus A$. Scanning in-edges of $z$ finds all tight predecessors and selects the minimum ID.
+3. Vertices outside $A \cup \text{boundary}$ have unchanged distances and parents outside $A$, which remain tight. Updating children for $A \cup \text{boundary}$ updates all and only changed parent-child relationships, ensuring bidirectional consistency without modifying unrelated tree branches. $\blacksquare$
+
+### Work Complexity
+The work performed by `_repair_delete` is:
+$$W_{\text{repair}} = O(|A| + |E(A)| + |E(\partial A)|) + O(|A| \log |A|)$$
+where $E(A)$ are edges internal to $A$ and $E(\partial A)$ are edges incident to $A$ (in-edges from $V \setminus A$ and out-edges to $V \setminus A$).
+No work proportional to $|V|$ or $|E|$ is performed on the rest of the graph. When $|A| \ll |V|$, $W_{\text{repair}} \ll F$.
+

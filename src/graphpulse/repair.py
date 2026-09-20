@@ -23,7 +23,7 @@ from graphpulse.dijkstra import INF
 from graphpulse.generators import Update, apply_update
 from graphpulse.graph import DiGraph
 from graphpulse.maintainer import Maintainer, UpdateStats
-from graphpulse.opcount import OpCounter
+from graphpulse.opcount import CountedHeap, OpCounter
 from graphpulse.spt import SPTState
 
 
@@ -32,29 +32,31 @@ def find_affected(
     g: DiGraph,
     v: int,
     counter: OpCounter | None = None,
-) -> set[int]:
+    return_scratch: bool = False,
+) -> set[int] | tuple[set[int], dict[int, int]]:
     """Identify the exact set of vertices whose shortest-path distance changes.
 
     This function is pure: it never mutates *state* or *g*.
 
     Parameters
     ----------
-    state   : SPTState before the update.
-    g       : DiGraph after the edge removal/increase.
-    v       : Head of the updated edge that lost its sole tight in-edge.
-    counter : Optional OpCounter charging QUEUE (enqueue + dequeue) and SCAN
-              (out-edge examination).
+    state          : SPTState before the update.
+    g              : DiGraph after the edge removal/increase.
+    v              : Head of the updated edge that lost its sole tight in-edge.
+    counter        : Optional OpCounter charging QUEUE (enqueue + dequeue) and SCAN
+                     (out-edge examination).
+    return_scratch : If True, returns (A, scratch_tight). Otherwise returns A.
 
     Returns
     -------
-    set[int]
-        The exact set of affected vertices A.
+    set[int] or tuple[set[int], dict[int, int]]
+        The exact set of affected vertices A, optionally with scratch tight counts.
     """
     if counter is None:
         counter = OpCounter()
 
     if v == state.src or state.dist[v] == INF:
-        return set()
+        return (set(), {}) if return_scratch else set()
 
     A: set[int] = {v}
     queue: deque[int] = deque([v])
@@ -83,6 +85,8 @@ def find_affected(
                     queue.append(z)
                     counter.queue += 1  # Enqueue z
 
+    if return_scratch:
+        return A, scratch_tight
     return A
 
 
@@ -211,6 +215,126 @@ class RepairMaintainer:
             self._last_stats = stats
             return stats
 
-        # Sole tight edge lost (tight[v] <= 1): compute affected set for inspection
+        # Sole tight edge lost (tight[v] <= 1):
+        if update.kind == "delete":
+            return self._repair_delete(u, v)
+
+        # Fallback rebuild (for weight increases until Milestone 3.5)
         self.last_affected = find_affected(self._state, self._g, v)
         return self._rebuild()
+
+    def _repair_delete(self, u: int, v: int) -> UpdateStats:
+        """Incrementally repair the SPT after deletion of tight edge (u, v)
+        where v has sole tight in-edge (tight[v] <= 1).
+        """
+        counter = OpCounter()
+        # Certificate test examined the edge (u, v): charge 1 SCAN
+        counter.scan += 1
+
+        # Step 1: Identify affected set A and scratch decrements
+        A, scratch_tight = find_affected(
+            self._state, self._g, v, counter=counter, return_scratch=True
+        )
+        self.last_affected = A
+
+        if not A:
+            stats = UpdateStats(
+                work=counter.work,
+                scan=counter.scan,
+                push=counter.push,
+                pop=counter.pop,
+                queue=counter.queue,
+                strategy="repair",
+            )
+            self._last_stats = stats
+            return stats
+
+        # Identify boundary nodes (children outside A whose parent was in A)
+        # and record old parents for all nodes that might change parent
+        boundary_nodes = list({c for x in A for c in self._state.children[x] if c not in A})
+        old_parents: dict[int, int] = {x: self._state.parent[x] for x in A}
+        for z in boundary_nodes:
+            old_parents[z] = self._state.parent[z]
+
+        # Step 2: Initialize local Dijkstra for A
+        # For each x in A: set dist[x] = INF, parent[x] = -1
+        for x in A:
+            self._state.dist[x] = INF
+            self._state.parent[x] = -1
+
+        # Scan in-edges (y, x) with y not in A and dist[y] != INF; best candidate seeds heap
+        heap: CountedHeap[tuple[float, int]] = CountedHeap(counter)
+        for x in A:
+            best_cand: float = INF
+            for y, w in self._g.in_edges(x):
+                counter.scan += 1
+                if y not in A and self._state.dist[y] != INF:
+                    cand_d = self._state.dist[y] + w
+                    if cand_d < best_cand:
+                        best_cand = cand_d
+            if best_cand != INF:
+                self._state.dist[x] = best_cand
+                heap.push((best_cand, x))
+
+        # Step 3: Run Dijkstra restricted to A
+        while heap:
+            d, curr = heap.pop()
+            if d > self._state.dist[curr]:
+                continue  # Stale entry
+
+            for z, w in self._g.out_edges(curr):
+                counter.scan += 1
+                if z not in A:
+                    continue
+                new_d = self._state.dist[curr] + w
+                if new_d < self._state.dist[z]:
+                    self._state.dist[z] = new_d
+                    heap.push((new_d, z))
+
+        # Step 4: Recompute tight[x] and pick parent for every x in A
+        for x in A:
+            if self._state.dist[x] == INF:
+                self._state.tight[x] = 0
+                self._state.parent[x] = -1
+            else:
+                tight_preds: list[int] = []
+                for y, w in self._g.in_edges(x):
+                    counter.scan += 1
+                    if self._state.dist[y] != INF and self._state.dist[y] + w == self._state.dist[x]:
+                        tight_preds.append(y)
+                self._state.tight[x] = len(tight_preds)
+                self._state.parent[x] = min(tight_preds) if tight_preds else -1
+
+        # Step 5: Apply scratch decrements to tight[z] for z outside A
+        for z, remaining_tight in scratch_tight.items():
+            if z not in A:
+                self._state.tight[z] = remaining_tight
+
+        # Step 6: For each z outside A whose parent was in A, choose a new tight parent
+        for z in boundary_nodes:
+            tight_preds = []
+            for y, w in self._g.in_edges(z):
+                counter.scan += 1
+                if self._state.dist[y] != INF and self._state.dist[y] + w == self._state.dist[z]:
+                    tight_preds.append(y)
+            self._state.parent[z] = min(tight_preds) if tight_preds else -1
+
+        # Step 7: Rebuild children links for all changed parents
+        for node, old_p in old_parents.items():
+            new_p = self._state.parent[node]
+            if old_p != new_p:
+                if old_p != -1:
+                    self._state.children[old_p].discard(node)
+                if new_p != -1:
+                    self._state.children[new_p].add(node)
+
+        stats = UpdateStats(
+            work=counter.work,
+            scan=counter.scan,
+            push=counter.push,
+            pop=counter.pop,
+            queue=counter.queue,
+            strategy="repair",
+        )
+        self._last_stats = stats
+        return stats

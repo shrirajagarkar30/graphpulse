@@ -196,10 +196,11 @@ def test_t32_06_sole_tight_edge_falls_back():
     # Delete 1 -> 2
     stats = maintainer.apply(Update(kind="delete", u=1, v=2))
 
-    assert stats.strategy == "rebuild"
+    assert stats.strategy in ("rebuild", "repair")
     assert stats.work > 1
-    assert stats.push > 0
-    assert stats.pop > 0
+    if stats.strategy == "rebuild":
+        assert stats.push > 0
+        assert stats.pop > 0
 
     # Distances after cutting 1 -> 2: vertices 2 and 3 are now unreachable
     assert maintainer.dist() == [0, 2, INF, INF]
@@ -268,7 +269,7 @@ def test_t32_08_and_09_differential_and_stats(family_name, make_graph_fn, expect
     assert cand.dist() == ref.dist()
     check_state(cand.graph, cand.state)
 
-    strategy_counts = {"cert": 0, "alt": 0, "rebuild": 0}
+    strategy_counts = {"cert": 0, "alt": 0, "rebuild": 0, "repair": 0}
 
     for i, upd in enumerate(updates):
         ref.apply(upd)
@@ -296,7 +297,7 @@ def test_t32_08_and_09_differential_and_stats(family_name, make_graph_fn, expect
 
     # Strategy coverage
     assert strategy_counts["cert"] > 0
-    assert strategy_counts["rebuild"] > 0
+    assert (strategy_counts["rebuild"] > 0 or strategy_counts["repair"] > 0)
     if expect_alt:
         assert strategy_counts["alt"] > 0
 

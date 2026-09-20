@@ -825,14 +825,14 @@ Do NOT commit: `.hypothesis/`.
 
 **2. Objective.** Recompute distances only inside `A` and update all state consistently.
 
-**3. Tasks to Complete.**
-- [ ] For each `x` in `A`: set `dist[x] = INF`, then scan in-edges `(y, x)` with `y` not in `A` and `dist[y] != INF`; the best candidate `dist[y] + w` seeds the heap (PUSH).
-- [ ] Run Dijkstra restricted to `A` (relax only edges into `A`).
-- [ ] Recompute `tight[x]` for every `x` in `A` from scratch using final distances (scan in-edges, INF-guarded) and pick a new `parent`.
-- [ ] Apply the scratch decrements to `tight[z]` for `z` outside `A` (edges from `A` to `z` are no longer tight, because distances in `A` strictly increased).
-- [ ] For each `z` outside `A` whose parent was in `A`, choose a new tight parent among in-neighbors.
-- [ ] Rebuild `children` links for all changed parents.
-- [ ] Replace the rebuild fallback for this case; keep `rebuild` only where still needed.
+### 3. Tasks to Complete.
+- [x] For each `x` in `A`: set `dist[x] = INF`, then scan in-edges `(y, x)` with `y` not in `A` and `dist[y] != INF`; the best candidate `dist[y] + w` seeds the heap (PUSH).
+- [x] Run Dijkstra restricted to `A` (relax only edges into `A`).
+- [x] Recompute `tight[x]` for every `x` in `A` from scratch using final distances (scan in-edges, INF-guarded) and pick a new `parent`.
+- [x] Apply the scratch decrements to `tight[z]` for `z` outside `A` (edges from `A` to `z` are no longer tight, because distances in `A` strictly increased).
+- [x] For each `z` outside `A` whose parent was in `A`, choose a new tight parent among in-neighbors.
+- [x] Rebuild `children` links for all changed parents.
+- [x] Replace the rebuild fallback for this case; keep `rebuild` only where still needed.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_repair_delete.py`.
 
@@ -842,19 +842,19 @@ Do NOT commit: `.hypothesis/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.4-01 | Chain repair (positive) | g2 with a detour edge `0→3` | Delete `1→2` | Distances match a fresh Dijkstra; `check_state` passes | ☐ |
-| T3.4-02 | Disconnection (edge case) | Chain, delete `0→1` | Repair | Affected vertices `dist=INF`, `parent=-1`, `tight=0` | ☐ |
-| T3.4-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Repair | Correct; work is of the same order as a full Dijkstra | ☐ |
-| T3.4-04 | Non-affected child re-parented (edge case) | Vertex whose parent enters `A` but keeps another tight edge | Repair | New parent chosen from a non-affected tight in-neighbor | ☐ |
-| T3.4-05 | Small repair beats rebuild (validation) | Grid 30x30, delete a leaf-adjacent tight edge | Compare work | Repair work strictly less than `F` | ☐ |
-| T3.4-06 | Differential run (regression) | Harness | 5000 deletions across 3 families, seeds 0 to 4 | Zero mismatches; `check_state` after every step | ☐ |
-| T3.4-07 | Earlier behavior (regression) | Tests T3.2-01 to T3.2-09 | Re-run | Still pass | ☐ |
-| T3.4-08 | Deleting to empty (edge case) | Repeatedly delete until no edges | Run | State remains valid at every step | ☐ |
-| T3.4-09 | Nested diamonds (edge case) | Hand-built graph with chained diamonds | Delete an early edge | Matches oracle | ☐ |
+| T3.4-01 | Chain repair (positive) | g2 with a detour edge `0→3` | Delete `1→2` | Distances match a fresh Dijkstra; `check_state` passes | ☑ |
+| T3.4-02 | Disconnection (edge case) | Chain, delete `0→1` | Repair | Affected vertices `dist=INF`, `parent=-1`, `tight=0` | ☑ |
+| T3.4-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Repair | Correct; work is of the same order as a full Dijkstra | ☑ |
+| T3.4-04 | Non-affected child re-parented (edge case) | Vertex whose parent enters `A` but keeps another tight edge | Repair | New parent chosen from a non-affected tight in-neighbor | ☑ |
+| T3.4-05 | Small repair beats rebuild (validation) | Grid 30x30, delete a leaf-adjacent tight edge | Compare work | Repair work strictly less than `F` | ☑ |
+| T3.4-06 | Differential run (regression) | Harness | 5000 deletions across 3 families, seeds 0 to 4 | Zero mismatches; `check_state` after every step | ☑ |
+| T3.4-07 | Earlier behavior (regression) | Tests T3.2-01 to T3.2-09 | Re-run | Still pass | ☑ |
+| T3.4-08 | Deleting to empty (edge case) | Repeatedly delete until no edges | Run | State remains valid at every step | ☑ |
+| T3.4-09 | Nested diamonds (edge case) | Hand-built graph with chained diamonds | Delete an early edge | Matches oracle | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; 5000-update differential run is clean for five seeds.
-- [ ] Proof P1 part 3 written (non-affected counts only decrease) and reviewed by two members other than the author.
+- [x] All tests pass; 5000-update differential run is clean for five seeds.
+- [x] Proof P1 part 3 written (non-affected counts only decrease) and reviewed by two members other than the author.
 
 **8. Milestone Completion Criteria.** Zero mismatches on 25,000 total deletions; proof reviewed.
 
