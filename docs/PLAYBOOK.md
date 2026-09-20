@@ -376,19 +376,19 @@ Do NOT commit: `.hypothesis/`, caches.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.2-01 | Golden graphs (positive) | 0.2 files | Run on g1, g2, g3 | Distances equal the JSON (INF for vertex 4) | ☐ |
-| T1.2-02 | Single vertex (edge case) | `n=1` | Run | `dist=[0]` | ☐ |
-| T1.2-03 | Source has no out-edges (edge case) | Isolated source | Run | Everything else INF | ☐ |
-| T1.2-04 | Equal-cost paths (edge case) | g1 | Run | `dist[3]=2` regardless of the parent chosen | ☐ |
-| T1.2-05 | Very large weights (edge case) | Weights 10^12 | Run | Exact integer distances, no overflow | ☐ |
-| T1.2-06 | Bad source (negative) | n=4 | `src=4` and `src=-1` | Raises | ☐ |
-| T1.2-07 | Exact scan count (validation) | Random graph | Run | `scan == sum(outdeg(v) for reachable v)` | ☐ |
-| T1.2-08 | Heap balance (validation) | Random graph | Run | `push == pop`; `push <= 1 + scan` | ☐ |
-| T1.2-09 | Parents form a tree (integration) | Random graph | Follow parent chains | Every reachable vertex reaches the source; `dist[parent[v]] < dist[v]` | ☐ |
+| T1.2-01 | Golden graphs (positive) | 0.2 files | Run on g1, g2, g3 | Distances equal the JSON (INF for vertex 4) | ✅ |
+| T1.2-02 | Single vertex (edge case) | `n=1` | Run | `dist=[0]` | ✅ |
+| T1.2-03 | Source has no out-edges (edge case) | Isolated source | Run | Everything else INF | ✅ |
+| T1.2-04 | Equal-cost paths (edge case) | g1 | Run | `dist[3]=2` regardless of the parent chosen | ✅ |
+| T1.2-05 | Very large weights (edge case) | Weights 10^12 | Run | Exact integer distances, no overflow | ✅ |
+| T1.2-06 | Bad source (negative) | n=4 | `src=4` and `src=-1` | Raises | ✅ |
+| T1.2-07 | Exact scan count (validation) | Random graph | Run | `scan == sum(outdeg(v) for reachable v)` | ✅ |
+| T1.2-08 | Heap balance (validation) | Random graph | Run | `push == pop`; `push <= 1 + scan` | ✅ |
+| T1.2-09 | Parents form a tree (integration) | Random graph | Follow parent chains | Every reachable vertex reaches the source; `dist[parent[v]] < dist[v]` | ✅ |
 
 **7. Verification Checklist.**
-- [ ] T1.2-01 to T1.2-09 pass.
-- [ ] Counts for the golden graphs are written into `SPEC.md` as worked examples.
+- [x] T1.2-01 to T1.2-09 pass.
+- [x] Counts for the golden graphs are written into `SPEC.md` as worked examples (Section 6).
 
 **8. Milestone Completion Criteria.** Tests green; exact-count identities T1.2-07 and T1.2-08 hold on 100 random graphs.
 
