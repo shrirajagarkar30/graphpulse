@@ -326,18 +326,18 @@ Branch: `phase-1-baseline` (create from updated `main`)
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.1-01 | Initial state (positive) | New counter | Read fields | All zero | ☐ |
-| T1.1-02 | Push and pop counting (positive) | Counted heap | 5 pushes, 3 pops | `push=5`, `pop=3` | ☐ |
-| T1.1-03 | Heap order (property) | 200 random lists | Push all, pop all | Non-decreasing order | ☐ |
-| T1.1-04 | Pop from empty (negative) | Empty heap | `pop()` | `IndexError`; counters unchanged | ☐ |
-| T1.1-05 | Equal keys (edge case) | Items `(5,1)`, `(5,2)` | Push and pop | Both returned, no comparison error | ☐ |
-| T1.1-06 | Snapshot delta (positive) | Counter with activity | `s=snapshot()`, more ops, `since(s)` | Delta equals the extra ops only | ☐ |
-| T1.1-07 | Counter independence (validation) | Two counters | Increment one | Other stays zero | ☐ |
-| T1.1-08 | Work definitions (validation) | Counter with all four fields set | Read `dijkstra_work`, `work` | `work - dijkstra_work == queue` | ☐ |
+| T1.1-01 | Initial state (positive) | New counter | Read fields | All zero | ✅ |
+| T1.1-02 | Push and pop counting (positive) | Counted heap | 5 pushes, 3 pops | `push=5`, `pop=3` | ✅ |
+| T1.1-03 | Heap order (property) | 200 random lists | Push all, pop all | Non-decreasing order | ✅ |
+| T1.1-04 | Pop from empty (negative) | Empty heap | `pop()` | `IndexError`; counters unchanged | ✅ |
+| T1.1-05 | Equal keys (edge case) | Items `(5,1)`, `(5,2)` | Push and pop | Both returned, no comparison error | ✅ |
+| T1.1-06 | Snapshot delta (positive) | Counter with activity | `s=snapshot()`, more ops, `since(s)` | Delta equals the extra ops only | ✅ |
+| T1.1-07 | Counter independence (validation) | Two counters | Increment one | Other stays zero | ✅ |
+| T1.1-08 | Work definitions (validation) | Counter with all four fields set | Read `dijkstra_work`, `work` | `work - dijkstra_work == queue` | ✅ |
 
 **7. Verification Checklist.**
-- [ ] T1.1-01 to T1.1-08 pass; full suite green.
-- [ ] No global mutable counter exists (`grep -n "global" src/graphpulse/opcount.py` is empty).
+- [x] T1.1-01 to T1.1-08 pass; full suite green.
+- [x] No global mutable counter exists (`grep -n "global" src/graphpulse/opcount.py` is empty).
 
 **8. Milestone Completion Criteria.** Tests green; definitions match `SPEC.md` exactly.
 
