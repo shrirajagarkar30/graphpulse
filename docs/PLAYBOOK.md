@@ -427,19 +427,19 @@ Do NOT commit: benchmark output files.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.3-01 | Accepts correct output (positive) | Dijkstra results on golden graphs | `check_spt` | No exception | ☐ |
-| T1.3-02 | Rejects dist too small (mutation) | Correct result | Subtract 1 from one reachable `dist[v]` | `InvariantViolation` | ☐ |
-| T1.3-03 | Rejects dist too large (mutation) | Correct result | Add 1 to one `dist[v]` | Violation (fails condition b or c) | ☐ |
-| T1.3-04 | Rejects wrong parent (mutation) | Correct result | Point parent to a non-tight neighbor | Violation | ☐ |
-| T1.3-05 | Rejects reachable marked INF (mutation) | Correct result | Set a reachable `dist[v]=INF` | Violation | ☐ |
-| T1.3-06 | Oracle agreement (property) | Hypothesis, 300 random graphs | Compare with networkx | Identical distances | ☐ |
-| T1.3-07 | Unreachable vertices (edge case) | g3 | Check | Accepted only with INF and parent -1 | ☐ |
-| T1.3-08 | Message quality (failure handling) | Any mutation above | Read exception | Names the vertex or edge that failed | ☐ |
+| T1.3-01 | Accepts correct output (positive) | Dijkstra results on golden graphs | `check_spt` | No exception | ✅ |
+| T1.3-02 | Rejects dist too small (mutation) | Correct result | Subtract 1 from one reachable `dist[v]` | `InvariantViolation` | ✅ |
+| T1.3-03 | Rejects dist too large (mutation) | Correct result | Add 1 to one `dist[v]` | Violation (fails condition b or c) | ✅ |
+| T1.3-04 | Rejects wrong parent (mutation) | Correct result | Point parent to a non-tight neighbor | Violation | ✅ |
+| T1.3-05 | Rejects reachable marked INF (mutation) | Correct result | Set a reachable `dist[v]=INF` | Violation | ✅ |
+| T1.3-06 | Oracle agreement (property) | Hypothesis, 300 random graphs | Compare with networkx | Identical distances | ✅ |
+| T1.3-07 | Unreachable vertices (edge case) | g3 | Check | Accepted only with INF and parent -1 | ✅ |
+| T1.3-08 | Message quality (failure handling) | Any mutation above | Read exception | Names the vertex or edge that failed | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] Every mutation type in T1.3-02 to T1.3-05 is caught on 100 random graphs.
-- [ ] `bench_dijkstra.py` runs and prints the Dijkstra work; record the value in your notes.
+- [x] All eight tests pass.
+- [x] Every mutation type in T1.3-02 to T1.3-05 is caught on 100 random graphs.
+- [x] `bench_dijkstra.py` runs: 100×100 grid, F=39800 (SCAN=19800, PUSH=10000, POP=10000).
 
 **8. Milestone Completion Criteria.** Checker catches 100 percent of injected mutations; oracle agreement holds on 300 graphs.
 
@@ -461,11 +461,11 @@ Do NOT commit: `experiments/output/`, `.hypothesis/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 1.1, 1.2, 1.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
-| Overall verification | Dijkstra agrees with networkx on 300 random graphs; checker catches all mutations; scan and heap identities hold |
-| **Go/No-Go for Phase 2** | **GO only if** every test is green and the counter definitions match `SPEC.md` |
+| Tests passed | 49 / 49 |
+| Known issues | None |
+| Git commit hash | (see m1.3 tag) |
+| Overall verification | Dijkstra agrees with networkx on 300 random graphs; checker catches all mutations; scan and heap identities hold; bench: F=39800 on 100×100 grid |
+| **Go/No-Go for Phase 2** | **GO**: all tests green, counter definitions match SPEC.md |
 
 ```
 git checkout main && git pull origin main
