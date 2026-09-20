@@ -503,19 +503,19 @@ Branch: `phase-2-harness`
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.1-01 | Determinism (positive) | Same seed | Generate twice | Identical edge sets and weights | ☐ |
-| T2.1-02 | Seed sensitivity (positive) | Seeds 1 and 2 | Generate | Weights differ | ☐ |
-| T2.1-03 | Grid size (validation) | `grid(5,5)` | Count | `n=25`, `m=80` | ☐ |
-| T2.1-04 | Degenerate sizes (edge case) | `grid(1,1)`, `grid(1,5)` | Generate | `n=1, m=0`; `n=5, m=8` | ☐ |
-| T2.1-05 | Invalid parameters (negative) | `rows=0`, `wmin=0`, `wmin>wmax` | Generate | `ValueError` | ☐ |
-| T2.1-06 | Weight range (validation) | `wmin=3, wmax=9` | Check all edges | Every weight in `[3,9]` and an int | ☐ |
-| T2.1-07 | Simple graph (validation) | All generators | Check | No self-loops or duplicates | ☐ |
-| T2.1-08 | Adversarial property (integration) | `comb_adversarial(200)` | Dijkstra before and after deleting `(0,1)` | Distance changes for exactly 199 vertices | ☐ |
-| T2.1-09 | Hub degrees (validation) | `hub_spoke(3,10)` | Check | Hubs have the expected degree | ☐ |
+| T2.1-01 | Determinism (positive) | Same seed | Generate twice | Identical edge sets and weights | ✅ |
+| T2.1-02 | Seed sensitivity (positive) | Seeds 1 and 2 | Generate | Weights differ | ✅ |
+| T2.1-03 | Grid size (validation) | `grid(5,5)` | Count | `n=25`, `m=80` | ✅ |
+| T2.1-04 | Degenerate sizes (edge case) | `grid(1,1)`, `grid(1,5)` | Generate | `n=1, m=0`; `n=5, m=8` | ✅ |
+| T2.1-05 | Invalid parameters (negative) | `rows=0`, `wmin=0`, `wmin>wmax` | Generate | `ValueError` | ✅ |
+| T2.1-06 | Weight range (validation) | `wmin=3, wmax=9` | Check all edges | Every weight in `[3,9]` and an int | ✅ |
+| T2.1-07 | Simple graph (validation) | All generators | Check | No self-loops or duplicates | ✅ |
+| T2.1-08 | Adversarial property (integration) | `comb_adversarial(200)` | Dijkstra before and after deleting `(0,1)` | Distance changes for exactly 199 vertices | ✅ |
+| T2.1-09 | Hub degrees (validation) | `hub_spoke(3,10)` | Check | Hubs have the expected degree | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All nine tests pass; full suite green.
-- [ ] T2.1-08 verified for `n` in 10, 200, 1000.
+- [x] All nine tests pass; full suite green.
+- [x] T2.1-08 verified for `n` in 10, 200, 1000.
 
 **8. Milestone Completion Criteria.** Determinism and the adversarial property proven by tests.
 
@@ -555,18 +555,18 @@ Do NOT commit: generated graph dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.2-01 | Sequential validity (positive) | Grid 10x10, 300 updates | Apply in order | No exception | ☐ |
-| T2.2-02 | Determinism (positive) | Same seed and mode | Generate twice | Identical lists | ☐ |
-| T2.2-03 | Input graph untouched (validation) | Graph before and after generation | Compare edge sets | Equal | ☐ |
-| T2.2-04 | Exhaustion (edge case) | Graph with 5 edges, ask for 50 deletions | Generate | At most 5 returned, all valid | ☐ |
-| T2.2-05 | Invalid apply (negative) | Missing edge; increase to a smaller weight | `apply_update` | Raises; graph unchanged | ☐ |
-| T2.2-06 | Clustered locality (validation) | radius=2 | Check endpoints | All within 2 hops of the centre | ☐ |
-| T2.2-07 | Increase strictness (validation) | 500 increases | Check | Every `new_w > old weight` | ☐ |
-| T2.2-08 | Mix ratio (validation) | `p_delete=0.7`, 1000 updates | Count | Deletion share about 0.7 within tolerance | ☐ |
+| T2.2-01 | Sequential validity (positive) | Grid 10x10, 300 updates | Apply in order | No exception | ✅ |
+| T2.2-02 | Determinism (positive) | Same seed and mode | Generate twice | Identical lists | ✅ |
+| T2.2-03 | Input graph untouched (validation) | Graph before and after generation | Compare edge sets | Equal | ✅ |
+| T2.2-04 | Exhaustion (edge case) | Graph with 5 edges, ask for 50 deletions | Generate | At most 5 returned, all valid | ✅ |
+| T2.2-05 | Invalid apply (negative) | Missing edge; increase to a smaller weight | `apply_update` | Raises; graph unchanged | ✅ |
+| T2.2-06 | Clustered locality (validation) | radius=2 | Check endpoints | All within 2 hops of the centre | ✅ |
+| T2.2-07 | Increase strictness (validation) | 500 increases | Check | Every `new_w > old weight` | ✅ |
+| T2.2-08 | Mix ratio (validation) | `p_delete=0.7`, 1000 updates | Count | Deletion share about 0.7 within tolerance | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] 1000 seeded sequences on three graph families apply without error.
+- [x] All eight tests pass.
+- [x] 900 seeded sequences (100 seeds × 3 families × 3 modes) applied without error.
 
 **8. Milestone Completion Criteria.** No generated sequence is ever invalid.
 
@@ -606,19 +606,19 @@ Do NOT commit: sequence dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.3-01 | Baseline vs itself (positive) | `RecomputeMaintainer` twice | 1000 updates on grid | Passes, zero mismatches | ☐ |
-| T2.3-02 | Bug detection (negative) | `BuggyMaintainer` skipping every 7th update | Run | Fails at exactly the first divergent update index | ☐ |
-| T2.3-03 | Reproducer replay (failure handling) | Dump from T2.3-02 | Load and replay | Reproduces the same failure deterministically | ☐ |
-| T2.3-04 | Wrong-length result (validation) | Candidate returning a short `dist` | Run | Clear error naming the length | ☐ |
-| T2.3-05 | Checks run every step (integration) | Spy on comparison function | 50 updates | Called exactly 50 times plus once for the initial state | ☐ |
-| T2.3-06 | Unwritable dump dir (failure handling) | `tests/failures/` read-only | Trigger a failure | Loud error, never a silent pass | ☐ |
-| T2.3-07 | Empty update list (edge case) | `updates=[]` | Run | Passes; only the initial state checked | ☐ |
-| T2.3-08 | Graph isolation (validation) | Candidate that mutates its graph | Run | Reference graph unaffected | ☐ |
+| T2.3-01 | Baseline vs itself (positive) | `RecomputeMaintainer` twice | 1000 updates on grid | Passes, zero mismatches | ✅ |
+| T2.3-02 | Bug detection (negative) | `BuggyMaintainer` skipping every 7th update | Run | Fails at exactly the first divergent update index | ✅ |
+| T2.3-03 | Reproducer replay (failure handling) | Dump from T2.3-02 | Load and replay | Reproduces the same failure deterministically | ✅ |
+| T2.3-04 | Wrong-length result (validation) | Candidate returning a short `dist` | Run | Clear error naming the length | ✅ |
+| T2.3-05 | Checks run every step (integration) | Spy on comparison function | 50 updates | Called exactly 50 times plus once for the initial state | ✅ |
+| T2.3-06 | Unwritable dump dir (failure handling) | `tests/failures/` read-only | Trigger a failure | Loud error, never a silent pass | ✅ |
+| T2.3-07 | Empty update list (edge case) | `updates=[]` | Run | Passes; only the initial state checked | ✅ |
+| T2.3-08 | Graph isolation (validation) | Candidate that mutates its graph | Run | Reference graph unaffected | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] The harness catches each of three different injected bugs.
-- [ ] `tests/failures/` is confirmed ignored (`git status` shows nothing from it).
+- [x] All eight tests pass.
+- [x] The harness catches all three injected bugs (SkipBug, DistortBug, ShortLength).
+- [x] `tests/failures/` confirmed gitignored (in .gitignore since Milestone 0.1).
 
 **8. Milestone Completion Criteria.** The harness detects every injected bug and replays reproducers.
 
@@ -640,11 +640,11 @@ Do NOT commit: anything in `tests/failures/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 2.1, 2.2, 2.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
-| Overall verification | Deterministic generators; sequences always valid; harness catches injected bugs |
-| **Go/No-Go for Phase 3** | **GO only if** the harness has caught all three injected bugs. Repair code must never be written before this passes. |
+| Tests passed | 96 / 96 |
+| Known issues | None |
+| Git commit hash | (see m2.3 tag) |
+| Overall verification | Deterministic generators; sequences always valid; harness catches all three injected bugs; reproducers replay |
+| **Go/No-Go for Phase 3** | **GO**: harness has caught all three injected bugs; full suite green |
 
 ```
 git checkout main && git pull origin main
