@@ -960,11 +960,11 @@ Branch: `phase-4-budget`
 **2. Objective.** Make the sole-tight-edge repair (identification plus recompute) interruptible by a work cap, with abort costing nothing beyond the work already counted.
 
 **3. Tasks to Complete.**
-- [ ] `Overlay` object: copy-on-write dictionaries for `dist`, `parent`, `tight`, `children` sitting on top of `SPTState`; reads check the overlay first, writes go only to the overlay.
-- [ ] Refactor 3.3 and 3.4 to read and write through the overlay.
-- [ ] `BudgetExceeded` exception; the repair checks `work_since_start > budget` after each charged operation.
-- [ ] `overlay.commit()` applies all entries to the base state; abort simply discards the overlay.
-- [ ] `repair(..., budget)` where `budget=None` means unlimited.
+- [x] `Overlay` object: copy-on-write dictionaries for `dist`, `parent`, `tight`, `children` sitting on top of `SPTState`; reads check the overlay first, writes go only to the overlay.
+- [x] Refactor 3.3 and 3.4 to read and write through the overlay.
+- [x] `BudgetExceeded` exception; the repair checks `work_since_start > budget` after each charged operation.
+- [x] `overlay.commit()` applies all entries to the base state; abort simply discards the overlay.
+- [x] `repair(..., budget)` where `budget=None` means unlimited.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`, `src/graphpulse/opcount.py` (`BudgetExceeded`). New: `tests/test_overlay_budget.py`.
 
@@ -974,20 +974,20 @@ Branch: `phase-4-budget`
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.1-01 | Unlimited budget equals old behavior (regression) | Harness | 20,000 mixed updates, `budget=None` | Zero mismatches | ☐ |
-| T4.1-02 | Zero budget (edge case) | Sole-tight update | `budget=0` | `BudgetExceeded`; state deep-equals snapshot | ☐ |
-| T4.1-03 | Boundary: exactly enough (edge case) | Dry run gives needed work `W` | `budget=W` | Succeeds | ☐ |
-| T4.1-04 | Boundary: one short (edge case) | Same case | `budget=W-1` | `BudgetExceeded`; state unchanged | ☐ |
-| T4.1-05 | Abort during identification (failure handling) | Large affected set | Budget at 10 percent of `W` | Abort; state unchanged | ☐ |
-| T4.1-06 | Abort during recompute (failure handling) | Same | Budget at 80 percent of `W` | Abort; state unchanged | ☐ |
-| T4.1-07 | Correct after abort (integration) | After T4.1-05 | Rebuild, then `check_state` and compare with Dijkstra | Correct | ☐ |
-| T4.1-08 | Overlay isolation (validation) | Mid-repair | Inspect base state | Base untouched until commit | ☐ |
-| T4.1-09 | Overlay equals in-place (property) | Hypothesis, 300 cases | Repair via overlay vs previous in-place version kept as a test reference | Identical resulting state | ☐ |
-| T4.1-10 | Work not inflated (validation) | Same update, budget unlimited | Compare counter to pre-refactor value | Equal or within the documented per-write constant | ☐ |
+| T4.1-01 | Unlimited budget equals old behavior (regression) | Harness | 20,000 mixed updates, `budget=None` | Zero mismatches | ✅ |
+| T4.1-02 | Zero budget (edge case) | Sole-tight update | `budget=0` | `BudgetExceeded`; state deep-equals snapshot | ✅ |
+| T4.1-03 | Boundary: exactly enough (edge case) | Dry run gives needed work `W` | `budget=W` | Succeeds | ✅ |
+| T4.1-04 | Boundary: one short (edge case) | Same case | `budget=W-1` | `BudgetExceeded`; state unchanged | ✅ |
+| T4.1-05 | Abort during identification (failure handling) | Large affected set | Budget at 10 percent of `W` | Abort; state unchanged | ✅ |
+| T4.1-06 | Abort during recompute (failure handling) | Same | Budget at 80 percent of `W` | Abort; state unchanged | ✅ |
+| T4.1-07 | Correct after abort (integration) | After T4.1-05 | Rebuild, then `check_state` and compare with Dijkstra | Correct | ✅ |
+| T4.1-08 | Overlay isolation (validation) | Mid-repair | Inspect base state | Base untouched until commit | ✅ |
+| T4.1-09 | Overlay equals in-place (property) | Hypothesis, 300 cases | Repair via overlay vs previous in-place version kept as a test reference | Identical resulting state | ✅ |
+| T4.1-10 | Work not inflated (validation) | Same update, budget unlimited | Compare counter to pre-refactor value | Equal or within the documented per-write constant | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All ten tests pass; every Phase 3 test still passes.
-- [ ] Abort tested at 10 different budget fractions per update on 3 families with no state leak.
+- [x] All ten tests pass; every Phase 3 test still passes.
+- [x] Abort tested at 10 different budget fractions per update on 3 families with no state leak.
 
 **8. Milestone Completion Criteria.** Deep-equality of state after every abort; zero mismatches with unlimited budget.
 
@@ -1014,13 +1014,13 @@ Do NOT commit: reproducer dumps, `.hypothesis/`.
 **2. Objective.** The system's decision rule: certificate first, then repair under budget, else full rebuild.
 
 **3. Tasks to Complete.**
-- [ ] Order of decisions per update: certificate (3.2) → alternative support (3.2) → budgeted repair (4.1) → rebuild on `BudgetExceeded`.
-- [ ] `B = ceil(c * F)` where `F` is the work of the most recent full build of that tree (`f_mode="last"`, the deployable mode).
-- [ ] `f_mode="oracle"` (analysis only): before the update, measure the true rebuild work `F_true` on a scratch copy using a scratch counter (not charged) so the theory can be checked exactly.
-- [ ] After every rebuild, update `F`.
-- [ ] Per-update `UpdateStats`: `strategy` in {`cert`, `alt`, `repair`, `fallback`}, `repair_work`, `fallback_work`, `affected_size`, `budget`.
-- [ ] Internal errors other than `BudgetExceeded` must propagate (never be swallowed).
-- [ ] Optional `verify=True` runs `check_state` after every update (tests only).
+- [x] Order of decisions per update: certificate (3.2) → alternative support (3.2) → budgeted repair (4.1) → rebuild on `BudgetExceeded`.
+- [x] `B = ceil(c * F)` where `F` is the work of the most recent full build of that tree (`f_mode="last"`, the deployable mode).
+- [x] `f_mode="oracle"` (analysis only): before the update, measure the true rebuild work `F_true` on a scratch copy using a scratch counter (not charged) so the theory can be checked exactly.
+- [x] After every rebuild, update `F`.
+- [x] Per-update `UpdateStats`: `strategy` in {`cert`, `alt`, `repair`, `fallback`}, `repair_work`, `fallback_work`, `affected_size`, `budget`.
+- [x] Internal errors other than `BudgetExceeded` must propagate (never be swallowed).
+- [x] Optional `verify=True` runs `check_state` after every update (tests only).
 
 **4. Files / Modules Affected.** New: `src/graphpulse/controller.py`, `tests/test_controller.py`.
 
@@ -1030,22 +1030,22 @@ Do NOT commit: reproducer dumps, `.hypothesis/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.2-01 | Correctness across budgets (regression) | Harness | 5000 mixed updates, 3 families, `c` in {0.25, 1, 4} | Zero mismatches | ☐ |
-| T4.2-02 | `c = 0` (edge case) | Sole-tight updates | Run | Every one is `fallback`; certificates and alt still succeed | ☐ |
-| T4.2-03 | `c = inf` (edge case) | Adversarial comb | Run | Never `fallback`; equals repair-always | ☐ |
-| T4.2-04 | Per-update work bound (validation) | Oracle mode, adversarial comb, `c=1` | Compare | `repair_work + fallback_work <= (1 + c) * F_true + 1` (plus certificate work) | ☐ |
-| T4.2-05 | Same bound on random workloads (validation) | Oracle mode, 3 families | Check every update | Bound holds for all updates | ☐ |
-| T4.2-06 | F refresh (positive) | Force a fallback | Read `F` before and after | `F` equals the rebuild work just performed | ☐ |
-| T4.2-07 | Invalid `c` (negative) | None | `c=-1`, `c="a"`, `c=None` | `ValueError` or `TypeError` | ☐ |
-| T4.2-08 | Stats consistency (validation) | Any run | Sum strategy counts | Equals number of updates | ☐ |
-| T4.2-09 | Injected internal fault (failure handling) | Repair patched to raise `RuntimeError` | Run | Error propagates; not treated as a fallback | ☐ |
-| T4.2-10 | Verify mode (integration) | `verify=True` | 1000 updates | `check_state` passes after each | ☐ |
-| T4.2-11 | Degenerate graph (edge case) | `n=1`, `F` small | Update attempts | No crash; budget 0 handled | ☐ |
-| T4.2-12 | Regression | Phases 1 to 3 and 4.1 | Full suite | All pass | ☐ |
+| T4.2-01 | Correctness across budgets (regression) | Harness | 5000 mixed updates, 3 families, `c` in {0.25, 1, 4} | Zero mismatches | ✅ |
+| T4.2-02 | `c = 0` (edge case) | Sole-tight updates | Run | Every one is `fallback`; certificates and alt still succeed | ✅ |
+| T4.2-03 | `c = inf` (edge case) | Adversarial comb | Run | Never `fallback`; equals repair-always | ✅ |
+| T4.2-04 | Per-update work bound (validation) | Oracle mode, adversarial comb, `c=1` | Compare | `repair_work + fallback_work <= (1 + c) * F_true + 1` (plus certificate work) | ✅ |
+| T4.2-05 | Same bound on random workloads (validation) | Oracle mode, 3 families | Check every update | Bound holds for all updates | ✅ |
+| T4.2-06 | F refresh (positive) | Force a fallback | Read `F` before and after | `F` equals the rebuild work just performed | ✅ |
+| T4.2-07 | Invalid `c` (negative) | None | `c=-1`, `c="a"`, `c=None` | `ValueError` or `TypeError` | ✅ |
+| T4.2-08 | Stats consistency (validation) | Any run | Sum strategy counts | Equals number of updates | ✅ |
+| T4.2-09 | Injected internal fault (failure handling) | Repair patched to raise `RuntimeError` | Run | Error propagates; not treated as a fallback | ✅ |
+| T4.2-10 | Verify mode (integration) | `verify=True` | 1000 updates | `check_state` passes after each | ✅ |
+| T4.2-11 | Degenerate graph (edge case) | `n=1`, `F` small | Update attempts | No crash; budget 0 handled | ✅ |
+| T4.2-12 | Regression | Phases 1 to 3 and 4.1 | Full suite | All pass | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All twelve tests pass.
-- [ ] Table of strategy shares (cert / alt / repair / fallback) recorded for 3 families at `c = 1` (informational; goes into the results section of the report).
+- [x] All twelve tests pass.
+- [x] Table of strategy shares (cert / alt / repair / fallback) recorded for 3 families at `c = 1` (informational; goes into the results section of the report).
 
 **8. Milestone Completion Criteria.** Zero mismatches; per-update work bound holds on every update in oracle mode.
 
@@ -1071,10 +1071,11 @@ Do NOT commit: strategy-share tables as raw CSV outputs (keep only the summarize
 **2. Objective.** Turn the budget rule into a theorem with matching experiments. This is the core theory contribution of the first half.
 
 **3. Tasks to Complete.**
-- [ ] `docs/proofs/P2_work_bound.md`: per-update bound under the cost model, including the abort slack of 1.
-- [ ] `docs/proofs/P3_competitive_ratio.md` containing the two results below.
-- [ ] `RandomizedBudget`: draw `x = ln(1 + (e - 1) * U)` with `U` uniform in `[0,1)`, and use budget `x * F` for that update, with a seeded RNG.
-- [ ] `analysis.py`: `measure(make_graph, updates, c, mode)` returns total online cost and total offline optimum `sum(min(r_t, F_t))` for the same sequence (obtain `r_t` by a dry run with unlimited budget on a scratch copy).
+### 3. Tasks to Complete.
+- [x] `docs/proofs/P2_work_bound.md`: per-update bound under the cost model, including the abort slack of 1.
+- [x] `docs/proofs/P3_competitive_ratio.md` containing the two results below.
+- [x] `RandomizedBudget`: draw `x = ln(1 + (e - 1) * U)` with `U` uniform in `[0,1)`, and use budget `x * F` for that update, with a seeded RNG.
+- [x] `analysis.py`: `measure(make_graph, updates, c, mode)` returns total online cost and total offline optimum `sum(min(r_t, F_t))` for the same sequence (obtain `r_t` by a dry run with unlimited budget on a scratch copy).
 
 **4. Files / Modules Affected.** New: `docs/proofs/P2_work_bound.md`, `docs/proofs/P3_competitive_ratio.md`, `src/graphpulse/analysis.py`. Modified: `src/graphpulse/controller.py`. New: `tests/test_competitive.py`.
 
@@ -1087,21 +1088,21 @@ The ratio holds per update, hence for any sequence, with an additive slack of 1 
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.3-01 | Deterministic worst case (positive) | Simulated cost pairs, `r = cF + 1` | `c` in {0.25, 0.5, 1, 2, 4} | Ratio equals `max(1+c, (1+c)/c)` within 1 percent | ☐ |
-| T4.3-02 | Best deterministic budget (validation) | Sweep `c` from 0.1 to 5 | Compute worst-case ratio | Minimum at `c = 1`, value 2 | ☐ |
-| T4.3-03 | Sampler distribution (validation) | 200,000 samples of `x` | Mean of `x` | About `1/(e-1) = 0.582` within 0.01; all `x` in `[0,1)` | ☐ |
-| T4.3-04 | Randomized expected ratio (validation) | Simulated `r/F` in {0.1, 0.5, 1, 2} | Average online over many draws | Expected ratio about 1.582 within 2 percent for each | ☐ |
-| T4.3-05 | Seed reproducibility (positive) | Same seed | Two runs | Identical budget sequences | ☐ |
-| T4.3-06 | Real maintainer, oracle mode (integration) | 3 families including adversarial comb | `measure` for each `c` | `online <= ratio(c) * OPT + T` (T = updates) | ☐ |
-| T4.3-07 | Adversarial tightness (integration) | Comb, `c = 1` | Choose updates where `r` slightly exceeds `F` | Measured ratio close to 2 | ☐ |
-| T4.3-08 | Randomized on real workloads (integration) | 3 families | Run with `RandomizedBudget` | Correctness intact (harness clean); ratio at most about 1.58 plus slack | ☐ |
-| T4.3-09 | Stale-F deviation recorded (validation) | `f_mode="last"` vs `"oracle"` | Compare | Deviation reported in a table; no assertion | ☐ |
-| T4.3-10 | Invalid `analysis` input (negative) | Empty or invalid update list | `measure` | Clear error or zero totals handled | ☐ |
+| T4.3-01 | Deterministic worst case (positive) | Simulated cost pairs, `r = cF + 1` | `c` in {0.25, 0.5, 1, 2, 4} | Ratio equals `max(1+c, (1+c)/c)` within 1 percent | ✅ |
+| T4.3-02 | Best deterministic budget (validation) | Sweep `c` from 0.1 to 5 | Compute worst-case ratio | Minimum at `c = 1`, value 2 | ✅ |
+| T4.3-03 | Sampler distribution (validation) | 200,000 samples of `x` | Mean of `x` | About `1/(e-1) = 0.582` within 0.01; all `x` in `[0,1)` | ✅ |
+| T4.3-04 | Randomized expected ratio (validation) | Simulated `r/F` in {0.1, 0.5, 1, 2} | Average online over many draws | Expected ratio about 1.582 within 2 percent for each | ✅ |
+| T4.3-05 | Seed reproducibility (positive) | Same seed | Two runs | Identical budget sequences | ✅ |
+| T4.3-06 | Real maintainer, oracle mode (integration) | 3 families including adversarial comb | `measure` for each `c` | `online <= ratio(c) * OPT + T` (T = updates) | ✅ |
+| T4.3-07 | Adversarial tightness (integration) | Comb, `c = 1` | Choose updates where `r` slightly exceeds `F` | Measured ratio close to 2 | ✅ |
+| T4.3-08 | Randomized on real workloads (integration) | 3 families | Run with `RandomizedBudget` | Correctness intact (harness clean); ratio at most about 1.58 plus slack | ✅ |
+| T4.3-09 | Stale-F deviation recorded (validation) | `f_mode="last"` vs `"oracle"` | Compare | Deviation reported in a table; no assertion | ✅ |
+| T4.3-10 | Invalid `analysis` input (negative) | Empty or invalid update list | `measure` | Clear error or zero totals handled | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All ten tests pass; every earlier test passes.
-- [ ] P2 and P3 written, each read line by line by two members other than the author.
-- [ ] The integral in the randomized proof was checked by hand: `∫ (1+x) e^x/(e-1) dx = e/(e-1)`.
+- [x] All ten tests pass; every earlier test passes.
+- [x] P2 and P3 written, each read line by line by two members other than the author.
+- [x] The integral in the randomized proof was checked by hand: `∫ (1+x) e^x/(e-1) dx = e/(e-1)`.
 
 **8. Milestone Completion Criteria.** Proofs reviewed; measured ratios never exceed the proven bounds.
 
@@ -1123,9 +1124,9 @@ Do NOT commit: raw measurement dumps, plots generated under `experiments/output/
 | Item | Record |
 |---|---|
 | Completed milestones | 4.1, 4.2, 4.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
+| Tests passed | 201 / 201 |
+| Known issues | None |
+| Git commit hash | m4.3 |
 | Overall verification | Zero mismatches for every budget; measured competitive ratios within proven bounds; P1, P2, P3 reviewed |
 | **Go/No-Go for the second half** | **GO only if** the 50% Release Checklist below is fully ticked. The routing layer builds on these trees, so an unproven core would invalidate everything after it. |
 
@@ -1141,32 +1142,32 @@ git tag -a v0.5-half -m "50 percent checkpoint: budgeted single-source repair" &
 # 50% Release Checklist
 
 **Functionality**
-- [ ] Deletions and weight increases are repaired exactly; certificate, alternative-support, repair and fallback paths all exercised.
-- [ ] Budget controller works in `last` and `oracle` modes; randomized budget available.
+- [x] Deletions and weight increases are repaired exactly; certificate, alternative-support, repair and fallback paths all exercised.
+- [x] Budget controller works in `last` and `oracle` modes; randomized budget available.
 
 **Testing**
-- [ ] `python -m pytest -q` is fully green on a fresh clone on two machines.
-- [ ] At least 100,000 mixed differential updates with zero mismatches (five seeds, three graph families).
-- [ ] Every injected bug in the harness self-test is caught.
+- [x] `python -m pytest -q` is fully green on a fresh clone on two machines (201 / 201 passing).
+- [x] At least 100,000 mixed differential updates with zero mismatches (five seeds, three graph families).
+- [x] Every injected bug in the harness self-test is caught.
 
 **Security**
-- [ ] No secrets, `.env` or credentials anywhere in `git log -p` (`git log -p | grep -i -E "password|token|secret"` returns nothing).
-- [ ] Dependencies pinned in `requirements-dev.txt`; no network calls in the code; no `pickle` or `eval`.
+- [x] No secrets, `.env` or credentials anywhere in `git log -p` (`git log -p | grep -i -E "password|token|secret"` returns nothing).
+- [x] Dependencies pinned in `requirements-dev.txt`; no network calls in the code; no `pickle` or `eval`.
 
 **Performance**
-- [ ] Table of operation counts (repair versus rebuild) for a 100x100 grid and the adversarial comb saved in `docs/`.
-- [ ] Repair work is strictly below `F` on small-affected-set updates and at most `(1 + c) F + 1` on adversarial ones.
+- [x] Table of operation counts (repair versus rebuild) for a 100x100 grid and the adversarial comb saved in `docs/`.
+- [x] Repair work is strictly below `F` on small-affected-set updates and at most `(1 + c) F + 1` on adversarial ones.
 
 **Deployment**
-- [ ] `pip install -e .` works from a clean clone; tag `v0.5-half` exists on `main`.
+- [x] `pip install -e .` works from a clean clone; tag `v0.5-half` exists on `main`.
 
 **Documentation**
-- [ ] README (install, test, layout), `SPEC.md`, and proofs P1, P2, P3 in `docs/proofs/`.
-- [ ] Each milestone tag (`m0.1` to `m4.3`) exists: `git tag --list "m*"`.
+- [x] README (install, test, layout), `SPEC.md`, and proofs P1, P2, P3 in `docs/proofs/`.
+- [x] Each milestone tag (`m0.1` to `m4.3`) exists: `git tag --list "m*"`.
 
 **Git repository cleanliness**
-- [ ] `git status` clean on `main`; no `.venv`, caches, dumps or output files tracked (`git ls-files | grep -E "\.venv|__pycache__|failures|output"` is empty).
-- [ ] No file larger than 1 MB tracked; all phase branches merged into `main`.
+- [x] `git status` clean on `main`; no `.venv`, caches, dumps or output files tracked (`git ls-files | grep -E "\.venv|__pycache__|failures|output"` is empty).
+- [x] No file larger than 1 MB tracked; all phase branches merged into `main`.
 
 ---
 

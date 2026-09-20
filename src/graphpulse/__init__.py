@@ -1,5 +1,11 @@
 """GraphPulse-R: Certificate-Driven, Budgeted Reoptimization for Dynamic Delivery Routing."""
 
+from graphpulse.analysis import (
+    MeasurementResult,
+    measure,
+    theoretical_competitive_ratio,
+)
+from graphpulse.controller import BudgetedMaintainer, RandomizedBudget
 from graphpulse.dijkstra import dijkstra
 from graphpulse.generators import (
     Update,
@@ -41,6 +47,11 @@ __all__ = [
     "Maintainer",
     "RecomputeMaintainer",
     "RepairMaintainer",
+    "BudgetedMaintainer",
+    "RandomizedBudget",
+    "MeasurementResult",
+    "measure",
+    "theoretical_competitive_ratio",
     "find_affected",
     "HarnessMismatch",
     "run_differential",

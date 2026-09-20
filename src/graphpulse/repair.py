@@ -1,34 +1,195 @@
-"""Incremental shortest-path repair maintainer (Milestone 3.2).
+"""Incremental shortest-path repair maintainer and abortable overlay (Milestones 3.2-4.1).
 
 `RepairMaintainer` maintains an SPTState dynamically under non-decreasing
 updates (edge deletions and weight increases).
 
-In Milestone 3.2, cheap updates are resolved immediately:
+Updates are resolved in order:
 - Strategy 'cert': The updated edge was not tight (or pointed into source).
   Distances and tree structure are guaranteed invariant.  Cost: exactly 1 SCAN.
 - Strategy 'alt': The updated edge was tight, but the target vertex has
   alternative tight in-edges (tight[v] > 1).  tight[v] is decremented.
   If the edge was parent[v], in-edges of v are scanned to select the
   smallest-id tight in-neighbor as the new parent.
-- Strategy 'rebuild': Unhandled cases (sole tight edge lost) fall back to a
-  full from-scratch build using SPTState.build until Milestone 3.4 replaces
-  the fallback with bounded repair.
+- Strategy 'repair': Incremental repair using an `Overlay` copy-on-write wrapper
+  over `SPTState`. If a budget is specified and the operations performed exceed
+  the budget, `BudgetExceeded` is raised and the base state is untouched.
+  On completion, `overlay.commit()` writes changes into the base state.
 """
 
 from __future__ import annotations
 
 from collections import deque
+from typing import Generic, TypeVar
 
 from graphpulse.dijkstra import INF
 from graphpulse.generators import Update, apply_update
 from graphpulse.graph import DiGraph
 from graphpulse.maintainer import Maintainer, UpdateStats
-from graphpulse.opcount import CountedHeap, OpCounter
+from graphpulse.opcount import BudgetExceeded, CountedHeap, OpCounter
 from graphpulse.spt import SPTState
+
+T = TypeVar("T")
+
+
+class DictOverlay(Generic[T]):
+    """Copy-on-write mapping over a base list."""
+
+    __slots__ = ("_base", "_dirty")
+
+    def __init__(self, base: list[T]) -> None:
+        self._base = base
+        self._dirty: dict[int, T] = {}
+
+    def __getitem__(self, idx: int) -> T:
+        if idx in self._dirty:
+            return self._dirty[idx]
+        return self._base[idx]
+
+    def __setitem__(self, idx: int, val: T) -> None:
+        self._dirty[idx] = val
+
+    def get(self, idx: int, default: T | None = None) -> T:
+        if idx in self._dirty:
+            return self._dirty[idx]
+        if 0 <= idx < len(self._base):
+            return self._base[idx]
+        return default
+
+    def __contains__(self, idx: object) -> bool:
+        if isinstance(idx, int) and 0 <= idx < len(self._base):
+            return True
+        return False
+
+    def __len__(self) -> int:
+        return len(self._base)
+
+    def commit(self) -> None:
+        """Apply all dirty modifications back to the base list."""
+        for idx, val in self._dirty.items():
+            self._base[idx] = val
+
+
+class ChildSetProxy:
+    """Proxy for a children set of a specific vertex with copy-on-write semantics."""
+
+    __slots__ = ("_overlay", "_u")
+
+    def __init__(self, overlay: ChildrenOverlay, u: int) -> None:
+        self._overlay = overlay
+        self._u = u
+
+    def _ensure_copy(self) -> set[int]:
+        if self._u not in self._overlay._dirty:
+            self._overlay._dirty[self._u] = set(self._overlay._base[self._u])
+        return self._overlay._dirty[self._u]
+
+    def add(self, v: int) -> None:
+        self._ensure_copy().add(v)
+
+    def discard(self, v: int) -> None:
+        self._ensure_copy().discard(v)
+
+    def remove(self, v: int) -> None:
+        self._ensure_copy().remove(v)
+
+    def __iter__(self):
+        if self._u in self._overlay._dirty:
+            return iter(self._overlay._dirty[self._u])
+        return iter(self._overlay._base[self._u])
+
+    def __contains__(self, v: object) -> bool:
+        if self._u in self._overlay._dirty:
+            return v in self._overlay._dirty[self._u]
+        return v in self._overlay._base[self._u]
+
+    def __len__(self) -> int:
+        if self._u in self._overlay._dirty:
+            return len(self._overlay._dirty[self._u])
+        return len(self._overlay._base[self._u])
+
+    def copy(self) -> set[int]:
+        if self._u in self._overlay._dirty:
+            return set(self._overlay._dirty[self._u])
+        return set(self._overlay._base[self._u])
+
+
+class ChildrenOverlay:
+    """Copy-on-write mapping for children adjacency sets."""
+
+    __slots__ = ("_base", "_dirty")
+
+    def __init__(self, base: list[set[int]]) -> None:
+        self._base = base
+        self._dirty: dict[int, set[int]] = {}
+
+    def __getitem__(self, u: int) -> ChildSetProxy:
+        return ChildSetProxy(self, u)
+
+    def __setitem__(self, u: int, new_set: set[int]) -> None:
+        self._dirty[u] = set(new_set)
+
+    def __len__(self) -> int:
+        return len(self._base)
+
+    def commit(self) -> None:
+        """Apply all modified child sets back to the base list."""
+        for u, s in self._dirty.items():
+            self._base[u] = s
+
+
+class Overlay:
+    """Copy-on-write overlay sitting on top of SPTState.
+
+    Reads check the overlay first, falling back to base SPTState.
+    Writes go strictly to the overlay's dirty dictionaries.
+    Calling commit() applies all dirty entries to the base state.
+    Discarding the overlay leaves base state completely untouched.
+    """
+
+    __slots__ = ("_base", "dist", "parent", "tight", "children")
+
+    def __init__(self, base: SPTState) -> None:
+        self._base = base
+        self.dist = DictOverlay(base.dist)
+        self.parent = DictOverlay(base.parent)
+        self.tight = DictOverlay(base.tight)
+        self.children = ChildrenOverlay(base.children)
+
+    @property
+    def base(self) -> SPTState:
+        """Reference to the underlying base SPTState."""
+        return self._base
+
+    @property
+    def src(self) -> int:
+        """Source vertex."""
+        return self._base.src
+
+    @property
+    def F(self) -> int:
+        """Work of full rebuild."""
+        return self._base.F
+
+    def commit(self) -> None:
+        """Apply all overlaid modifications to the underlying SPTState."""
+        self.dist.commit()
+        self.parent.commit()
+        self.tight.commit()
+        self.children.commit()
+
+    @property
+    def has_changes(self) -> bool:
+        """Return True if any entry has been written to the overlay."""
+        return bool(
+            self.dist._dirty
+            or self.parent._dirty
+            or self.tight._dirty
+            or self.children._dirty
+        )
 
 
 def find_affected(
-    state: SPTState,
+    state: SPTState | Overlay,
     g: DiGraph,
     v: int,
     counter: OpCounter | None = None,
@@ -36,11 +197,11 @@ def find_affected(
 ) -> set[int] | tuple[set[int], dict[int, int]]:
     """Identify the exact set of vertices whose shortest-path distance changes.
 
-    This function is pure: it never mutates *state* or *g*.
+    This function is pure with respect to *state* and *g*.
 
     Parameters
     ----------
-    state          : SPTState before the update.
+    state          : SPTState or Overlay before the update.
     g              : DiGraph after the edge removal/increase.
     v              : Head of the updated edge that lost its sole tight in-edge.
     counter        : Optional OpCounter charging QUEUE (enqueue + dequeue) and SCAN
@@ -90,9 +251,144 @@ def find_affected(
     return A
 
 
+def repair(
+    state: SPTState,
+    g: DiGraph,
+    u: int,
+    v: int,
+    budget: int | None = None,
+    counter: OpCounter | None = None,
+    affected_holder: list[set[int]] | None = None,
+) -> UpdateStats:
+    """Incrementally repair the SPT after deletion or weight increase of
+    tight edge (u, v) where v has sole tight in-edge (tight[v] <= 1).
+
+    If budget is not None and the repair work exceeds budget, BudgetExceeded
+    is raised and *state* is left completely unmodified.
+    On success, changes are committed to *state*.
+    """
+    if counter is None:
+        counter = OpCounter()
+
+    # Configure budget on counter (delta from current work)
+    counter.budget = budget
+    counter.start_work = counter.work
+
+    # Certificate test examined the edge (u, v): charge 1 SCAN
+    counter.scan += 1
+
+    overlay = Overlay(state)
+
+    # Step 1: Identify affected set A and scratch decrements
+    A, scratch_tight = find_affected(
+        overlay, g, v, counter=counter, return_scratch=True
+    )
+    if affected_holder is not None:
+        affected_holder.append(A)
+
+    if not A:
+        overlay.commit()
+        return UpdateStats(
+            work=counter.work,
+            scan=counter.scan,
+            push=counter.push,
+            pop=counter.pop,
+            queue=counter.queue,
+            strategy="repair",
+        )
+
+    # Step 2: Identify boundary nodes and record old parents
+    boundary_nodes = list({c for x in A for c in overlay.children[x] if c not in A})
+    old_parents: dict[int, int] = {x: overlay.parent[x] for x in A}
+    for z in boundary_nodes:
+        old_parents[z] = overlay.parent[z]
+
+    # Step 3: Initialize local Dijkstra for A
+    for x in A:
+        overlay.dist[x] = INF
+        overlay.parent[x] = -1
+
+    heap: CountedHeap[tuple[float, int]] = CountedHeap(counter)
+    for x in A:
+        best_cand: float = INF
+        for y, w in g.in_edges(x):
+            counter.scan += 1
+            if y not in A and overlay.dist[y] != INF:
+                cand_d = overlay.dist[y] + w
+                if cand_d < best_cand:
+                    best_cand = cand_d
+        if best_cand != INF:
+            overlay.dist[x] = best_cand
+            heap.push((best_cand, x))
+
+    # Step 4: Run Dijkstra restricted to A
+    while heap:
+        d, curr = heap.pop()
+        if d > overlay.dist[curr]:
+            continue  # Stale entry
+
+        for z, w in g.out_edges(curr):
+            counter.scan += 1
+            if z not in A:
+                continue
+            new_d = overlay.dist[curr] + w
+            if new_d < overlay.dist[z]:
+                overlay.dist[z] = new_d
+                heap.push((new_d, z))
+
+    # Step 5: Recompute tight[x] and pick parent for every x in A
+    for x in A:
+        if overlay.dist[x] == INF:
+            overlay.tight[x] = 0
+            overlay.parent[x] = -1
+        else:
+            tight_preds: list[int] = []
+            for y, w in g.in_edges(x):
+                counter.scan += 1
+                if overlay.dist[y] != INF and overlay.dist[y] + w == overlay.dist[x]:
+                    tight_preds.append(y)
+            overlay.tight[x] = len(tight_preds)
+            overlay.parent[x] = min(tight_preds) if tight_preds else -1
+
+    # Step 6: Apply scratch decrements to tight[z] for z outside A
+    for z, remaining_tight in scratch_tight.items():
+        if z not in A:
+            overlay.tight[z] = remaining_tight
+
+    # Step 7: For each z outside A whose parent was in A, choose a new tight parent
+    for z in boundary_nodes:
+        tight_preds = []
+        for y, w in g.in_edges(z):
+            counter.scan += 1
+            if overlay.dist[y] != INF and overlay.dist[y] + w == overlay.dist[z]:
+                tight_preds.append(y)
+        overlay.parent[z] = min(tight_preds) if tight_preds else -1
+
+    # Step 8: Rebuild children links for all changed parents
+    for node, old_p in old_parents.items():
+        new_p = overlay.parent[node]
+        if old_p != new_p:
+            if old_p != -1:
+                overlay.children[old_p].discard(node)
+            if new_p != -1:
+                overlay.children[new_p].add(node)
+
+    # Commit all changes to the underlying state
+    overlay.commit()
+
+    return UpdateStats(
+        work=counter.work,
+        scan=counter.scan,
+        push=counter.push,
+        pop=counter.pop,
+        queue=counter.queue,
+        strategy="repair",
+    )
+
+
 class RepairMaintainer:
     """Dynamic shortest-path maintainer with zero-work certificate, alternative
-    support, and fallback rebuild.
+    support, and abortable budgeted repair.
     """
 
     def __init__(self, g: DiGraph, src: int) -> None:
@@ -151,13 +447,21 @@ class RepairMaintainer:
         self._last_stats = stats
         return stats
 
-    def apply(self, update: Update) -> UpdateStats:
+    def apply(self, update: Update, budget: int | None = None) -> UpdateStats:
         """Apply an edge deletion or weight increase in-place.
+
+        Parameters
+        ----------
+        update : Update
+            Edge deletion or weight increase.
+        budget : int | None
+            Maximum allowed work for repair if update requires repair.
+            If exceeded, BudgetExceeded is raised and state is unchanged.
 
         Returns
         -------
         UpdateStats
-            Operation counts and strategy ('cert', 'alt', or 'rebuild').
+            Operation counts and strategy ('cert', 'alt', or 'repair').
         """
         u, v = update.u, update.v
         # Precondition check & extract old weight before mutation
@@ -177,7 +481,7 @@ class RepairMaintainer:
         dist_u = self._state.dist[u]
         dist_v = self._state.dist[v]
 
-        # Non-tight edge: unreachable u or dist[u] + old_w != dist[v]
+        # Non-tight edge: unreachable u or dist[u] + old_w != dist_v
         if dist_u == INF or dist_u + old_w != dist_v:
             self.last_affected = set()
             stats = UpdateStats(work=1, scan=1, strategy="cert")
@@ -216,124 +520,43 @@ class RepairMaintainer:
             return stats
 
         # Sole tight edge lost (tight[v] <= 1):
-        return self._repair(u, v)
+        return self._repair(u, v, budget=budget)
 
-    def _repair_delete(self, u: int, v: int) -> UpdateStats:
+    def _repair_delete(self, u: int, v: int, budget: int | None = None) -> UpdateStats:
         """Backward-compatible alias for _repair."""
-        return self._repair(u, v)
+        return self._repair(u, v, budget=budget)
 
-    def _repair(self, u: int, v: int) -> UpdateStats:
+    def _repair(self, u: int, v: int, budget: int | None = None) -> UpdateStats:
         """Incrementally repair the SPT after deletion or weight increase of
         tight edge (u, v) where v has sole tight in-edge (tight[v] <= 1).
         """
+        aff_holder: list[set[int]] = []
         counter = OpCounter()
-        # Certificate test examined the edge (u, v): charge 1 SCAN
-        counter.scan += 1
-
-        # Step 1: Identify affected set A and scratch decrements
-        A, scratch_tight = find_affected(
-            self._state, self._g, v, counter=counter, return_scratch=True
+        stats = repair(
+            self._state,
+            self._g,
+            u,
+            v,
+            budget=budget,
+            counter=counter,
+            affected_holder=aff_holder,
         )
-        self.last_affected = A
-
-        if not A:
-            stats = UpdateStats(
-                work=counter.work,
-                scan=counter.scan,
-                push=counter.push,
-                pop=counter.pop,
-                queue=counter.queue,
-                strategy="repair",
-            )
-            self._last_stats = stats
-            return stats
-
-        # Identify boundary nodes (children outside A whose parent was in A)
-        # and record old parents for all nodes that might change parent
-        boundary_nodes = list({c for x in A for c in self._state.children[x] if c not in A})
-        old_parents: dict[int, int] = {x: self._state.parent[x] for x in A}
-        for z in boundary_nodes:
-            old_parents[z] = self._state.parent[z]
-
-        # Step 2: Initialize local Dijkstra for A
-        # For each x in A: set dist[x] = INF, parent[x] = -1
-        for x in A:
-            self._state.dist[x] = INF
-            self._state.parent[x] = -1
-
-        # Scan in-edges (y, x) with y not in A and dist[y] != INF; best candidate seeds heap
-        heap: CountedHeap[tuple[float, int]] = CountedHeap(counter)
-        for x in A:
-            best_cand: float = INF
-            for y, w in self._g.in_edges(x):
-                counter.scan += 1
-                if y not in A and self._state.dist[y] != INF:
-                    cand_d = self._state.dist[y] + w
-                    if cand_d < best_cand:
-                        best_cand = cand_d
-            if best_cand != INF:
-                self._state.dist[x] = best_cand
-                heap.push((best_cand, x))
-
-        # Step 3: Run Dijkstra restricted to A
-        while heap:
-            d, curr = heap.pop()
-            if d > self._state.dist[curr]:
-                continue  # Stale entry
-
-            for z, w in self._g.out_edges(curr):
-                counter.scan += 1
-                if z not in A:
-                    continue
-                new_d = self._state.dist[curr] + w
-                if new_d < self._state.dist[z]:
-                    self._state.dist[z] = new_d
-                    heap.push((new_d, z))
-
-        # Step 4: Recompute tight[x] and pick parent for every x in A
-        for x in A:
-            if self._state.dist[x] == INF:
-                self._state.tight[x] = 0
-                self._state.parent[x] = -1
-            else:
-                tight_preds: list[int] = []
-                for y, w in self._g.in_edges(x):
-                    counter.scan += 1
-                    if self._state.dist[y] != INF and self._state.dist[y] + w == self._state.dist[x]:
-                        tight_preds.append(y)
-                self._state.tight[x] = len(tight_preds)
-                self._state.parent[x] = min(tight_preds) if tight_preds else -1
-
-        # Step 5: Apply scratch decrements to tight[z] for z outside A
-        for z, remaining_tight in scratch_tight.items():
-            if z not in A:
-                self._state.tight[z] = remaining_tight
-
-        # Step 6: For each z outside A whose parent was in A, choose a new tight parent
-        for z in boundary_nodes:
-            tight_preds = []
-            for y, w in self._g.in_edges(z):
-                counter.scan += 1
-                if self._state.dist[y] != INF and self._state.dist[y] + w == self._state.dist[z]:
-                    tight_preds.append(y)
-            self._state.parent[z] = min(tight_preds) if tight_preds else -1
-
-        # Step 7: Rebuild children links for all changed parents
-        for node, old_p in old_parents.items():
-            new_p = self._state.parent[node]
-            if old_p != new_p:
-                if old_p != -1:
-                    self._state.children[old_p].discard(node)
-                if new_p != -1:
-                    self._state.children[new_p].add(node)
-
-        stats = UpdateStats(
-            work=counter.work,
-            scan=counter.scan,
-            push=counter.push,
-            pop=counter.pop,
-            queue=counter.queue,
-            strategy="repair",
-        )
+        self.last_affected = aff_holder[0] if aff_holder else set()
         self._last_stats = stats
         return stats
+
+    def repair(self, u: int, v: int, budget: int | None = None) -> UpdateStats:
+        """Public alias for _repair."""
+        return self._repair(u, v, budget=budget)
+
+
+__all__ = [
+    "BudgetExceeded",
+    "DictOverlay",
+    "ChildSetProxy",
+    "ChildrenOverlay",
+    "Overlay",
+    "find_affected",
+    "repair",
+    "RepairMaintainer",
+]
