@@ -38,7 +38,24 @@ pip install -e . -r requirements-dev.txt
 
 ---
 
-## 3. Running Tests
+## 3. Running the Project
+
+### Interactive Demonstration & Tournament Benchmark
+Run the comprehensive interactive demo showcasing certificate checks, alternative support, budgeted repair, fallback rebuilds, and the tournament benchmark against naive recomputation:
+
+```bash
+python demo.py
+```
+*(or equivalently: `python -m graphpulse`)*
+
+### Run Benchmarks
+```bash
+python experiments/bench_dijkstra.py
+```
+
+---
+
+## 4. Running Tests
 
 ### Quick test loop (skips slow property tests)
 ```bash
