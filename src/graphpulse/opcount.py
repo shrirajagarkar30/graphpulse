@@ -29,6 +29,20 @@ class OpSnapshot:
         return self.scan + self.push + self.pop + self.queue
 
 
+class BudgetExceeded(Exception):
+    """Raised when an operation budget is exceeded during bounded repair."""
+
+    def __init__(
+        self,
+        message: str = "Operation budget exceeded",
+        budget: int | None = None,
+        work: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.budget = budget
+        self.work = work
+
+
 class OpCounter:
     """Explicit machine-independent operation counter.
 
@@ -39,13 +53,69 @@ class OpCounter:
     - queue: FIFO queue enqueues and dequeues during affected-set propagation
     """
 
-    __slots__ = ("scan", "push", "pop", "queue")
+    __slots__ = ("_scan", "_push", "_pop", "_queue", "budget", "start_work")
 
-    def __init__(self, scan: int = 0, push: int = 0, pop: int = 0, queue: int = 0) -> None:
-        self.scan: int = scan
-        self.push: int = push
-        self.pop: int = pop
-        self.queue: int = queue
+    def __init__(
+        self,
+        scan: int = 0,
+        push: int = 0,
+        pop: int = 0,
+        queue: int = 0,
+        budget: int | None = None,
+        start_work: int = 0,
+    ) -> None:
+        self._scan: int = scan
+        self._push: int = push
+        self._pop: int = pop
+        self._queue: int = queue
+        self.budget: int | None = budget
+        self.start_work: int = start_work
+
+    @property
+    def scan(self) -> int:
+        return self._scan
+
+    @scan.setter
+    def scan(self, val: int) -> None:
+        self._scan = val
+        self._check_budget()
+
+    @property
+    def push(self) -> int:
+        return self._push
+
+    @push.setter
+    def push(self, val: int) -> None:
+        self._push = val
+        self._check_budget()
+
+    @property
+    def pop(self) -> int:
+        return self._pop
+
+    @pop.setter
+    def pop(self, val: int) -> None:
+        self._pop = val
+        self._check_budget()
+
+    @property
+    def queue(self) -> int:
+        return self._queue
+
+    @queue.setter
+    def queue(self, val: int) -> None:
+        self._queue = val
+        self._check_budget()
+
+    def _check_budget(self) -> None:
+        if self.budget is not None:
+            delta = self.work - self.start_work
+            if delta > self.budget:
+                raise BudgetExceeded(
+                    f"Budget {self.budget} exceeded: work {delta}",
+                    budget=self.budget,
+                    work=delta,
+                )
 
     @property
     def dijkstra_work(self) -> int:

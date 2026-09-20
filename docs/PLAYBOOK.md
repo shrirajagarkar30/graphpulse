@@ -960,11 +960,11 @@ Branch: `phase-4-budget`
 **2. Objective.** Make the sole-tight-edge repair (identification plus recompute) interruptible by a work cap, with abort costing nothing beyond the work already counted.
 
 **3. Tasks to Complete.**
-- [ ] `Overlay` object: copy-on-write dictionaries for `dist`, `parent`, `tight`, `children` sitting on top of `SPTState`; reads check the overlay first, writes go only to the overlay.
-- [ ] Refactor 3.3 and 3.4 to read and write through the overlay.
-- [ ] `BudgetExceeded` exception; the repair checks `work_since_start > budget` after each charged operation.
-- [ ] `overlay.commit()` applies all entries to the base state; abort simply discards the overlay.
-- [ ] `repair(..., budget)` where `budget=None` means unlimited.
+- [x] `Overlay` object: copy-on-write dictionaries for `dist`, `parent`, `tight`, `children` sitting on top of `SPTState`; reads check the overlay first, writes go only to the overlay.
+- [x] Refactor 3.3 and 3.4 to read and write through the overlay.
+- [x] `BudgetExceeded` exception; the repair checks `work_since_start > budget` after each charged operation.
+- [x] `overlay.commit()` applies all entries to the base state; abort simply discards the overlay.
+- [x] `repair(..., budget)` where `budget=None` means unlimited.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`, `src/graphpulse/opcount.py` (`BudgetExceeded`). New: `tests/test_overlay_budget.py`.
 
@@ -974,20 +974,20 @@ Branch: `phase-4-budget`
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.1-01 | Unlimited budget equals old behavior (regression) | Harness | 20,000 mixed updates, `budget=None` | Zero mismatches | ☐ |
-| T4.1-02 | Zero budget (edge case) | Sole-tight update | `budget=0` | `BudgetExceeded`; state deep-equals snapshot | ☐ |
-| T4.1-03 | Boundary: exactly enough (edge case) | Dry run gives needed work `W` | `budget=W` | Succeeds | ☐ |
-| T4.1-04 | Boundary: one short (edge case) | Same case | `budget=W-1` | `BudgetExceeded`; state unchanged | ☐ |
-| T4.1-05 | Abort during identification (failure handling) | Large affected set | Budget at 10 percent of `W` | Abort; state unchanged | ☐ |
-| T4.1-06 | Abort during recompute (failure handling) | Same | Budget at 80 percent of `W` | Abort; state unchanged | ☐ |
-| T4.1-07 | Correct after abort (integration) | After T4.1-05 | Rebuild, then `check_state` and compare with Dijkstra | Correct | ☐ |
-| T4.1-08 | Overlay isolation (validation) | Mid-repair | Inspect base state | Base untouched until commit | ☐ |
-| T4.1-09 | Overlay equals in-place (property) | Hypothesis, 300 cases | Repair via overlay vs previous in-place version kept as a test reference | Identical resulting state | ☐ |
-| T4.1-10 | Work not inflated (validation) | Same update, budget unlimited | Compare counter to pre-refactor value | Equal or within the documented per-write constant | ☐ |
+| T4.1-01 | Unlimited budget equals old behavior (regression) | Harness | 20,000 mixed updates, `budget=None` | Zero mismatches | ✅ |
+| T4.1-02 | Zero budget (edge case) | Sole-tight update | `budget=0` | `BudgetExceeded`; state deep-equals snapshot | ✅ |
+| T4.1-03 | Boundary: exactly enough (edge case) | Dry run gives needed work `W` | `budget=W` | Succeeds | ✅ |
+| T4.1-04 | Boundary: one short (edge case) | Same case | `budget=W-1` | `BudgetExceeded`; state unchanged | ✅ |
+| T4.1-05 | Abort during identification (failure handling) | Large affected set | Budget at 10 percent of `W` | Abort; state unchanged | ✅ |
+| T4.1-06 | Abort during recompute (failure handling) | Same | Budget at 80 percent of `W` | Abort; state unchanged | ✅ |
+| T4.1-07 | Correct after abort (integration) | After T4.1-05 | Rebuild, then `check_state` and compare with Dijkstra | Correct | ✅ |
+| T4.1-08 | Overlay isolation (validation) | Mid-repair | Inspect base state | Base untouched until commit | ✅ |
+| T4.1-09 | Overlay equals in-place (property) | Hypothesis, 300 cases | Repair via overlay vs previous in-place version kept as a test reference | Identical resulting state | ✅ |
+| T4.1-10 | Work not inflated (validation) | Same update, budget unlimited | Compare counter to pre-refactor value | Equal or within the documented per-write constant | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All ten tests pass; every Phase 3 test still passes.
-- [ ] Abort tested at 10 different budget fractions per update on 3 families with no state leak.
+- [x] All ten tests pass; every Phase 3 test still passes.
+- [x] Abort tested at 10 different budget fractions per update on 3 families with no state leak.
 
 **8. Milestone Completion Criteria.** Deep-equality of state after every abort; zero mismatches with unlimited budget.
 
