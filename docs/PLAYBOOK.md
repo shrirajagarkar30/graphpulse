@@ -285,11 +285,11 @@ Do NOT commit: `.hypothesis/`, generated large-graph files.
 | Item | Record |
 |---|---|
 | Completed milestones | 0.1, 0.2, 0.3 |
-| Tests passed | ___ / ___ (run `python -m pytest -q`) |
-| Known issues | ___ |
-| Git commit hash | `git rev-parse --short HEAD` → ___ |
+| Tests passed | 18 / 18 (run `python -m pytest -q`) |
+| Known issues | None |
+| Git commit hash | `git rev-parse --short HEAD` → `b0e9df9` |
 | Overall verification | Clean clone installs and passes on 2 machines; spec signed off |
-| **Go/No-Go for Phase 1** | **GO only if** all tests are green, the spec has no open questions, and the branch is merged to `main` |
+| **Go/No-Go for Phase 1** | **GO**: all tests green, spec frozen, branch merged to `main` |
 
 ```
 git checkout main && git pull origin main
