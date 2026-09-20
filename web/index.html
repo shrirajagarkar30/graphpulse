@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraphPulse-R — Dynamic Graph Optimization Dashboard</title>
+  <meta name="description" content="Certificate-Driven, Budgeted Reoptimization for Dynamic Shortest Paths — Research Dashboard">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><circle cx='5' cy='12' r='3'/><circle cx='12' cy='5' r='3'/><circle cx='19' cy='12' r='3'/><circle cx='12' cy='19' r='3'/><path d='M5 12h14M12 5v14' stroke='%232563eb' stroke-width='2'/></svg>">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ====================================================================
+       LEFT SIDEBAR (Dark Navy)
+       ==================================================================== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="3"></circle>
+          <circle cx="18" cy="6" r="3"></circle>
+          <circle cx="12" cy="18" r="3"></circle>
+          <line x1="8.5" y1="7.5" x2="15.5" y2="7.5"></line>
+          <line x1="7.5" y1="8.5" x2="10.5" y2="15.5"></line>
+          <line x1="16.5" y1="8.5" x2="13.5" y2="15.5"></line>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">GraphPulse-R</div>
+        <div class="brand-subtitle">Dynamic Routing. Smarter Responses.</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <!-- Main Item -->
+      <div class="nav-item active" id="navDashboard">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Dashboard</span>
+      </div>
+
+      <!-- Section 1: Graph Engine (Implemented) -->
+      <div class="nav-section">
+        <div class="nav-section-title">GRAPH ENGINE (IMPLEMENTED)</div>
+        <div class="nav-item" id="navLoadGraph">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>Load Graph</span>
+        </div>
+        <div class="nav-item" id="navShortestPaths">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="6" y1="3" x2="6" y2="15"></line>
+            <circle cx="18" cy="6" r="3"></circle>
+            <circle cx="6" cy="18" r="3"></circle>
+            <path d="M18 9a9 9 0 0 1-9 9"></path>
+          </svg>
+          <span>Shortest Paths</span>
+        </div>
+        <div class="nav-item" id="navApplyUpdate">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <span>Apply Update</span>
+        </div>
+        <div class="nav-item" id="navVerification">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          <span>Verification</span>
+        </div>
+        <div class="nav-item" id="navAlgorithmLogs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Algorithm Logs</span>
+        </div>
+      </div>
+
+      <!-- Section 2: Routing Layer (Pending / Upcoming) -->
+      <div class="nav-section">
+        <div class="nav-section-title">ROUTING LAYER (PENDING)</div>
+        <div class="nav-item disabled" title="Coming in Phase 2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span>Delivery Stops</span>
+          <span class="nav-badge-pill">Phase 2</span>
+        </div>
+        <div class="nav-item disabled" title="Coming in Phase 2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+          <span>Route Optimization</span>
+          <span class="nav-badge-pill">Phase 2</span>
+        </div>
+        <div class="nav-item disabled" title="Coming in Phase 2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Comparisons</span>
+          <span class="nav-badge-pill">Phase 2</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar Footer Progress Widget -->
+    <div class="sidebar-footer">
+      <div class="progress-box">
+        <div class="progress-header">
+          <span>Project Progress</span>
+          <span style="color:#60a5fa; font-weight:700;">50%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-status-item">
+          <div class="status-dot active"></div>
+          <span>Shortest-Path Layer ✔</span>
+        </div>
+        <div class="progress-status-item">
+          <div class="status-dot upcoming"></div>
+          <span>Routing Layer (Next)</span>
+        </div>
+        <div class="progress-quote">
+          "Building the foundation for smarter delivery routing."
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====================================================================
+       MAIN CONTENT WRAPPER
+       ==================================================================== -->
+  <main class="main-wrapper">
+
+    <!-- Top Application Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="brand-icon" style="width:28px; height:28px; border-radius:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="5" cy="12" r="3"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h2 class="page-title">Dashboard</h2>
+      </div>
+
+      <div class="header-right">
+        <div class="badge-dev-mode">
+          <div class="pulse-dot"></div>
+          <span id="headerStatusText">Development Mode (50%)</span>
+        </div>
+
+        <div class="header-clock" id="headerClock">Sep 19, 2026 02:34 PM</div>
+
+        <button class="btn-header-demo" id="btnHeaderDemo" title="Launch guided faculty research walkthrough">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Research Demo</span>
+        </button>
+
+        <div class="btn-icon-circle" title="Theme Toggle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </div>
+
+        <div class="btn-icon-circle" title="User Profile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Body -->
+    <div class="dashboard-content">
+
+      <!-- Hero Header & Status Cards -->
+      <section class="hero-section">
+        <div class="hero-text">
+          <h1>Welcome to GraphPulse-R</h1>
+          <p>Analyze and maintain shortest paths under dynamic road updates.</p>
+        </div>
+
+        <div class="hero-cards-row">
+          <!-- Card 1: Current Phase -->
+          <div class="hero-card">
+            <div class="hero-card-icon blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+                <line x1="20" y1="9" x2="23" y2="9"></line>
+                <line x1="20" y1="14" x2="23" y2="14"></line>
+                <line x1="1" y1="9" x2="4" y2="9"></line>
+                <line x1="1" y1="14" x2="4" y2="14"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="hero-card-title">Current Phase</div>
+              <div class="hero-card-val">Phase 1–4: Shortest-Path Layer</div>
+              <div class="hero-card-sub">Routing layer coming in next phase</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Implemented Layer -->
+          <div class="hero-card" style="min-width:250px;">
+            <div class="hero-card-icon purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div style="font-size:11.5px; line-height:1.4;">
+              <div class="hero-card-title" style="color:#7c3aed;">Implemented (Phases 0–4)</div>
+              <div style="color:#334155; font-weight:600;">✔ Graph model & data structures</div>
+              <div style="color:#334155; font-weight:600;">✔ Counted Dijkstra & SPT state</div>
+              <div style="color:#334155; font-weight:600;">✔ Budgeted repair with fallback</div>
+              <div style="color:#334155; font-weight:600;">✔ Invariant state verifier</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Visualizer Grid -->
+      <div class="dashboard-grid">
+
+        <!-- Left: Main Canvas Panel -->
+        <div class="vis-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <h3 class="card-title">Road Network Visualization</h3>
+            </div>
+
+            <div class="card-actions">
+              <!-- Preset Selector -->
+              <select class="select-styled" id="presetSelect" title="Select abstract graph family">
+                <option value="grid">Grid Graph (6x6)</option>
+                <option value="comb">Adversarial Comb (30)</option>
+                <option value="hub_spoke">Hub-Spoke Graph (4 Hubs)</option>
+                <option value="random_sparse">Random Sparse (25 Nodes)</option>
+              </select>
+
+              <!-- View Switcher -->
+              <div class="btn-group-pill">
+                <button class="btn-pill active" id="btnViewNetwork">Network</button>
+                <button class="btn-pill" id="btnViewAlgo">Algorithm</button>
+              </div>
+
+              <!-- Extra Toggles -->
+              <button class="btn-pill" id="btnToggleWeights" style="background:#ffffff; border:1px solid #e2e8f0; color:#475569;" title="Toggle Edge Weight Labels">
+                Weights
+              </button>
+              <button class="btn-pill" id="btnToggleTree" style="background:#ffffff; border:1px solid #e2e8f0; color:#475569;" title="Toggle Non-Tree Edges">
+                Tree Only
+              </button>
+            </div>
+          </div>
+
+          <!-- Canvas Viewport -->
+          <div class="canvas-container">
+            <canvas id="graphCanvas"></canvas>
+
+            <!-- Legend Overlay -->
+            <div class="canvas-legend">
+              <div class="legend-item">
+                <div class="legend-line normal"></div>
+                <span>Normal Road</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-line shortest"></div>
+                <span>Shortest Path</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-line updated"></div>
+                <span>Updated Edge</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-line closed"></div>
+                <span>Closed Road</span>
+              </div>
+              <div class="legend-item" style="margin-top:2px;">
+                <div class="legend-dot source"></div>
+                <span>Source (S)</span>
+                <div class="legend-dot target" style="margin-left:6px;"></div>
+                <span>Target (T)</span>
+                <div class="legend-dot affected" style="margin-left:6px;"></div>
+                <span>Affected (A)</span>
+              </div>
+            </div>
+
+            <!-- Canvas Controls -->
+            <div class="canvas-controls-zoom">
+              <button class="btn-canvas-ctrl" id="btnZoomIn" title="Zoom In">+</button>
+              <button class="btn-canvas-ctrl" id="btnZoomOut" title="Zoom Out">−</button>
+            </div>
+
+            <!-- Reset View Button -->
+            <button class="canvas-reset-btn" id="btnResetView">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+              <span>Reset View</span>
+            </button>
+
+            <!-- Scale Indicator -->
+            <div class="canvas-scale-bar">
+              <div class="scale-ticks"></div>
+              <span>0&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;4 km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Control & Telemetry Column -->
+        <div class="right-column">
+
+          <!-- Card 1: Update Control -->
+          <div class="card">
+            <div class="card-header" style="padding:0 0 14px 0; border-bottom:1px solid #f1f5f9;">
+              <div class="card-title-group">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <h4 class="card-title" style="font-size:14.5px;">Update Control</h4>
+              </div>
+            </div>
+
+            <!-- Segmented Control -->
+            <div class="segmented-tabs" style="margin-top:14px;">
+              <button class="seg-tab active" id="tabCloseRoad">Close Road</button>
+              <button class="seg-tab" id="tabIncreaseWeight">Increase Weight</button>
+              <button class="seg-tab" id="tabResetGraph" title="Reset graph to pre-update state">Reset</button>
+            </div>
+
+            <!-- Form -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">From Node</label>
+                <input class="form-input" id="inputFromNode" type="number" value="12" placeholder="u">
+              </div>
+              <div class="form-group">
+                <label class="form-label">To Node</label>
+                <input class="form-input" id="inputToNode" type="number" value="27" placeholder="v">
+              </div>
+            </div>
+
+            <div class="form-row" id="groupWeightInput" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">New Edge Weight (Congestion)</label>
+                <input class="form-input" id="inputWeight" type="number" value="15" placeholder="weight > old_w">
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btnApplyUpdate">
+              <span>▶ Apply Update</span>
+            </button>
+
+            <!-- Live Decision Banner -->
+            <div class="decision-banner cert" id="decisionBanner" style="display:none;"></div>
+          </div>
+
+          <!-- Card 2: Current Shortest Path -->
+          <div class="card">
+            <div class="card-header" style="padding:0 0 12px 0; border-bottom:1px solid #f1f5f9;">
+              <div class="card-title-group">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <h4 class="card-title" style="font-size:14.5px;">Current Shortest Path</h4>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <div class="path-info-row">
+                <span class="path-info-label">Source</span>
+                <span class="path-info-val" id="valSourceNode" style="color:#059669;">Node 0</span>
+              </div>
+              <div class="path-info-row">
+                <span class="path-info-label">Target (Optional)</span>
+                <span class="path-info-val" id="valTargetNode" style="color:#dc2626;">Node 35</span>
+              </div>
+              <div class="path-info-row">
+                <span class="path-info-label">Distance</span>
+                <span class="path-info-val" id="valDistance">8.4 km</span>
+              </div>
+
+              <div style="margin-top:10px; font-size:11.5px; color:#64748b; font-weight:600;">PATH SEQUENCE:</div>
+              <div class="path-sequence-box" id="valPathSequence">
+                0 → 1 → 7 → 13 → 19 → 35
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Recent Updates -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div class="card-title-group">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <h4 class="card-title" style="font-size:14px;">Recent Updates</h4>
+              </div>
+              <a href="#" id="linkViewAllLogs" style="font-size:11.5px; color:#2563eb; text-decoration:none; font-weight:600;" onclick="window.LogsModal?.open(); return false;">View All</a>
+            </div>
+
+            <table class="recent-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Edge (u, v)</th>
+                  <th>Δ Weight</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="recentUpdatesTbody">
+                <tr>
+                  <td>1</td>
+                  <td><span class="badge-update-type close">Close</span></td>
+                  <td>(12, 27)</td>
+                  <td>—</td>
+                  <td>02:34 PM</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom Metric Cards (3 Columns) -->
+      <div class="bottom-grid">
+
+        <!-- Card 1: Algorithm Status -->
+        <div class="card">
+          <div class="card-title-group" style="margin-bottom:12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <h4 class="card-title" style="font-size:14.5px;">Algorithm Status</h4>
+          </div>
+
+          <div class="status-badge-ready">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Shortest-path engine ready</span>
+          </div>
+
+          <ul class="status-check-list">
+            <li class="status-check-item">
+              <span>Dijkstra (counted)</span>
+              <span class="check-icon">✔</span>
+            </li>
+            <li class="status-check-item">
+              <span>Incremental repair</span>
+              <span class="check-icon">✔</span>
+            </li>
+            <li class="status-check-item">
+              <span>Budget controller</span>
+              <span class="check-icon">✔</span>
+            </li>
+            <li class="status-check-item">
+              <span>Verifier</span>
+              <span class="check-icon">✔</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Performance (Last Run) -->
+        <div class="card">
+          <div class="card-title-group" style="margin-bottom:12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <h4 class="card-title" style="font-size:14.5px;">Performance (Last Run)</h4>
+          </div>
+
+          <div>
+            <div class="metric-row">
+              <span class="metric-label">Operations (repair)</span>
+              <span class="metric-val" id="valRepairOps">12,340</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Operations (fallback)</span>
+              <span class="metric-val" id="valFallbackOps">0</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Total operations</span>
+              <span class="metric-val" id="valTotalOps" style="color:#2563eb;">12,340</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Time (wall clock)</span>
+              <span class="metric-val" id="valWallTime">0.18 ms</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Result verified</span>
+              <span class="metric-val" id="badgeVerified" style="color:#10b981;">✔ Verified</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Next Steps (Phase 2) -->
+        <div class="card">
+          <div class="card-title-group" style="margin-bottom:12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <h4 class="card-title" style="font-size:14.5px;">Next Steps (50% Complete)</h4>
+          </div>
+
+          <ul class="next-steps-list">
+            <li class="next-step-item">
+              <div class="step-bullet"></div>
+              <span>Complete testing on larger graphs</span>
+            </li>
+            <li class="next-step-item">
+              <div class="step-bullet"></div>
+              <span>Integrate multi-source support</span>
+            </li>
+            <li class="next-step-item">
+              <div class="step-bullet"></div>
+              <span>Build distance matrix for delivery stops</span>
+            </li>
+            <li class="next-step-item">
+              <div class="step-bullet" style="background-color:#94a3b8;"></div>
+              <span>Implement Held-Karp routing (Phase 2)</span>
+            </li>
+            <li class="next-step-item">
+              <div class="step-bullet" style="background-color:#94a3b8;"></div>
+              <span>Add visualization and comparative analysis</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- ====================================================================
+     MODAL 1: State Inspector
+     ==================================================================== -->
+<div class="modal-overlay" id="inspectorModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div class="card-title-group">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <h3 class="modal-title">Algorithm State Inspector</h3>
+      </div>
+      <button class="modal-close" id="btnCloseInspector">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; margin-bottom:14px; gap:12px;">
+        <input class="form-input" id="inputSearchVertex" type="text" placeholder="Search by vertex ID (e.g. 12)..." style="max-width:280px;">
+        <button class="btn-primary" id="btnExportState" style="width:auto; padding:6px 14px; font-size:12px;">
+          ⬇ Export State (JSON)
+        </button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vertex (v)</th>
+            <th>dist[v]</th>
+            <th>parent[v]</th>
+            <th>tight[v]</th>
+            <th>Reachable</th>
+            <th>Children</th>
+            <th>Affected</th>
+          </tr>
+        </thead>
+        <tbody id="stateTableTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 2: Active Verification
+     ==================================================================== -->
+<div class="modal-overlay" id="verificationModal">
+  <div class="modal-container" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="card-title-group">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <polyline points="9 12 11 14 15 10"></polyline>
+        </svg>
+        <h3 class="modal-title">Invariant Verification (check_state)</h3>
+      </div>
+      <button class="modal-close" id="btnCloseVerification">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="verificationResultBox">
+        <div style="text-align:center; padding:20px; color:#64748b;">
+          Computing active verification against reference Dijkstra oracle...
+        </div>
+      </div>
+      <div style="margin-top:20px; text-align:right;">
+        <button class="btn-primary" id="btnRunVerification" style="display:inline-flex; width:auto;">
+          ⟲ Re-run Verification
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 3: Algorithm Audit Logs
+     ==================================================================== -->
+<div class="modal-overlay" id="logsModal">
+  <div class="modal-container" style="max-width:850px;">
+    <div class="modal-header">
+      <div class="card-title-group">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <h3 class="modal-title">Algorithm Audit Logs</h3>
+      </div>
+      <button class="modal-close" id="btnCloseLogs">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; margin-bottom:14px;">
+        <select class="select-styled" id="selectLogsFilter">
+          <option value="all">All Events</option>
+          <option value="cert">Certificate Hits Only</option>
+          <option value="alt">Alternative Support Only</option>
+          <option value="repair">Incremental Repairs Only</option>
+          <option value="fallback">Budget Fallbacks Only</option>
+        </select>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Time</th>
+            <th>Update</th>
+            <th>Strategy</th>
+            <th>Work (ops)</th>
+            <th>Counts (S/P/P/Q)</th>
+            <th>Wall Time</th>
+            <th>Verified</th>
+          </tr>
+        </thead>
+        <tbody id="logsTableTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODAL 4: Guided Research Walkthrough
+     ==================================================================== -->
+<div class="modal-overlay" id="demoModal">
+  <div class="modal-container" style="max-width:620px;">
+    <div class="modal-header" style="background:#f8fafc;">
+      <div class="card-title-group">
+        <span style="font-size:20px;">🎓</span>
+        <div>
+          <h3 class="modal-title">Faculty Research Walkthrough</h3>
+          <div id="demoStepNum" style="font-size:11.5px; color:#64748b; font-weight:600;">Step 1 of 11</div>
+        </div>
+      </div>
+      <button class="modal-close" id="btnCloseDemo">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px;">
+      <h4 id="demoStepTitle" style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:10px;">
+        1. Problem Formulation
+      </h4>
+      <p id="demoStepDesc" style="font-size:13.5px; color:#475569; line-height:1.6; margin-bottom:20px;">
+        Overview text...
+      </p>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:16px;">
+        <button class="btn-pill" id="btnDemoPrev" style="border:1px solid #cbd5e1; background:#ffffff; color:#334155;">
+          ← Previous
+        </button>
+        <button class="btn-primary" id="btnDemoNext" style="width:auto; padding:8px 20px;">
+          Next Step →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/api.js"></script>
+<script src="js/graph_renderer.js"></script>
+<script src="js/inspector.js"></script>
+<script src="js/logs.js"></script>
+<script src="js/demo_flow.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
