@@ -248,22 +248,22 @@ Do NOT commit: scratch files with paper calculations, temp copies of the golden 
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T0.3-01 | Add and query edges (positive) | Empty graph n=4 | Add 3 edges, query weight, out and in edges | Values match; `m == 3` | ☐ |
-| T0.3-02 | Remove edge (positive) | Graph with edge | `remove_edge` | Gone from both `out` and `inn`; `m` decreases | ☐ |
-| T0.3-03 | Duplicate edge (negative) | Edge exists | `add_edge` again | `ValueError` | ☐ |
-| T0.3-04 | Self-loop (negative) | Any graph | `add_edge(2,2,1)` | `ValueError` | ☐ |
-| T0.3-05 | Bad weights (validation) | Any graph | Weights 0, -3, 2.5, `True` | Each raises | ☐ |
-| T0.3-06 | Vertex out of range (validation) | n=4 | `add_edge(0,4,1)` and `add_edge(-1,2,1)` | `IndexError` or `ValueError` | ☐ |
-| T0.3-07 | Missing edge operations (failure handling) | Edge absent | `remove_edge`, `increase_weight` | `KeyError`; graph unchanged | ☐ |
-| T0.3-08 | Increase rules (validation) | Edge weight 5 | `increase_weight(...,5)`, `(...,3)`, `(...,9)` | First two raise; third sets weight 9 in both maps | ☐ |
-| T0.3-09 | Copy independence (edge case) | Graph | Copy, mutate copy | Original unchanged | ☐ |
-| T0.3-10 | Adjacency consistency (property test) | Hypothesis, 200 examples | Random sequences of valid operations | `out` and `inn` describe the same edge set after every step | ☐ |
-| T0.3-11 | Boundary sizes (edge case) | None | `n=0`, `n=1` with no edges; `n=100000` build with 200000 edges | No errors | ☐ |
-| T0.3-12 | Golden integration | 0.2 files | `from_json` on all three | Correct `n` and `m` | ☐ |
+| T0.3-01 | Add and query edges (positive) | Empty graph n=4 | Add 3 edges, query weight, out and in edges | Values match; `m == 3` | ✅ |
+| T0.3-02 | Remove edge (positive) | Graph with edge | `remove_edge` | Gone from both `out` and `inn`; `m` decreases | ✅ |
+| T0.3-03 | Duplicate edge (negative) | Edge exists | `add_edge` again | `ValueError` | ✅ |
+| T0.3-04 | Self-loop (negative) | Any graph | `add_edge(2,2,1)` | `ValueError` | ✅ |
+| T0.3-05 | Bad weights (validation) | Any graph | Weights 0, -3, 2.5, `True` | Each raises | ✅ |
+| T0.3-06 | Vertex out of range (validation) | n=4 | `add_edge(0,4,1)` and `add_edge(-1,2,1)` | `IndexError` or `ValueError` | ✅ |
+| T0.3-07 | Missing edge operations (failure handling) | Edge absent | `remove_edge`, `increase_weight` | `KeyError`; graph unchanged | ✅ |
+| T0.3-08 | Increase rules (validation) | Edge weight 5 | `increase_weight(...,5)`, `(...,3)`, `(...,9)` | First two raise; third sets weight 9 in both maps | ✅ |
+| T0.3-09 | Copy independence (edge case) | Graph | Copy, mutate copy | Original unchanged | ✅ |
+| T0.3-10 | Adjacency consistency (property test) | Hypothesis, 200 examples | Random sequences of valid operations | `out` and `inn` describe the same edge set after every step | ✅ |
+| T0.3-11 | Boundary sizes (edge case) | None | `n=0`, `n=1` with no edges; `n=100000` build with 200000 edges | No errors | ✅ |
+| T0.3-12 | Golden integration | 0.2 files | `from_json` on all three | Correct `n` and `m` | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All twelve tests pass and `pytest -q` for the whole repo is green.
-- [ ] No public method can leave `out` and `inn` inconsistent (confirmed by T0.3-10).
+- [x] All twelve tests pass and `pytest -q` for the whole repo is green.
+- [x] No public method can leave `out` and `inn` inconsistent (confirmed by T0.3-10).
 
 **8. Milestone Completion Criteria.** Tests green; a teammate not on this milestone reviewed `graph.py`.
 
