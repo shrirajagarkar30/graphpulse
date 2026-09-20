@@ -29,6 +29,10 @@ class UpdateStats:
     pop: int = 0
     queue: int = 0
     strategy: str = "rebuild"
+    repair_work: int = 0
+    fallback_work: int = 0
+    affected_size: int = 0
+    budget: int | None = None
 
 
 @runtime_checkable

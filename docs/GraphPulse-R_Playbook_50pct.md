@@ -1014,13 +1014,13 @@ Do NOT commit: reproducer dumps, `.hypothesis/`.
 **2. Objective.** The system's decision rule: certificate first, then repair under budget, else full rebuild.
 
 **3. Tasks to Complete.**
-- [ ] Order of decisions per update: certificate (3.2) → alternative support (3.2) → budgeted repair (4.1) → rebuild on `BudgetExceeded`.
-- [ ] `B = ceil(c * F)` where `F` is the work of the most recent full build of that tree (`f_mode="last"`, the deployable mode).
-- [ ] `f_mode="oracle"` (analysis only): before the update, measure the true rebuild work `F_true` on a scratch copy using a scratch counter (not charged) so the theory can be checked exactly.
-- [ ] After every rebuild, update `F`.
-- [ ] Per-update `UpdateStats`: `strategy` in {`cert`, `alt`, `repair`, `fallback`}, `repair_work`, `fallback_work`, `affected_size`, `budget`.
-- [ ] Internal errors other than `BudgetExceeded` must propagate (never be swallowed).
-- [ ] Optional `verify=True` runs `check_state` after every update (tests only).
+- [x] Order of decisions per update: certificate (3.2) → alternative support (3.2) → budgeted repair (4.1) → rebuild on `BudgetExceeded`.
+- [x] `B = ceil(c * F)` where `F` is the work of the most recent full build of that tree (`f_mode="last"`, the deployable mode).
+- [x] `f_mode="oracle"` (analysis only): before the update, measure the true rebuild work `F_true` on a scratch copy using a scratch counter (not charged) so the theory can be checked exactly.
+- [x] After every rebuild, update `F`.
+- [x] Per-update `UpdateStats`: `strategy` in {`cert`, `alt`, `repair`, `fallback`}, `repair_work`, `fallback_work`, `affected_size`, `budget`.
+- [x] Internal errors other than `BudgetExceeded` must propagate (never be swallowed).
+- [x] Optional `verify=True` runs `check_state` after every update (tests only).
 
 **4. Files / Modules Affected.** New: `src/graphpulse/controller.py`, `tests/test_controller.py`.
 
@@ -1030,22 +1030,22 @@ Do NOT commit: reproducer dumps, `.hypothesis/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T4.2-01 | Correctness across budgets (regression) | Harness | 5000 mixed updates, 3 families, `c` in {0.25, 1, 4} | Zero mismatches | ☐ |
-| T4.2-02 | `c = 0` (edge case) | Sole-tight updates | Run | Every one is `fallback`; certificates and alt still succeed | ☐ |
-| T4.2-03 | `c = inf` (edge case) | Adversarial comb | Run | Never `fallback`; equals repair-always | ☐ |
-| T4.2-04 | Per-update work bound (validation) | Oracle mode, adversarial comb, `c=1` | Compare | `repair_work + fallback_work <= (1 + c) * F_true + 1` (plus certificate work) | ☐ |
-| T4.2-05 | Same bound on random workloads (validation) | Oracle mode, 3 families | Check every update | Bound holds for all updates | ☐ |
-| T4.2-06 | F refresh (positive) | Force a fallback | Read `F` before and after | `F` equals the rebuild work just performed | ☐ |
-| T4.2-07 | Invalid `c` (negative) | None | `c=-1`, `c="a"`, `c=None` | `ValueError` or `TypeError` | ☐ |
-| T4.2-08 | Stats consistency (validation) | Any run | Sum strategy counts | Equals number of updates | ☐ |
-| T4.2-09 | Injected internal fault (failure handling) | Repair patched to raise `RuntimeError` | Run | Error propagates; not treated as a fallback | ☐ |
-| T4.2-10 | Verify mode (integration) | `verify=True` | 1000 updates | `check_state` passes after each | ☐ |
-| T4.2-11 | Degenerate graph (edge case) | `n=1`, `F` small | Update attempts | No crash; budget 0 handled | ☐ |
-| T4.2-12 | Regression | Phases 1 to 3 and 4.1 | Full suite | All pass | ☐ |
+| T4.2-01 | Correctness across budgets (regression) | Harness | 5000 mixed updates, 3 families, `c` in {0.25, 1, 4} | Zero mismatches | ✅ |
+| T4.2-02 | `c = 0` (edge case) | Sole-tight updates | Run | Every one is `fallback`; certificates and alt still succeed | ✅ |
+| T4.2-03 | `c = inf` (edge case) | Adversarial comb | Run | Never `fallback`; equals repair-always | ✅ |
+| T4.2-04 | Per-update work bound (validation) | Oracle mode, adversarial comb, `c=1` | Compare | `repair_work + fallback_work <= (1 + c) * F_true + 1` (plus certificate work) | ✅ |
+| T4.2-05 | Same bound on random workloads (validation) | Oracle mode, 3 families | Check every update | Bound holds for all updates | ✅ |
+| T4.2-06 | F refresh (positive) | Force a fallback | Read `F` before and after | `F` equals the rebuild work just performed | ✅ |
+| T4.2-07 | Invalid `c` (negative) | None | `c=-1`, `c="a"`, `c=None` | `ValueError` or `TypeError` | ✅ |
+| T4.2-08 | Stats consistency (validation) | Any run | Sum strategy counts | Equals number of updates | ✅ |
+| T4.2-09 | Injected internal fault (failure handling) | Repair patched to raise `RuntimeError` | Run | Error propagates; not treated as a fallback | ✅ |
+| T4.2-10 | Verify mode (integration) | `verify=True` | 1000 updates | `check_state` passes after each | ✅ |
+| T4.2-11 | Degenerate graph (edge case) | `n=1`, `F` small | Update attempts | No crash; budget 0 handled | ✅ |
+| T4.2-12 | Regression | Phases 1 to 3 and 4.1 | Full suite | All pass | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All twelve tests pass.
-- [ ] Table of strategy shares (cert / alt / repair / fallback) recorded for 3 families at `c = 1` (informational; goes into the results section of the report).
+- [x] All twelve tests pass.
+- [x] Table of strategy shares (cert / alt / repair / fallback) recorded for 3 families at `c = 1` (informational; goes into the results section of the report).
 
 **8. Milestone Completion Criteria.** Zero mismatches; per-update work bound holds on every update in oracle mode.
 

@@ -73,6 +73,11 @@ class SPTState:
             F_ops=self.F_ops,
         )
 
+    @property
+    def F(self) -> int:
+        """Alias for F_ops: total rebuild work."""
+        return self.F_ops
+
     @classmethod
     def build(cls, g: DiGraph, src: int, counter: OpCounter) -> "SPTState":
         """Build the SPT state from scratch.
