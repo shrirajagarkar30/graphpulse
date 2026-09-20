@@ -673,9 +673,9 @@ Vertices with a tight in-edge from an unaffected vertex keep their distance; tha
 **2. Objective.** The data structure repair operates on, with a from-scratch checker for it.
 
 **3. Tasks to Complete.**
-- [ ] `SPTState.build(g, src, counter)`: run Dijkstra, then compute `tight` and `children` by scanning in-edges.
-- [ ] Record `F_ops` = total rebuild work (Dijkstra plus the in-edge scan that computes `tight`), the cost of doing this build again.
-- [ ] Extend `verify.py` with `check_state(g, state)` that recomputes everything from scratch and compares.
+- [x] `SPTState.build(g, src, counter)`: run Dijkstra, then compute `tight` and `children` by scanning in-edges.
+- [x] Record `F_ops` = total rebuild work (Dijkstra plus the in-edge scan that computes `tight`), the cost of doing this build again.
+- [x] Extend `verify.py` with `check_state(g, state)` that recomputes everything from scratch and compares.
 
 **4. Files / Modules Affected.** New: `src/graphpulse/spt.py`, `tests/test_spt.py`. Modified: `src/graphpulse/verify.py`.
 
@@ -685,19 +685,19 @@ Vertices with a tight in-edge from an unaffected vertex keep their distance; tha
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.1-01 | Diamond (positive) | g1 | Build | `tight[3]==2`, `tight[1]==tight[2]==1` | ☐ |
-| T3.1-02 | Chain (positive) | g2 | Build | Every non-source `tight==1`; children form a path | ☐ |
-| T3.1-03 | Unreachable (edge case) | g3 | Build | Vertex 4: `tight=0`, `parent=-1`, not in any children set | ☐ |
-| T3.1-04 | INF guard (edge case) | Two unreachable vertices joined by an edge | Build | That edge is NOT counted as tight | ☐ |
-| T3.1-05 | Edge into source (edge case) | Cycle back to the source | Build | `tight[src]==0` | ☐ |
-| T3.1-06 | From-scratch equality (property) | Hypothesis, 300 graphs | Build then `check_state` | Passes | ☐ |
-| T3.1-07 | Corruption detected (mutation) | Correct state | Change one `tight` count; then one child link | `check_state` raises each time | ☐ |
-| T3.1-08 | F equals rebuild work (validation) | Random graph | Compare `F_ops` with a standalone counted Dijkstra | `F_ops == dijkstra_work + sum of in-degrees of reachable non-source vertices` | ☐ |
-| T3.1-09 | Parent/children consistency (validation) | Random graphs | Check | `v in children[parent[v]]` for every reachable non-source `v` | ☐ |
+| T3.1-01 | Diamond (positive) | g1 | Build | `tight[3]==2`, `tight[1]==tight[2]==1` | ☑ |
+| T3.1-02 | Chain (positive) | g2 | Build | Every non-source `tight==1`; children form a path | ☑ |
+| T3.1-03 | Unreachable (edge case) | g3 | Build | Vertex 4: `tight=0`, `parent=-1`, not in any children set | ☑ |
+| T3.1-04 | INF guard (edge case) | Two unreachable vertices joined by an edge | Build | That edge is NOT counted as tight | ☑ |
+| T3.1-05 | Edge into source (edge case) | Cycle back to the source | Build | `tight[src]==0` | ☑ |
+| T3.1-06 | From-scratch equality (property) | Hypothesis, 300 graphs | Build then `check_state` | Passes | ☑ |
+| T3.1-07 | Corruption detected (mutation) | Correct state | Change one `tight` count; then one child link | `check_state` raises each time | ☑ |
+| T3.1-08 | F equals rebuild work (validation) | Random graph | Compare `F_ops` with a standalone counted Dijkstra | `F_ops == dijkstra_work + sum of in-degrees of reachable non-source vertices` | ☑ |
+| T3.1-09 | Parent/children consistency (validation) | Random graphs | Check | `v in children[parent[v]]` for every reachable non-source `v` | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; regression: all Phase 1 and 2 tests still pass.
-- [ ] `docs/proofs/P1_repair_correctness.md` started with the definition of tight edges and the DAG claim.
+- [x] All tests pass; regression: all Phase 1 and 2 tests still pass.
+- [x] `docs/proofs/P1_repair_correctness.md` started with the definition of tight edges and the DAG claim.
 
 **8. Milestone Completion Criteria.** `check_state` accepts every built state and rejects every corruption.
 
@@ -724,11 +724,11 @@ Do NOT commit: `.hypothesis/`, notes outside `docs/`.
 **2. Objective.** A maintainer that is already **correct at every commit**: cheap cases handled, unhandled cases fall back to a rebuild until 3.4 replaces the fallback.
 
 **3. Tasks to Complete.**
-- [ ] `RepairMaintainer(g, src)` implementing the `Maintainer` protocol.
-- [ ] **Certificate 1 (non-tight):** if `dist[u] == INF` or `dist[u] + w != dist[v]` for the updated edge, distances are unchanged; charge exactly 1 SCAN and return.
-- [ ] **Alternative support:** edge is tight but `tight[v] > 1`. Decrement `tight[v]`; if `parent[v] == u`, scan in-edges of `v` (counted) and choose the smallest other tight in-neighbor as the new parent, updating `children`.
-- [ ] Otherwise call `_rebuild()` (full `SPTState.build`).
-- [ ] `UpdateStats` records strategy (`cert`, `alt`, `rebuild`) and work.
+- [x] `RepairMaintainer(g, src)` implementing the `Maintainer` protocol.
+- [x] **Certificate 1 (non-tight):** if `dist[u] == INF` or `dist[u] + w != dist[v]` for the updated edge, distances are unchanged; charge exactly 1 SCAN and return.
+- [x] **Alternative support:** edge is tight but `tight[v] > 1`. Decrement `tight[v]`; if `parent[v] == u`, scan in-edges of `v` (counted) and choose the smallest other tight in-neighbor as the new parent, updating `children`.
+- [x] Otherwise call `_rebuild()` (full `SPTState.build`).
+- [x] `UpdateStats` records strategy (`cert`, `alt`, `rebuild`) and work.
 
 **4. Files / Modules Affected.** New: `src/graphpulse/repair.py`, `tests/test_cert.py`. Modified: `src/graphpulse/maintainer.py` (stats type).
 
@@ -738,19 +738,19 @@ Do NOT commit: `.hypothesis/`, notes outside `docs/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.2-01 | Non-tight deletion (positive) | Diamond plus extra heavy edge | Delete the heavy edge | Strategy `cert`; state identical; work == 1 | ☐ |
-| T3.2-02 | Unreachable tail (edge case) | g3 with edge among unreachable vertices | Delete it | Certificate hit | ☐ |
-| T3.2-03 | Alternative support (positive) | g1 (`tight[3]=2`) | Delete `1→3` | `dist` unchanged; `tight[3]==1`; parent is 2; `check_state` passes | ☐ |
-| T3.2-04 | Alternative, edge was not the parent (edge case) | g1, parent of 3 is 1 | Delete `2→3` | Parent stays 1; `tight[3]==1` | ☐ |
-| T3.2-05 | Increase with alternative (positive) | g1 | Increase `1→3` | Same as T3.2-03 (edge no longer tight) | ☐ |
-| T3.2-06 | Sole tight edge falls back (integration) | g2 chain | Delete `1→2` | Strategy `rebuild`; distances correct | ☐ |
-| T3.2-07 | Edge into source (edge case) | Cycle to source | Delete it | Certificate hit | ☐ |
-| T3.2-08 | Differential run (regression) | 3.x harness | 2000 mixed updates on grid, random_sparse, hub_spoke | Zero mismatches; `check_state` after every update | ☐ |
-| T3.2-09 | Stats consistency (validation) | Same run | Sum strategy counts | Equals the number of updates | ☐ |
+| T3.2-01 | Non-tight deletion (positive) | Diamond plus extra heavy edge | Delete the heavy edge | Strategy `cert`; state identical; work == 1 | ☑ |
+| T3.2-02 | Unreachable tail (edge case) | g3 with edge among unreachable vertices | Delete it | Certificate hit | ☑ |
+| T3.2-03 | Alternative support (positive) | g1 (`tight[3]=2`) | Delete `1→3` | `dist` unchanged; `tight[3]==1`; parent is 2; `check_state` passes | ☑ |
+| T3.2-04 | Alternative, edge was not the parent (edge case) | g1, parent of 3 is 1 | Delete `2→3` | Parent stays 1; `tight[3]==1` | ☑ |
+| T3.2-05 | Increase with alternative (positive) | g1 | Increase `1→3` | Same as T3.2-03 (edge no longer tight) | ☑ |
+| T3.2-06 | Sole tight edge falls back (integration) | g2 chain | Delete `1→2` | Strategy `rebuild`; distances correct | ☑ |
+| T3.2-07 | Edge into source (edge case) | Cycle to source | Delete it | Certificate hit | ☑ |
+| T3.2-08 | Differential run (regression) | 3.x harness | 2000 mixed updates on grid, random_sparse, hub_spoke | Zero mismatches; `check_state` after every update | ☑ |
+| T3.2-09 | Stats consistency (validation) | Same run | Sum strategy counts | Equals the number of updates | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; Phase 1 and 2 tests still pass.
-- [ ] Report the certificate hit rate on a 30x30 grid with 1000 uniform deletions (informational, no fixed threshold).
+- [x] All tests pass; Phase 1 and 2 tests still pass.
+- [x] Report the certificate hit rate on a 30x30 grid with 1000 uniform deletions (informational, no fixed threshold): 71.30% (713/1000).
 
 **8. Milestone Completion Criteria.** Zero harness mismatches across 3 families with 2000 updates each.
 
@@ -776,9 +776,9 @@ Do NOT commit: harness reproducer dumps.
 **2. Objective.** Isolate and verify the hardest piece of logic before recomputing anything.
 
 **3. Tasks to Complete.**
-- [ ] Implement propagation: start with `A = {v}` (where `tight[v] == 1` and its sole tight edge was removed). For each `x` dequeued (QUEUE op), scan out-edges `(x, z)` (SCAN). If the edge is tight under the **old** distances and `z` not in `A`, decrement a *scratch* copy of `tight[z]`; when it reaches 0, add `z` to `A` and enqueue it.
-- [ ] The function is **pure**: it never modifies `SPTState`.
-- [ ] Wire it into `RepairMaintainer` only in a test harness (the rebuild fallback still performs the actual update).
+- [x] Implement propagation: start with `A = {v}` (where `tight[v] == 1` and its sole tight edge was removed). For each `x` dequeued (QUEUE op), scan out-edges `(x, z)` (SCAN). If the edge is tight under the **old** distances and `z` not in `A`, decrement a *scratch* copy of `tight[z]`; when it reaches 0, add `z` to `A` and enqueue it.
+- [x] The function is **pure**: it never modifies `SPTState`.
+- [x] Wire it into `RepairMaintainer` only in a test harness (the rebuild fallback still performs the actual update).
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_affected.py`.
 
@@ -788,19 +788,19 @@ Do NOT commit: harness reproducer dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.3-01 | Chain (positive) | g2, delete `1→2` | `find_affected` | `A == {2, 3}` | ☐ |
-| T3.3-02 | Disconnection (edge case) | Delete the only in-edge of a subtree | Find | `A` = whole subtree (these become INF) | ☐ |
-| T3.3-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Find | `\|A\| == 199` | ☐ |
-| T3.3-04 | Vertex with two tight parents survives (edge case) | Diamond below the deleted edge | Find | The shared vertex is **not** in `A` if a tight in-edge remains from an unaffected vertex | ☐ |
-| T3.3-05 | Purity (validation) | Snapshot of state | Call `find_affected` | State deep-equals snapshot | ☐ |
-| T3.3-06 | Oracle equality (property) | Hypothesis, 500 cases, deleting only edges with `tight[v]==1` | Compare `A` to `A_expected` | Equal | ☐ |
-| T3.3-07 | Source never affected (edge case) | Graph with cycles through the source | Find | Source not in `A` | ☐ |
-| T3.3-08 | Exact work (validation) | Any case | Read counter | `queue == 2*\|A\|` and `scan == sum(outdeg(x) for x in A)` | ☐ |
-| T3.3-09 | Cyclic graphs terminate (edge case) | Random graphs with cycles | Find | Terminates; equals oracle | ☐ |
+| T3.3-01 | Chain (positive) | g2, delete `1→2` | `find_affected` | `A == {2, 3}` | ☑ |
+| T3.3-02 | Disconnection (edge case) | Delete the only in-edge of a subtree | Find | `A` = whole subtree (these become INF) | ☑ |
+| T3.3-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Find | `\|A\| == 199` | ☑ |
+| T3.3-04 | Vertex with two tight parents survives (edge case) | Diamond below the deleted edge | Find | The shared vertex is **not** in `A` if a tight in-edge remains from an unaffected vertex | ☑ |
+| T3.3-05 | Purity (validation) | Snapshot of state | Call `find_affected` | State deep-equals snapshot | ☑ |
+| T3.3-06 | Oracle equality (property) | Hypothesis, 500 cases, deleting only edges with `tight[v]==1` | Compare `A` to `A_expected` | Equal | ☑ |
+| T3.3-07 | Source never affected (edge case) | Graph with cycles through the source | Find | Source not in `A` | ☑ |
+| T3.3-08 | Exact work (validation) | Any case | Read counter | `queue == 2*\|A\|` and `scan == sum(outdeg(x) for x in A)` | ☑ |
+| T3.3-09 | Cyclic graphs terminate (edge case) | Random graphs with cycles | Find | Terminates; equals oracle | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; earlier tests still pass.
-- [ ] Proof P1 part 2 written: "a vertex with a tight in-edge from an unaffected vertex keeps its distance; a vertex all of whose tight in-edges are lost has strictly larger distance."
+- [x] All tests pass; earlier tests still pass.
+- [x] Proof P1 part 2 written: "a vertex with a tight in-edge from an unaffected vertex keeps its distance; a vertex all of whose tight in-edges are lost has strictly larger distance."
 
 **8. Milestone Completion Criteria.** T3.3-06 passes on 500 cases with zero disagreement.
 
@@ -825,14 +825,14 @@ Do NOT commit: `.hypothesis/`.
 
 **2. Objective.** Recompute distances only inside `A` and update all state consistently.
 
-**3. Tasks to Complete.**
-- [ ] For each `x` in `A`: set `dist[x] = INF`, then scan in-edges `(y, x)` with `y` not in `A` and `dist[y] != INF`; the best candidate `dist[y] + w` seeds the heap (PUSH).
-- [ ] Run Dijkstra restricted to `A` (relax only edges into `A`).
-- [ ] Recompute `tight[x]` for every `x` in `A` from scratch using final distances (scan in-edges, INF-guarded) and pick a new `parent`.
-- [ ] Apply the scratch decrements to `tight[z]` for `z` outside `A` (edges from `A` to `z` are no longer tight, because distances in `A` strictly increased).
-- [ ] For each `z` outside `A` whose parent was in `A`, choose a new tight parent among in-neighbors.
-- [ ] Rebuild `children` links for all changed parents.
-- [ ] Replace the rebuild fallback for this case; keep `rebuild` only where still needed.
+### 3. Tasks to Complete.
+- [x] For each `x` in `A`: set `dist[x] = INF`, then scan in-edges `(y, x)` with `y` not in `A` and `dist[y] != INF`; the best candidate `dist[y] + w` seeds the heap (PUSH).
+- [x] Run Dijkstra restricted to `A` (relax only edges into `A`).
+- [x] Recompute `tight[x]` for every `x` in `A` from scratch using final distances (scan in-edges, INF-guarded) and pick a new `parent`.
+- [x] Apply the scratch decrements to `tight[z]` for `z` outside `A` (edges from `A` to `z` are no longer tight, because distances in `A` strictly increased).
+- [x] For each `z` outside `A` whose parent was in `A`, choose a new tight parent among in-neighbors.
+- [x] Rebuild `children` links for all changed parents.
+- [x] Replace the rebuild fallback for this case; keep `rebuild` only where still needed.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_repair_delete.py`.
 
@@ -842,19 +842,19 @@ Do NOT commit: `.hypothesis/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.4-01 | Chain repair (positive) | g2 with a detour edge `0→3` | Delete `1→2` | Distances match a fresh Dijkstra; `check_state` passes | ☐ |
-| T3.4-02 | Disconnection (edge case) | Chain, delete `0→1` | Repair | Affected vertices `dist=INF`, `parent=-1`, `tight=0` | ☐ |
-| T3.4-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Repair | Correct; work is of the same order as a full Dijkstra | ☐ |
-| T3.4-04 | Non-affected child re-parented (edge case) | Vertex whose parent enters `A` but keeps another tight edge | Repair | New parent chosen from a non-affected tight in-neighbor | ☐ |
-| T3.4-05 | Small repair beats rebuild (validation) | Grid 30x30, delete a leaf-adjacent tight edge | Compare work | Repair work strictly less than `F` | ☐ |
-| T3.4-06 | Differential run (regression) | Harness | 5000 deletions across 3 families, seeds 0 to 4 | Zero mismatches; `check_state` after every step | ☐ |
-| T3.4-07 | Earlier behavior (regression) | Tests T3.2-01 to T3.2-09 | Re-run | Still pass | ☐ |
-| T3.4-08 | Deleting to empty (edge case) | Repeatedly delete until no edges | Run | State remains valid at every step | ☐ |
-| T3.4-09 | Nested diamonds (edge case) | Hand-built graph with chained diamonds | Delete an early edge | Matches oracle | ☐ |
+| T3.4-01 | Chain repair (positive) | g2 with a detour edge `0→3` | Delete `1→2` | Distances match a fresh Dijkstra; `check_state` passes | ☑ |
+| T3.4-02 | Disconnection (edge case) | Chain, delete `0→1` | Repair | Affected vertices `dist=INF`, `parent=-1`, `tight=0` | ☑ |
+| T3.4-03 | Adversarial comb (integration) | `comb_adversarial(200)`, delete `(0,1)` | Repair | Correct; work is of the same order as a full Dijkstra | ☑ |
+| T3.4-04 | Non-affected child re-parented (edge case) | Vertex whose parent enters `A` but keeps another tight edge | Repair | New parent chosen from a non-affected tight in-neighbor | ☑ |
+| T3.4-05 | Small repair beats rebuild (validation) | Grid 30x30, delete a leaf-adjacent tight edge | Compare work | Repair work strictly less than `F` | ☑ |
+| T3.4-06 | Differential run (regression) | Harness | 5000 deletions across 3 families, seeds 0 to 4 | Zero mismatches; `check_state` after every step | ☑ |
+| T3.4-07 | Earlier behavior (regression) | Tests T3.2-01 to T3.2-09 | Re-run | Still pass | ☑ |
+| T3.4-08 | Deleting to empty (edge case) | Repeatedly delete until no edges | Run | State remains valid at every step | ☑ |
+| T3.4-09 | Nested diamonds (edge case) | Hand-built graph with chained diamonds | Delete an early edge | Matches oracle | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; 5000-update differential run is clean for five seeds.
-- [ ] Proof P1 part 3 written (non-affected counts only decrease) and reviewed by two members other than the author.
+- [x] All tests pass; 5000-update differential run is clean for five seeds.
+- [x] Proof P1 part 3 written (non-affected counts only decrease) and reviewed by two members other than the author.
 
 **8. Milestone Completion Criteria.** Zero mismatches on 25,000 total deletions; proof reviewed.
 
@@ -879,10 +879,10 @@ Do NOT commit: reproducer dumps, scratch proof drafts outside `docs/proofs/`.
 
 **2. Objective.** Complete the agreed update model.
 
-**3. Tasks to Complete.**
-- [ ] Route a tight increase with `tight[v] == 1` through the same identification and recompute as deletion, with the edge still present at its **new** weight.
-- [ ] The recompute step must treat `(u, v, w')` as an ordinary in-edge candidate for `v`.
-- [ ] After recompute, the edge may be tight again; the from-scratch `tight` recount for `A` handles that.
+### 3. Tasks to Complete.
+- [x] Route a tight increase with `tight[v] == 1` through the same identification and recompute as deletion, with the edge still present at its **new** weight.
+- [x] The recompute step must treat `(u, v, w')` as an ordinary in-edge candidate for `v`.
+- [x] After recompute, the edge may be tight again; the from-scratch `tight` recount for `A` handles that.
 
 **4. Files / Modules Affected.** Modified: `src/graphpulse/repair.py`. New: `tests/test_repair_increase.py`.
 
@@ -892,19 +892,19 @@ Do NOT commit: reproducer dumps, scratch proof drafts outside `docs/proofs/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.5-01 | Increase, edge stays best (positive) | Chain | Increase middle edge by 5 | All downstream distances rise by exactly 5 | ☐ |
-| T3.5-02 | Increase, alternative wins (positive) | Chain with detour | Increase past the detour | Distances use the detour; matches oracle | ☐ |
-| T3.5-03 | Non-tight increase (edge case) | Non-tight edge | Increase | Certificate hit, work == 1 | ☐ |
-| T3.5-04 | Tight with alternative (edge case) | Diamond | Increase one branch | No distance change; `tight` decremented | ☐ |
-| T3.5-05 | Edge becomes tight again (edge case) | Case from T3.5-01 | Check `tight` after | The increased edge is counted as tight for `v` | ☐ |
-| T3.5-06 | Invalid increase (negative) | Edge weight 5 | `increase(...,5)` | Rejected by `apply_update`; maintainer unchanged | ☐ |
-| T3.5-07 | Mixed differential run (regression) | Harness | 20,000 mixed updates, 3 families, `p_delete=0.5` | Zero mismatches | ☐ |
-| T3.5-08 | Deletion tests (regression) | 3.4 tests | Re-run | Pass | ☐ |
-| T3.5-09 | Huge increase (edge case) | Increase by 10^12 | Repair | Behaves like deletion; no overflow | ☐ |
+| T3.5-01 | Increase, edge stays best (positive) | Chain | Increase middle edge by 5 | All downstream distances rise by exactly 5 | ☑ |
+| T3.5-02 | Increase, alternative wins (positive) | Chain with detour | Increase past the detour | Distances use the detour; matches oracle | ☑ |
+| T3.5-03 | Non-tight increase (edge case) | Non-tight edge | Increase | Certificate hit, work == 1 | ☑ |
+| T3.5-04 | Tight with alternative (edge case) | Diamond | Increase one branch | No distance change; `tight` decremented | ☑ |
+| T3.5-05 | Edge becomes tight again (edge case) | Case from T3.5-01 | Check `tight` after | The increased edge is counted as tight for `v` | ☑ |
+| T3.5-06 | Invalid increase (negative) | Edge weight 5 | `increase(...,5)` | Rejected by `apply_update`; maintainer unchanged | ☑ |
+| T3.5-07 | Mixed differential run (regression) | Harness | 20,000 mixed updates, 3 families, `p_delete=0.5` | Zero mismatches | ☑ |
+| T3.5-08 | Deletion tests (regression) | 3.4 tests | Re-run | Pass | ☑ |
+| T3.5-09 | Huge increase (edge case) | Increase by 10^12 | Repair | Behaves like deletion; no overflow | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; 20,000-update differential run clean on five seeds.
-- [ ] Proof P1 completed (deletions and increases) and reviewed.
+- [x] All tests pass; 20,000-update differential run clean on five seeds.
+- [x] Proof P1 completed (deletions and increases) and reviewed.
 
 **8. Milestone Completion Criteria.** Zero mismatches on 100,000 mixed updates in total.
 
@@ -926,9 +926,9 @@ Do NOT commit: dumps, `.hypothesis/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 3.1 to 3.5 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
+| Tests passed | 165 / 165 |
+| Known issues | None |
+| Git commit hash | m3.5 |
 | Overall verification | 100,000 mixed updates with zero mismatches; `check_state` clean; P1 proof reviewed |
 | **Go/No-Go for Phase 4** | **GO only if** P1 is written and reviewed and the differential runs are clean. Budgets add abort logic; do not add it on top of an unproven repair. |
 
