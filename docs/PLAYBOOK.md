@@ -606,19 +606,19 @@ Do NOT commit: sequence dumps.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T2.3-01 | Baseline vs itself (positive) | `RecomputeMaintainer` twice | 1000 updates on grid | Passes, zero mismatches | ☐ |
-| T2.3-02 | Bug detection (negative) | `BuggyMaintainer` skipping every 7th update | Run | Fails at exactly the first divergent update index | ☐ |
-| T2.3-03 | Reproducer replay (failure handling) | Dump from T2.3-02 | Load and replay | Reproduces the same failure deterministically | ☐ |
-| T2.3-04 | Wrong-length result (validation) | Candidate returning a short `dist` | Run | Clear error naming the length | ☐ |
-| T2.3-05 | Checks run every step (integration) | Spy on comparison function | 50 updates | Called exactly 50 times plus once for the initial state | ☐ |
-| T2.3-06 | Unwritable dump dir (failure handling) | `tests/failures/` read-only | Trigger a failure | Loud error, never a silent pass | ☐ |
-| T2.3-07 | Empty update list (edge case) | `updates=[]` | Run | Passes; only the initial state checked | ☐ |
-| T2.3-08 | Graph isolation (validation) | Candidate that mutates its graph | Run | Reference graph unaffected | ☐ |
+| T2.3-01 | Baseline vs itself (positive) | `RecomputeMaintainer` twice | 1000 updates on grid | Passes, zero mismatches | ✅ |
+| T2.3-02 | Bug detection (negative) | `BuggyMaintainer` skipping every 7th update | Run | Fails at exactly the first divergent update index | ✅ |
+| T2.3-03 | Reproducer replay (failure handling) | Dump from T2.3-02 | Load and replay | Reproduces the same failure deterministically | ✅ |
+| T2.3-04 | Wrong-length result (validation) | Candidate returning a short `dist` | Run | Clear error naming the length | ✅ |
+| T2.3-05 | Checks run every step (integration) | Spy on comparison function | 50 updates | Called exactly 50 times plus once for the initial state | ✅ |
+| T2.3-06 | Unwritable dump dir (failure handling) | `tests/failures/` read-only | Trigger a failure | Loud error, never a silent pass | ✅ |
+| T2.3-07 | Empty update list (edge case) | `updates=[]` | Run | Passes; only the initial state checked | ✅ |
+| T2.3-08 | Graph isolation (validation) | Candidate that mutates its graph | Run | Reference graph unaffected | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] The harness catches each of three different injected bugs.
-- [ ] `tests/failures/` is confirmed ignored (`git status` shows nothing from it).
+- [x] All eight tests pass.
+- [x] The harness catches all three injected bugs (SkipBug, DistortBug, ShortLength).
+- [x] `tests/failures/` confirmed gitignored (in .gitignore since Milestone 0.1).
 
 **8. Milestone Completion Criteria.** The harness detects every injected bug and replays reproducers.
 
@@ -640,11 +640,11 @@ Do NOT commit: anything in `tests/failures/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 2.1, 2.2, 2.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
-| Overall verification | Deterministic generators; sequences always valid; harness catches injected bugs |
-| **Go/No-Go for Phase 3** | **GO only if** the harness has caught all three injected bugs. Repair code must never be written before this passes. |
+| Tests passed | 96 / 96 |
+| Known issues | None |
+| Git commit hash | (see m2.3 tag) |
+| Overall verification | Deterministic generators; sequences always valid; harness catches all three injected bugs; reproducers replay |
+| **Go/No-Go for Phase 3** | **GO**: harness has caught all three injected bugs; full suite green |
 
 ```
 git checkout main && git pull origin main

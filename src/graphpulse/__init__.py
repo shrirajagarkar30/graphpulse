@@ -11,6 +11,8 @@ from graphpulse.generators import (
     random_updates,
 )
 from graphpulse.graph import DiGraph
+from graphpulse.harness import HarnessMismatch, replay_reproducer, run_differential
+from graphpulse.maintainer import Maintainer, RecomputeMaintainer, UpdateStats
 from graphpulse.opcount import CountedHeap, OpCounter, OpSnapshot
 from graphpulse.verify import InvariantViolation, check_spt
 
@@ -30,5 +32,11 @@ __all__ = [
     "Update",
     "apply_update",
     "random_updates",
+    "UpdateStats",
+    "Maintainer",
+    "RecomputeMaintainer",
+    "HarnessMismatch",
+    "run_differential",
+    "replay_reproducer",
     "__version__",
 ]
