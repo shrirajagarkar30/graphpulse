@@ -1,0 +1,150 @@
+"""Incremental shortest-path repair maintainer (Milestone 3.2).
+
+`RepairMaintainer` maintains an SPTState dynamically under non-decreasing
+updates (edge deletions and weight increases).
+
+In Milestone 3.2, cheap updates are resolved immediately:
+- Strategy 'cert': The updated edge was not tight (or pointed into source).
+  Distances and tree structure are guaranteed invariant.  Cost: exactly 1 SCAN.
+- Strategy 'alt': The updated edge was tight, but the target vertex has
+  alternative tight in-edges (tight[v] > 1).  tight[v] is decremented.
+  If the edge was parent[v], in-edges of v are scanned to select the
+  smallest-id tight in-neighbor as the new parent.
+- Strategy 'rebuild': Unhandled cases (sole tight edge lost) fall back to a
+  full from-scratch build using SPTState.build until Milestone 3.4 replaces
+  the fallback with bounded repair.
+"""
+
+from __future__ import annotations
+
+from graphpulse.dijkstra import INF
+from graphpulse.generators import Update, apply_update
+from graphpulse.graph import DiGraph
+from graphpulse.maintainer import Maintainer, UpdateStats
+from graphpulse.opcount import OpCounter
+from graphpulse.spt import SPTState
+
+
+class RepairMaintainer:
+    """Dynamic shortest-path maintainer with zero-work certificate, alternative
+    support, and fallback rebuild.
+    """
+
+    def __init__(self, g: DiGraph, src: int) -> None:
+        """Initialize maintainer with graph g and source vertex src."""
+        if isinstance(src, bool) or not isinstance(src, int) or not (0 <= src < g.n):
+            raise ValueError(f"Source vertex {src!r} out of range [0, {g.n - 1}]")
+        self._g = g.copy()
+        self._src = src
+        counter = OpCounter()
+        self._state = SPTState.build(self._g, self._src, counter)
+        self._last_stats = UpdateStats(
+            work=counter.work,
+            scan=counter.scan,
+            push=counter.push,
+            pop=counter.pop,
+            queue=counter.queue,
+            strategy="rebuild",
+        )
+
+    def dist(self) -> list[float]:
+        """Return a fresh copy of current shortest-path distances."""
+        return list(self._state.dist)
+
+    def parent(self) -> list[int]:
+        """Return a fresh copy of current shortest-path tree parents."""
+        return list(self._state.parent)
+
+    @property
+    def state(self) -> SPTState:
+        """Return the internal SPTState."""
+        return self._state
+
+    @property
+    def graph(self) -> DiGraph:
+        """Return the internal DiGraph."""
+        return self._g
+
+    @property
+    def last_stats(self) -> UpdateStats:
+        """Return the UpdateStats produced by the most recent apply() call."""
+        return self._last_stats
+
+    def _rebuild(self) -> UpdateStats:
+        """Execute a full rebuild from scratch using SPTState.build."""
+        counter = OpCounter()
+        self._state = SPTState.build(self._g, self._src, counter)
+        stats = UpdateStats(
+            work=counter.work,
+            scan=counter.scan,
+            push=counter.push,
+            pop=counter.pop,
+            queue=counter.queue,
+            strategy="rebuild",
+        )
+        self._last_stats = stats
+        return stats
+
+    def apply(self, update: Update) -> UpdateStats:
+        """Apply an edge deletion or weight increase in-place.
+
+        Returns
+        -------
+        UpdateStats
+            Operation counts and strategy ('cert', 'alt', or 'rebuild').
+        """
+        u, v = update.u, update.v
+        # Precondition check & extract old weight before mutation
+        old_w = self._g.weight(u, v)
+
+        # Apply update to the graph first
+        apply_update(self._g, update)
+
+        # Certificate 1: Edge into source or non-tight edge
+        # An edge into source is never tight (dist[src] == 0 and weights >= 1).
+        if v == self._src:
+            stats = UpdateStats(work=1, scan=1, strategy="cert")
+            self._last_stats = stats
+            return stats
+
+        dist_u = self._state.dist[u]
+        dist_v = self._state.dist[v]
+
+        # Non-tight edge: unreachable u or dist[u] + old_w != dist[v]
+        if dist_u == INF or dist_u + old_w != dist_v:
+            stats = UpdateStats(work=1, scan=1, strategy="cert")
+            self._last_stats = stats
+            return stats
+
+        # If we reach here, (u, v) was tight before the update!
+        # The certificate check examined the edge: 1 SCAN.
+        # Now (u, v) is no longer tight (deleted, or increased so dist[u] + new_w > dist[v]).
+        if self._state.tight[v] > 1:
+            # Alternative support case: v has at least one other tight in-edge
+            self._state.tight[v] -= 1
+
+            if self._state.parent[v] != u:
+                # The updated edge was not the SPT tree parent of v; tree unchanged
+                stats = UpdateStats(work=1, scan=1, strategy="alt")
+                self._last_stats = stats
+                return stats
+
+            # The updated edge WAS the SPT parent of v: scan in-edges to find replacement
+            scan_count = 1  # 1 scan for the initial certificate check
+            tight_preds: list[int] = []
+            for p, w in self._g.in_edges(v):
+                scan_count += 1
+                if self._state.dist[p] != INF and self._state.dist[p] + w == dist_v:
+                    tight_preds.append(p)
+
+            new_parent = min(tight_preds)
+            self._state.children[u].remove(v)
+            self._state.children[new_parent].add(v)
+            self._state.parent[v] = new_parent
+
+            stats = UpdateStats(work=scan_count, scan=scan_count, strategy="alt")
+            self._last_stats = stats
+            return stats
+
+        # Sole tight edge lost (tight[v] <= 1): fallback to full rebuild
+        return self._rebuild()

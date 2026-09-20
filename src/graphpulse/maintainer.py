@@ -28,6 +28,7 @@ class UpdateStats:
     push: int = 0
     pop: int = 0
     queue: int = 0
+    strategy: str = "rebuild"
 
 
 @runtime_checkable

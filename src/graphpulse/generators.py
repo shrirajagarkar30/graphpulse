@@ -252,7 +252,7 @@ class Update:
     kind: str
     u: int
     v: int
-    new_w: int
+    new_w: int = 0
 
 
 def apply_update(g: "DiGraph", upd: Update) -> None:  # noqa: F821

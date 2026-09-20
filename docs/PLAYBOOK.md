@@ -724,11 +724,11 @@ Do NOT commit: `.hypothesis/`, notes outside `docs/`.
 **2. Objective.** A maintainer that is already **correct at every commit**: cheap cases handled, unhandled cases fall back to a rebuild until 3.4 replaces the fallback.
 
 **3. Tasks to Complete.**
-- [ ] `RepairMaintainer(g, src)` implementing the `Maintainer` protocol.
-- [ ] **Certificate 1 (non-tight):** if `dist[u] == INF` or `dist[u] + w != dist[v]` for the updated edge, distances are unchanged; charge exactly 1 SCAN and return.
-- [ ] **Alternative support:** edge is tight but `tight[v] > 1`. Decrement `tight[v]`; if `parent[v] == u`, scan in-edges of `v` (counted) and choose the smallest other tight in-neighbor as the new parent, updating `children`.
-- [ ] Otherwise call `_rebuild()` (full `SPTState.build`).
-- [ ] `UpdateStats` records strategy (`cert`, `alt`, `rebuild`) and work.
+- [x] `RepairMaintainer(g, src)` implementing the `Maintainer` protocol.
+- [x] **Certificate 1 (non-tight):** if `dist[u] == INF` or `dist[u] + w != dist[v]` for the updated edge, distances are unchanged; charge exactly 1 SCAN and return.
+- [x] **Alternative support:** edge is tight but `tight[v] > 1`. Decrement `tight[v]`; if `parent[v] == u`, scan in-edges of `v` (counted) and choose the smallest other tight in-neighbor as the new parent, updating `children`.
+- [x] Otherwise call `_rebuild()` (full `SPTState.build`).
+- [x] `UpdateStats` records strategy (`cert`, `alt`, `rebuild`) and work.
 
 **4. Files / Modules Affected.** New: `src/graphpulse/repair.py`, `tests/test_cert.py`. Modified: `src/graphpulse/maintainer.py` (stats type).
 
@@ -738,19 +738,19 @@ Do NOT commit: `.hypothesis/`, notes outside `docs/`.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T3.2-01 | Non-tight deletion (positive) | Diamond plus extra heavy edge | Delete the heavy edge | Strategy `cert`; state identical; work == 1 | ☐ |
-| T3.2-02 | Unreachable tail (edge case) | g3 with edge among unreachable vertices | Delete it | Certificate hit | ☐ |
-| T3.2-03 | Alternative support (positive) | g1 (`tight[3]=2`) | Delete `1→3` | `dist` unchanged; `tight[3]==1`; parent is 2; `check_state` passes | ☐ |
-| T3.2-04 | Alternative, edge was not the parent (edge case) | g1, parent of 3 is 1 | Delete `2→3` | Parent stays 1; `tight[3]==1` | ☐ |
-| T3.2-05 | Increase with alternative (positive) | g1 | Increase `1→3` | Same as T3.2-03 (edge no longer tight) | ☐ |
-| T3.2-06 | Sole tight edge falls back (integration) | g2 chain | Delete `1→2` | Strategy `rebuild`; distances correct | ☐ |
-| T3.2-07 | Edge into source (edge case) | Cycle to source | Delete it | Certificate hit | ☐ |
-| T3.2-08 | Differential run (regression) | 3.x harness | 2000 mixed updates on grid, random_sparse, hub_spoke | Zero mismatches; `check_state` after every update | ☐ |
-| T3.2-09 | Stats consistency (validation) | Same run | Sum strategy counts | Equals the number of updates | ☐ |
+| T3.2-01 | Non-tight deletion (positive) | Diamond plus extra heavy edge | Delete the heavy edge | Strategy `cert`; state identical; work == 1 | ☑ |
+| T3.2-02 | Unreachable tail (edge case) | g3 with edge among unreachable vertices | Delete it | Certificate hit | ☑ |
+| T3.2-03 | Alternative support (positive) | g1 (`tight[3]=2`) | Delete `1→3` | `dist` unchanged; `tight[3]==1`; parent is 2; `check_state` passes | ☑ |
+| T3.2-04 | Alternative, edge was not the parent (edge case) | g1, parent of 3 is 1 | Delete `2→3` | Parent stays 1; `tight[3]==1` | ☑ |
+| T3.2-05 | Increase with alternative (positive) | g1 | Increase `1→3` | Same as T3.2-03 (edge no longer tight) | ☑ |
+| T3.2-06 | Sole tight edge falls back (integration) | g2 chain | Delete `1→2` | Strategy `rebuild`; distances correct | ☑ |
+| T3.2-07 | Edge into source (edge case) | Cycle to source | Delete it | Certificate hit | ☑ |
+| T3.2-08 | Differential run (regression) | 3.x harness | 2000 mixed updates on grid, random_sparse, hub_spoke | Zero mismatches; `check_state` after every update | ☑ |
+| T3.2-09 | Stats consistency (validation) | Same run | Sum strategy counts | Equals the number of updates | ☑ |
 
 **7. Verification Checklist.**
-- [ ] All tests pass; Phase 1 and 2 tests still pass.
-- [ ] Report the certificate hit rate on a 30x30 grid with 1000 uniform deletions (informational, no fixed threshold).
+- [x] All tests pass; Phase 1 and 2 tests still pass.
+- [x] Report the certificate hit rate on a 30x30 grid with 1000 uniform deletions (informational, no fixed threshold): 71.30% (713/1000).
 
 **8. Milestone Completion Criteria.** Zero harness mismatches across 3 families with 2000 updates each.
 
