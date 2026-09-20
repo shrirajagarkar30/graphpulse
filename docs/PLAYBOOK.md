@@ -326,18 +326,18 @@ Branch: `phase-1-baseline` (create from updated `main`)
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.1-01 | Initial state (positive) | New counter | Read fields | All zero | ☐ |
-| T1.1-02 | Push and pop counting (positive) | Counted heap | 5 pushes, 3 pops | `push=5`, `pop=3` | ☐ |
-| T1.1-03 | Heap order (property) | 200 random lists | Push all, pop all | Non-decreasing order | ☐ |
-| T1.1-04 | Pop from empty (negative) | Empty heap | `pop()` | `IndexError`; counters unchanged | ☐ |
-| T1.1-05 | Equal keys (edge case) | Items `(5,1)`, `(5,2)` | Push and pop | Both returned, no comparison error | ☐ |
-| T1.1-06 | Snapshot delta (positive) | Counter with activity | `s=snapshot()`, more ops, `since(s)` | Delta equals the extra ops only | ☐ |
-| T1.1-07 | Counter independence (validation) | Two counters | Increment one | Other stays zero | ☐ |
-| T1.1-08 | Work definitions (validation) | Counter with all four fields set | Read `dijkstra_work`, `work` | `work - dijkstra_work == queue` | ☐ |
+| T1.1-01 | Initial state (positive) | New counter | Read fields | All zero | ✅ |
+| T1.1-02 | Push and pop counting (positive) | Counted heap | 5 pushes, 3 pops | `push=5`, `pop=3` | ✅ |
+| T1.1-03 | Heap order (property) | 200 random lists | Push all, pop all | Non-decreasing order | ✅ |
+| T1.1-04 | Pop from empty (negative) | Empty heap | `pop()` | `IndexError`; counters unchanged | ✅ |
+| T1.1-05 | Equal keys (edge case) | Items `(5,1)`, `(5,2)` | Push and pop | Both returned, no comparison error | ✅ |
+| T1.1-06 | Snapshot delta (positive) | Counter with activity | `s=snapshot()`, more ops, `since(s)` | Delta equals the extra ops only | ✅ |
+| T1.1-07 | Counter independence (validation) | Two counters | Increment one | Other stays zero | ✅ |
+| T1.1-08 | Work definitions (validation) | Counter with all four fields set | Read `dijkstra_work`, `work` | `work - dijkstra_work == queue` | ✅ |
 
 **7. Verification Checklist.**
-- [ ] T1.1-01 to T1.1-08 pass; full suite green.
-- [ ] No global mutable counter exists (`grep -n "global" src/graphpulse/opcount.py` is empty).
+- [x] T1.1-01 to T1.1-08 pass; full suite green.
+- [x] No global mutable counter exists (`grep -n "global" src/graphpulse/opcount.py` is empty).
 
 **8. Milestone Completion Criteria.** Tests green; definitions match `SPEC.md` exactly.
 
@@ -376,19 +376,19 @@ Do NOT commit: `.hypothesis/`, caches.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.2-01 | Golden graphs (positive) | 0.2 files | Run on g1, g2, g3 | Distances equal the JSON (INF for vertex 4) | ☐ |
-| T1.2-02 | Single vertex (edge case) | `n=1` | Run | `dist=[0]` | ☐ |
-| T1.2-03 | Source has no out-edges (edge case) | Isolated source | Run | Everything else INF | ☐ |
-| T1.2-04 | Equal-cost paths (edge case) | g1 | Run | `dist[3]=2` regardless of the parent chosen | ☐ |
-| T1.2-05 | Very large weights (edge case) | Weights 10^12 | Run | Exact integer distances, no overflow | ☐ |
-| T1.2-06 | Bad source (negative) | n=4 | `src=4` and `src=-1` | Raises | ☐ |
-| T1.2-07 | Exact scan count (validation) | Random graph | Run | `scan == sum(outdeg(v) for reachable v)` | ☐ |
-| T1.2-08 | Heap balance (validation) | Random graph | Run | `push == pop`; `push <= 1 + scan` | ☐ |
-| T1.2-09 | Parents form a tree (integration) | Random graph | Follow parent chains | Every reachable vertex reaches the source; `dist[parent[v]] < dist[v]` | ☐ |
+| T1.2-01 | Golden graphs (positive) | 0.2 files | Run on g1, g2, g3 | Distances equal the JSON (INF for vertex 4) | ✅ |
+| T1.2-02 | Single vertex (edge case) | `n=1` | Run | `dist=[0]` | ✅ |
+| T1.2-03 | Source has no out-edges (edge case) | Isolated source | Run | Everything else INF | ✅ |
+| T1.2-04 | Equal-cost paths (edge case) | g1 | Run | `dist[3]=2` regardless of the parent chosen | ✅ |
+| T1.2-05 | Very large weights (edge case) | Weights 10^12 | Run | Exact integer distances, no overflow | ✅ |
+| T1.2-06 | Bad source (negative) | n=4 | `src=4` and `src=-1` | Raises | ✅ |
+| T1.2-07 | Exact scan count (validation) | Random graph | Run | `scan == sum(outdeg(v) for reachable v)` | ✅ |
+| T1.2-08 | Heap balance (validation) | Random graph | Run | `push == pop`; `push <= 1 + scan` | ✅ |
+| T1.2-09 | Parents form a tree (integration) | Random graph | Follow parent chains | Every reachable vertex reaches the source; `dist[parent[v]] < dist[v]` | ✅ |
 
 **7. Verification Checklist.**
-- [ ] T1.2-01 to T1.2-09 pass.
-- [ ] Counts for the golden graphs are written into `SPEC.md` as worked examples.
+- [x] T1.2-01 to T1.2-09 pass.
+- [x] Counts for the golden graphs are written into `SPEC.md` as worked examples (Section 6).
 
 **8. Milestone Completion Criteria.** Tests green; exact-count identities T1.2-07 and T1.2-08 hold on 100 random graphs.
 
@@ -427,19 +427,19 @@ Do NOT commit: benchmark output files.
 
 | Test Case ID | Test Scenario | Preconditions | Steps | Expected Result | Status |
 |---|---|---|---|---|---|
-| T1.3-01 | Accepts correct output (positive) | Dijkstra results on golden graphs | `check_spt` | No exception | ☐ |
-| T1.3-02 | Rejects dist too small (mutation) | Correct result | Subtract 1 from one reachable `dist[v]` | `InvariantViolation` | ☐ |
-| T1.3-03 | Rejects dist too large (mutation) | Correct result | Add 1 to one `dist[v]` | Violation (fails condition b or c) | ☐ |
-| T1.3-04 | Rejects wrong parent (mutation) | Correct result | Point parent to a non-tight neighbor | Violation | ☐ |
-| T1.3-05 | Rejects reachable marked INF (mutation) | Correct result | Set a reachable `dist[v]=INF` | Violation | ☐ |
-| T1.3-06 | Oracle agreement (property) | Hypothesis, 300 random graphs | Compare with networkx | Identical distances | ☐ |
-| T1.3-07 | Unreachable vertices (edge case) | g3 | Check | Accepted only with INF and parent -1 | ☐ |
-| T1.3-08 | Message quality (failure handling) | Any mutation above | Read exception | Names the vertex or edge that failed | ☐ |
+| T1.3-01 | Accepts correct output (positive) | Dijkstra results on golden graphs | `check_spt` | No exception | ✅ |
+| T1.3-02 | Rejects dist too small (mutation) | Correct result | Subtract 1 from one reachable `dist[v]` | `InvariantViolation` | ✅ |
+| T1.3-03 | Rejects dist too large (mutation) | Correct result | Add 1 to one `dist[v]` | Violation (fails condition b or c) | ✅ |
+| T1.3-04 | Rejects wrong parent (mutation) | Correct result | Point parent to a non-tight neighbor | Violation | ✅ |
+| T1.3-05 | Rejects reachable marked INF (mutation) | Correct result | Set a reachable `dist[v]=INF` | Violation | ✅ |
+| T1.3-06 | Oracle agreement (property) | Hypothesis, 300 random graphs | Compare with networkx | Identical distances | ✅ |
+| T1.3-07 | Unreachable vertices (edge case) | g3 | Check | Accepted only with INF and parent -1 | ✅ |
+| T1.3-08 | Message quality (failure handling) | Any mutation above | Read exception | Names the vertex or edge that failed | ✅ |
 
 **7. Verification Checklist.**
-- [ ] All eight tests pass.
-- [ ] Every mutation type in T1.3-02 to T1.3-05 is caught on 100 random graphs.
-- [ ] `bench_dijkstra.py` runs and prints the Dijkstra work; record the value in your notes.
+- [x] All eight tests pass.
+- [x] Every mutation type in T1.3-02 to T1.3-05 is caught on 100 random graphs.
+- [x] `bench_dijkstra.py` runs: 100×100 grid, F=39800 (SCAN=19800, PUSH=10000, POP=10000).
 
 **8. Milestone Completion Criteria.** Checker catches 100 percent of injected mutations; oracle agreement holds on 300 graphs.
 
@@ -461,11 +461,11 @@ Do NOT commit: `experiments/output/`, `.hypothesis/`.
 | Item | Record |
 |---|---|
 | Completed milestones | 1.1, 1.2, 1.3 |
-| Tests passed | ___ / ___ |
-| Known issues | ___ |
-| Git commit hash | ___ |
-| Overall verification | Dijkstra agrees with networkx on 300 random graphs; checker catches all mutations; scan and heap identities hold |
-| **Go/No-Go for Phase 2** | **GO only if** every test is green and the counter definitions match `SPEC.md` |
+| Tests passed | 49 / 49 |
+| Known issues | None |
+| Git commit hash | (see m1.3 tag) |
+| Overall verification | Dijkstra agrees with networkx on 300 random graphs; checker catches all mutations; scan and heap identities hold; bench: F=39800 on 100×100 grid |
+| **Go/No-Go for Phase 2** | **GO**: all tests green, counter definitions match SPEC.md |
 
 ```
 git checkout main && git pull origin main
