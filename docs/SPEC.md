@@ -61,7 +61,15 @@ $F$ denotes the total machine-independent operations executed by a complete from
 - $r$ is the total machine-independent operations executed by an incremental repair procedure.
 - $B$ is the operational budget cap:
 $$B = \lceil c \cdot F \rceil$$
-where $c > 0$ is the competitive factor (e.g., $c = 1.0$ for standard 2-competitive deterministic ski-rental). If repair exceeds $B$ operations, repair is aborted and a full rebuild is executed.
+where $c > 0$ is the budget multiplier.
+
+**Per-update work bound (P2):** In the fallback case, total work $\leq (1+c)F + 2$ (the $+2$ absorbs the unit abort-slack of the budget check plus the integer-ceiling rounding of $cF$). This is a work bound, not a competitive ratio.
+
+**Competitive ratio against OPT = min(r, F) (P3):** The worst-case ratio of online cost to OPT is:
+$$\mathcal{R}(c) = \max\!\left(1 + c,\;\frac{1 + c}{c}\right)$$
+This is minimized **uniquely at $c = 1$**, giving $\mathcal{R}(1) = 2.0$ (the ski-rental bound). For any other $c \neq 1$, $\mathcal{R}(c) > 2.0$. See `docs/proofs/P3_competitive_ratio.md` for the full proof.
+
+If repair exceeds $B$ operations, repair is aborted and a full rebuild is executed.
 
 ---
 

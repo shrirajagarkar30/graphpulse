@@ -14,3 +14,4 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["."]
 markers = ["slow: long-running randomized tests"]
+addopts = "-p no:pytest_ethereum"

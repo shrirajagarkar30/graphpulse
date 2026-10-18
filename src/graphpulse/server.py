@@ -4,7 +4,8 @@ Provides JSON REST endpoints connecting the frontend directly to the core
 shortest-path algorithms (Phases 0–4: Dijkstra, SPTState, BudgetedMaintainer,
 OpCounter, check_state, and generators).
 
-Zero extra dependencies: uses only Python standard library.
+Runtime: Python standard library only (no pip packages required to run this file).
+Dev/test dependencies (pytest, hypothesis, networkx) are listed in requirements-dev.txt.
 """
 
 from __future__ import annotations

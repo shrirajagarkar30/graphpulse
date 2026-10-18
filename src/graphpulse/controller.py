@@ -32,7 +32,9 @@ class RandomizedBudget:
 
     Draws x = ln(1 + (e - 1) * U) where U ~ Uniform[0, 1).
     Multiplier x has probability density f(x) = e^x / (e - 1) on [0, 1],
-    achieving the optimal expected competitive ratio e / (e - 1) ≈ 1.582.
+    achieving the optimal expected competitive ratio e / (e - 1) ≈ 1.582
+    against the offline optimum OPT = min(r, F) (see docs/proofs/P3_competitive_ratio.md).
+    This beats the deterministic lower bound of 2.0 (achieved at c=1).
     """
 
     __slots__ = ("_rng", "_seed")

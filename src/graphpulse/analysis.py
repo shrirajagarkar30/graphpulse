@@ -4,8 +4,15 @@ This module provides tools to empirically evaluate the competitive ratio of
 online shortest-path maintenance against the offline optimum:
 - `measure()`: executes an update sequence on both the online `BudgetedMaintainer`
   and an offline oracle player, recording exact machine-independent operation costs.
-- `theoretical_competitive_ratio()`: returns the proven worst-case competitive ratio
-  for a given budget multiplier c or the randomized distribution.
+- `theoretical_competitive_ratio()`: returns the worst-case competitive ratio
+  max(1+c, (1+c)/c) against the offline optimum OPT = min(r, F).
+  This is minimized uniquely at c=1, giving ratio 2.0 (the ski-rental bound).
+  For the randomized budget, the expected ratio is e/(e-1) ≈ 1.582.
+
+**Work bound vs. competitive ratio:**
+  - Per-update work bound (P2): work ≤ (1+c)*F + 2.  This bounds absolute work.
+  - Competitive ratio (P3): max(1+c, (1+c)/c) against OPT = min(r, F).
+    These are different quantities; the ratio equals 2 only at c=1.
 - `MeasurementResult`: holds online cost, offline OPT cost, ratio, and per-update traces.
 """
 

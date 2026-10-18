@@ -26,7 +26,7 @@ This is a DAA project, so **correctness, proofs, complexity analysis and measure
 
 ## 4. Core ideas (the novelty claim)
 
-1. **Budgeted repair.** Incremental repair runs under a work cap `B = c * F`, where `F` is the work of a full tree rebuild. If the cap is exceeded, discard the repair and rebuild with Dijkstra. This is a ski-rental-style online problem: with `c = 1` the strategy is 2-competitive against an offline oracle that always picks the cheaper of repair and rebuild; a randomized budget (`x = ln(1 + (e - 1) * U)`, budget `x * F`) gives expected ratio `e / (e - 1)`.
+1. **Budgeted repair.** Incremental repair runs under a work cap `B = ceil(c * F)`, where `F` is the work of a full tree rebuild. If the cap is exceeded, discard the repair and rebuild with Dijkstra. Per-update work is at most `(1 + c) * F + 2` (work bound, P2). The competitive ratio against the offline optimum `min(r, F)` is `max(1 + c, (1 + c) / c)`, which is minimized uniquely at `c = 1` with ratio `2.0` (the ski-rental bound, P3). A randomized budget (`x = ln(1 + (e - 1) * U)`, budget `x * F`) gives expected ratio `e / (e - 1) ≈ 1.582`.
 2. **Free structural certificate (shortest-path layer).** If an updated edge is not tight (`dist[u] + w != dist[v]`, or `dist[u]` is INF), no distance changes and the cost is exactly 1 operation. If it is tight but `tight[v] > 1`, another tight edge supports `v`; only counters and the parent pointer change.
 3. **Cross-layer certificate (routing layer, second half).** If distances only increase and no distance-matrix entry used by the current optimal tour changed, that tour is still optimal, so Held-Karp is skipped.
 
