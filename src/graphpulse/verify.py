@@ -235,3 +235,7 @@ def check_state(g: DiGraph, state: Any) -> None:
                     f"Inconsistent parent link: parent[{v}] = {p}, "
                     f"but {v} is not in children[{p}]"
                 )
+
+
+# Alias for explicit structured SPTState verification
+verify_structured = check_state

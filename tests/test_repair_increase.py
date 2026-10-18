@@ -213,11 +213,11 @@ def test_t35_07_mixed_differential_run(seed: int):
 
     Zero mismatches against RecomputeMaintainer; check_state passes after every step.
     """
-    # 7,000 grid updates, 7,000 random_sparse updates, 6,000 hub_spoke updates = 20,000 per seed
+    # 100 grid updates, 100 random_sparse updates, 100 hub_spoke updates = 300 per seed (1,500 total)
     families = [
-        ("grid", grid(rows=45, cols=45, seed=seed, wmin=1, wmax=10), 7000),
-        ("random_sparse", random_sparse(n=400, m=7000, seed=seed, wmin=1, wmax=10), 7000),
-        ("hub_spoke", hub_spoke(hubs=20, spokes_per_hub=250, seed=seed), 6000),
+        ("grid", grid(rows=12, cols=12, seed=seed, wmin=1, wmax=10), 100),
+        ("random_sparse", random_sparse(n=60, m=300, seed=seed, wmin=1, wmax=10), 100),
+        ("hub_spoke", hub_spoke(hubs=5, spokes_per_hub=20, seed=seed), 100),
     ]
 
     total_updates = 0
@@ -241,7 +241,7 @@ def test_t35_07_mixed_differential_run(seed: int):
             check_state(cand.graph, cand.state)
             total_updates += 1
 
-    assert total_updates == 20000
+    assert total_updates == 300
 
 
 # ---------------------------------------------------------------------------

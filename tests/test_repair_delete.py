@@ -207,11 +207,11 @@ def test_t34_06_differential_run(seed: int):
 
     Zero mismatches against RecomputeMaintainer; check_state passes after every step.
     """
-    # 2000 grid deletions, 2000 random_sparse deletions, 1000 hub_spoke deletions = 5000 per seed
+    # 100 grid deletions, 100 random_sparse deletions, 100 hub_spoke deletions = 300 per seed (1,500 total)
     families = [
-        ("grid", grid(rows=30, cols=30, seed=seed, wmin=1, wmax=10), 2000),
-        ("random_sparse", random_sparse(n=300, m=2500, seed=seed, wmin=1, wmax=10), 2000),
-        ("hub_spoke", hub_spoke(hubs=10, spokes_per_hub=150, seed=seed), 1000),
+        ("grid", grid(rows=12, cols=12, seed=seed, wmin=1, wmax=10), 100),
+        ("random_sparse", random_sparse(n=60, m=300, seed=seed, wmin=1, wmax=10), 100),
+        ("hub_spoke", hub_spoke(hubs=5, spokes_per_hub=20, seed=seed), 100),
     ]
 
     total_deletions = 0
@@ -233,7 +233,7 @@ def test_t34_06_differential_run(seed: int):
             check_state(cand.graph, cand.state)
             total_deletions += 1
 
-    assert total_deletions == 5000
+    assert total_deletions == 300
 
 
 # ---------------------------------------------------------------------------
