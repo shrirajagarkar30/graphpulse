@@ -116,16 +116,16 @@ Update the status column as milestones finish.
 |---|---|---|---|
 | 0 | Setup, spec freeze, graph structure | 0.1, 0.2, 0.3 | ✅ completed |
 | 1 | Counted Dijkstra, invariant checker, oracle | 1.1, 1.2, 1.3 | ✅ completed |
-| 2 | Generators, update sequences, differential harness | 2.1, 2.2, 2.3 | ⏳ in progress (2.1 done) |
-| 3 | Incremental repair (tight counters, affected set, deletions, increases) | 3.1 to 3.5 | ☐ |
-| 4 | Budgeted controller, competitive-ratio proofs (**50% checkpoint, tag `v0.5-half`**) | 4.1, 4.2, 4.3 | ☐ |
+| 2 | Generators, update sequences, differential harness | 2.1, 2.2, 2.3 | ✅ completed |
+| 3 | Incremental repair (tight counters, affected set, deletions, increases) | 3.1 to 3.5 | ✅ completed |
+| 4 | Budgeted controller, competitive-ratio proofs (**50% checkpoint, tag `v0.5-half`**) | 4.1, 4.2, 4.3 | ✅ completed (207 / 207 tests passed) |
 | 5 | Multi-terminal trees and distance matrix | (second half) | ☐ |
 | 6 | Held-Karp, lazy re-solve certificate, baselines, NP-hardness write-up | (second half) | ☐ |
 | 7 | Real road data, experiments, ablations, adversarial tightness | (second half) | ☐ |
 | 8 | Demo, final report, release checklist | (second half) | ☐ |
 
-**Current milestone:** `2.1` (completed)
-**Last stable tag:** `m2.1`
+**Current milestone:** `4.3` (completed; 50% checkpoint reached)
+**Last stable tag:** `v0.5-half`
 **Known issues:** None
 
 Phases 5 to 8 are described here only so you understand the direction. **Do not implement them until the 50% checkpoint is tagged and the team asks.**

@@ -1124,7 +1124,7 @@ Do NOT commit: raw measurement dumps, plots generated under `experiments/output/
 | Item | Record |
 |---|---|
 | Completed milestones | 4.1, 4.2, 4.3 |
-| Tests passed | 201 / 201 |
+| Tests passed | 207 / 207 (201 fast default passing in ~34s, 6 marked slow) |
 | Known issues | None |
 | Git commit hash | m4.3 |
 | Overall verification | Zero mismatches for every budget; measured competitive ratios within proven bounds; P1, P2, P3 reviewed |
@@ -1146,8 +1146,8 @@ git tag -a v0.5-half -m "50 percent checkpoint: budgeted single-source repair" &
 - [x] Budget controller works in `last` and `oracle` modes; randomized budget available.
 
 **Testing**
-- [x] `python -m pytest -q` is fully green on a fresh clone on two machines (201 / 201 passing).
-- [x] At least 100,000 mixed differential updates with zero mismatches (five seeds, three graph families).
+- [x] `python -m pytest -q` is fully green (207 / 207 passing: 201 fast default in 34s, 6 slow passing).
+- [x] At least 100,000 mixed differential updates with zero mismatches across all four graph families (grid, hub_spoke, random_sparse, comb_adversarial, five seeds) verified in 202.87s.
 - [x] Every injected bug in the harness self-test is caught.
 
 **Security**
