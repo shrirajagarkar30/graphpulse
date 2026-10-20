@@ -69,10 +69,10 @@ Status key: ✅ COMPLETE · 🟡 PARTIALLY COMPLETE · 🔴 NOT STARTED · ⚠�
 | 4 | Empirical **prose** | ❌ | contradicts own table (§2 G4) | Rewrite |
 | 4 | CLI demo (`demo.py`) | ✅ | runs headless, exit 0 | no tests (0 % coverage) — acceptable for a demo |
 | 4 | Dashboard (`server.py`, `web/`) | 🟡 | runs; **no tests**; hard-coded `project_progress: 50`; no lock/size limit; CORS `*`; prefix path check | Milestone 8.1 |
-| 5 | Shared-graph entry point (5.1) | 🔴 | — | full milestone |
-| 5 | `MultiTreeManager` (5.2) | 🔴 | — | |
-| 5 | `TerminalMatrix` + guard (5.3) | 🔴 | — | |
-| 5 | Multi-tree hardening, touched-tree stat (5.4) | 🔴 | — | |
+| 5 | Shared-graph entry point (5.1) | ✅ | `test_shared_graph`, slow suite unchanged | — |
+| 5 | `MultiTreeManager` (5.2) | ✅ | `test_multitree` | — |
+| 5 | `TerminalMatrix` + guard (5.3) | ✅ | `test_matrix`; guard seen to fire | — |
+| 5 | Multi-tree hardening, touched-tree stat (5.4) | ✅ | `test_multitree_slow`; 60,000 updates, 0 mismatches | Phase 7 regenerates touched-tree numbers |
 | 6 | Tour cost, brute force (6.1) | 🔴 | worked examples verified by scratch script | |
 | 6 | Held–Karp (6.2) | 🔴 | formula verified combinatorially | |
 | 6 | NN + branch-and-bound (6.3) | 🔴 | | |

@@ -4,7 +4,7 @@
 > It describes what the repository *actually* does, what has been *verified*, and what is still *planned*.
 > It is a living document: it is updated in the same commit as any change to methodology, code, tests or results (Rule 4).
 >
-> **Synchronised with:** `main` @ `0e02495` (2026-10-18), analysed 2026-10-20.
+> **Synchronised with:** branch `phase-5-terminals` (Phase 5 complete, 2026-10-20); baseline analysis on `main` @ `0e02495`.
 > **Companion documents:** [`PROJECT_LOGBOOK.md`](PROJECT_LOGBOOK.md) (chronology, decisions, experiments) · [`ANALYSIS_REPORT.md`](ANALYSIS_REPORT.md) (gate audit, status audit, roadmap) · [`SPEC.md`](SPEC.md) (frozen model and cost model) · [`proofs/`](proofs/) (P1–P3).
 
 ## Status labels (used everywhere in this document)
@@ -209,8 +209,8 @@ Notation: n=|V|, m=|E|, deg⁺/deg⁻ out/in-degree, A = affected set, vol(S)=Σ
 
 | ID | Algorithm | Playbook | Time / space | Soundness argument to be proved |
 |---|---|---|---|---|
-| Alg-10 | `MultiTreeManager`: k+1 `BudgetedMaintainer`s on one graph | 5.1–5.2 | O(k) × single-tree; space O(k·n) | Per-tree P2 bound holds per tree; graph mutated once |
-| Alg-11 | `TerminalMatrix` with changed-set and monotonicity guard | 5.3 | O(k²) bookkeeping per update (counted separately as `matrix_cells`) | Guard fires iff a distance decreased |
+| Alg-10 | `MultiTreeManager`: k+1 `BudgetedMaintainer`s on one graph — **VALIDATED (Phase 5)** | 5.1–5.2 | O(k) × single-tree; space O(k·n) | Per-tree P2 bound holds per tree; graph mutated once |
+| Alg-11 | `TerminalMatrix` with changed-set and monotonicity guard — **VALIDATED (Phase 5)** | 5.3 | O(k²) bookkeeping per update (counted separately as `matrix_cells`) | Guard fires iff a distance decreased |
 | Alg-12 | Held–Karp (k ≤ 18) | 6.2 | Θ(k²2ᵏ) transitions, exactly k(k−1)2^{k−2} (verified combinatorially for k=2..7 in a scratch script); space Θ(k2ᵏ) | Standard DP |
 | Alg-13 | Nearest neighbour; branch-and-bound with NN initial bound | 6.3 | NN O(k²); B&B worst O(k!) | Prune rule `partial ≥ best` safe for non-negative entries |
 | Alg-14 | **Lazy tour certificate** (+ε mode, stored LB) | 6.4 | O(k) per decision | **P5 (to be written):** keep ⇒ optimal; ε-keep ⇒ cost′ ≤ (1+ε)·OPT′ provided LB is *not* ratcheted |
@@ -284,7 +284,9 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Differential at scale | `tests/test_differential_scale.py` | 100k updates, `verify_structured` each | Alg-9 | itself (slow) | VALIDATED |
 | Benchmark | `experiments/bench_empirical_claims.py` | Seeded table → `docs/EMPIRICAL_EVALUATION.md` | — | none | EXPERIMENTALLY VERIFIED (table), prose **REJECTED** |
 | Dashboard | `server.py`, `web/`, `run_ui.py`, `__main__.py` | Local demo | — | **none (0 % coverage)** | PARTIAL (see L9) |
-| Multi-terminal | `terminals.py` | — | Alg-10/11 | — | PLANNED |
+| Shared-graph entry | `controller.py` (`handle_applied`, `own_graph`), `generators.py` (`apply_update` returns old weight) | split mutate/handle | Alg-6 | `test_shared_graph` | VALIDATED |
+| Multi-terminal | `terminals.py` (`MultiTreeManager`, `TerminalMatrix`) | one budgeted tree per terminal on a shared graph; matrix + changed set + guard | Alg-10/11 | `test_multitree`, `test_matrix`, `test_multitree_slow` | VALIDATED |
+| Touched-tree script | `experiments/touched_trees.py` | stdout-only distribution (not for documents) | — | `test_t54_07` | IMPLEMENTED |
 | Tour / certificate / pipeline / road data / experiments | `tour.py`, `tourcert.py`, `pipeline.py`, `roadnet.py`, `experiments/e1…e5` | — | Alg-12…15 | — | PLANNED |
 
 ---
@@ -323,7 +325,7 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 |---|---|---|
 | Collected | `pytest --collect-only -q` | **207** tests (201 fast + 6 slow) |
 | Fast | `pytest -q -m "not slow"` | **201 passed**, 0 failed, 51–61 s |
-| Slow | `pytest -q -m slow` | **6 passed**, 0 failed, 643 s (100k differential: 5 seeds × 20,000 updates, 44–64 s each, 0 mismatches; 20k unlimited-budget regression 352 s) |
+| Slow | `pytest -q -m slow` | **6 passed**, 0 failed, 643 s (baseline, pre-Phase 5) (100k differential: 5 seeds × 20,000 updates, 44–64 s each, 0 mismatches; 20k unlimited-budget regression 352 s) |
 
 The brief that started this analysis recalled "≈240 tests". The repository has **207**; the 207 figure is consistent with `AGENTS.md`, `PLAYBOOK.md` and `git` history. Per-file counts are in `ANALYSIS_REPORT.md` §5.
 
@@ -344,6 +346,19 @@ The brief that started this analysis recalled "≈240 tests". The repository has
 
 **V4 — Playbook worked examples** (scratch brute force): T6.1-01 → cost 80, order [1,3,2]; T6.1-02 → cost 21, order [2,3,1]; Held–Karp transition formula equals k(k−1)2^{k−2} for k=2..7 (k=3 → 12). These confirm the *second-half playbook's expected values are correct*; they are not results about GraphPulse code.
 
+**V5 — Phase 5 (multi-terminal engine), 2026-10-20, branch `phase-5-terminals`.** Collected **254** tests (207 + 47 new). Fast: **243 passed**, 0 failed (66 s). Slow: the old 6 re-run on the refactored controller → **6 passed** (699 s, behaviour unchanged); the new 5 → **5 passed** (1,077 s):
+
+| Test | What it ran | Time |
+|---|---|---|
+| T5.4-01 | 10×10 grid, k=5, 20,000 updates; matrix vs oracle **and** all 6 trees `check_state` after *every* update | 396 s |
+| T5.4-02 | 30×30 grid, k=8, 20,000 updates, checked every 50th | 275 s |
+| T5.4-03 | random_sparse n=900 m=4500, k=8, 20,000 updates, every 50th | 265 s |
+| T5.3 (×2) | 5,000 updates on a 10×10 grid and on random_sparse; matrix = oracle after every update | 73 s, 66 s |
+
+Total 60,000 multi-tree updates + 10,000 matrix updates, **0 mismatches**. Per-tree work ≤ (1+c)F_true+2 was verified in oracle mode for c∈{0.5,1,2} (T5.4-04). The monotonicity guard was seen to fire on an injected decrease (T5.3-06). The comb case behaves as specified (T5.4-06). Sampling every 50th update on large graphs is acceptable only because T5.4-01 checks every update on a small graph. Touched-tree distributions printed by `experiments/touched_trees.py` are **not recorded here** (stdout-only until Phase 7 regenerates them).
+
+**Finding (test-design hazard):** `random_updates` removes deleted edges from its pool, so with `p_delete=0.5` the pool exhausts early: "2000 updates" on a 6×6 grid yields about 210–240 updates, on an 8×8 grid about 400–490. Phase 5 tests therefore (a) use low deletion shares wherever a count is claimed and assert `len(updates) == N`, and (b) run a deletion-heavy variant separately with the actual count asserted. Any future "N updates" claim must be backed by such an assertion (the pre-existing 100k test already is).
+
 ### 10.2 Claims that must **not** be used (found in the repository; all removed from the repo on branch `gate-fixes` on 2026-10-20 — kept here as a record)
 | Location | Claim | Why rejected |
 |---|---|---|
@@ -363,7 +378,7 @@ The brief that started this analysis recalled "≈240 tests". The repository has
 | E3 | Scaling in n (grid 20…160) and k (4…16) | grid | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
 | E4 | Adversarial tightness via `partial_comb` | synthetic | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
 | E5 | End-to-end pipeline vs RecomputeEverything | grid, road subgraph | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E0 | 60,000-update multi-tree differential (Milestone 5.4) | grid, random_sparse | — | PENDING EXPERIMENT | — |
+| E0 | 60,000-update multi-tree differential (Milestone 5.4) | grid, random_sparse | oracle | **0 mismatches (V5)** | correctness result, not a performance claim |
 
 ---
 
@@ -423,7 +438,7 @@ Not meaningful for this system (omitted on purpose): "without routing optimisati
 | L9 | Server: no lock around global state under a threaded server, no request-size limit, CORS `*`, prefix-based path check (`startswith`), hard-coded `project_progress: 50`, no tests. | Phase 8.1 scope; **not** part of the algorithmic claims. |
 | L10 | Pure Python, graphs ≤ ~10⁴ vertices, one machine. | Not a scalability claim. |
 | L11 | `analysis.theoretical_competitive_ratio` raises for c≤0 and E1 sweeps c=0 and c=∞ (ratio unbounded). | E1 must special-case; document ρ(0)=ρ(∞)=∞ (limit). |
-| L12 | "Touched trees" as specified counts `alt` as touched although no distance changes. | Add a second statistic `dist_changed_trees` (D-005). |
+| L12 | "Touched trees" counts `alt` as touched although no distance changes. | **Resolved:** `MultiStats` records both `touched_trees` and `dist_changed_trees` (D-005). |
 
 ---
 
@@ -468,7 +483,7 @@ Dataset preparation, experiment commands, `MANIFEST.json`: PLANNED (Phase 7.6 / 
 
 ## 16. Future work
 
-**PLANNED (second-half playbook, in order):** Gate fixes → 5.1–5.4 multi-terminal engine and matrix → 6.1–6.3 tour baselines (parallelisable) → 6.4 lazy certificate → 6.5 pipeline → 6.6 proofs P4 (NP-hardness by reduction from directed Hamiltonian cycle, restricted to the tour problem on a metric closure) and P5 (lazy certificate) → 7.1–7.6 real-data experiments → 8.1–8.4 dashboard hardening, claims audit, paper, release.
+**DONE:** gate fixes; 5.1–5.4 multi-terminal engine and matrix (VALIDATED, V5). **PLANNED (second-half playbook, in order):** 6.1–6.3 tour baselines (parallelisable) → 6.4 lazy certificate → 6.5 pipeline → 6.6 proofs P4 (NP-hardness by reduction from directed Hamiltonian cycle, restricted to the tour problem on a metric closure) and P5 (lazy certificate) → 7.1–7.6 real-data experiments → 8.1–8.4 dashboard hardening, claims audit, paper, release.
 
 **FUTURE WORK (not scheduled; each needs its own justification):** edge insertions/decreases (needs a different certificate), heuristic tours for k>18 with the same certificate, multiple vehicles/time windows, adaptive F estimation to tighten L2, a proof that the state is canonical (closes L3).
 
@@ -483,7 +498,7 @@ Dataset preparation, experiment commands, `MANIFEST.json`: PLANNED (Phase 7.6 / 
 | D-003 | Gate G6 "find_affected equals oracle set" | True (500 cases), but `KNOWN_GAPS.md` describes it wrongly as a superset | Correct `KNOWN_GAPS.md` |
 | D-004 | Gate G9: `v0.5-half` on `main` | Tag is 7 commits behind `main`; the tag predates the G1/G2/G3 fixes. Rollback "R1 to `v0.5-half`" would discard the 100k test and the ratio-wording fix | After gates pass, add a new stable tag (suggested `v0.5.1-gated`); do not move `v0.5-half` |
 | D-005 | 5.2: `touched_trees` = strategy ≠ `cert` | `alt` does zero distance change | Implement as specified, **also** record `dist_changed_trees` |
-| D-006 | 5.1: `apply_update` "in `src/graphpulse/updates`" | Lives in `generators.py`, returns `None` | Change in place (return old weight); no new module |
+| D-006 | 5.1: `apply_update` "in `src/graphpulse/updates`" | Lives in `generators.py`, returns `None` | **Done:** changed in place (returns old weight); no new module |
 | D-007 | 7.3: ρ(c) for c∈{0,∞} | `theoretical_competitive_ratio` raises for c≤0 | Special-case in E1 (L11) |
 | D-008 | Gate G10: `AGENTS.md` status table | File is at `docs/AGENTS.md`, not repo root; table says second half "do not implement until team asks" | Update after the user approves; keep location |
 | D-009 | G4: every % claim seeded or deleted | Rejected claims listed in §10.2 | Rewrite prose from the table; delete `demo_flow.js` figure |

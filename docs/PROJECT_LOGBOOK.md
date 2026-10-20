@@ -39,6 +39,10 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | 2026-10-20 | Analysis A8 | Playbook value check | ✅ | brute force for T6.1-01/02, HK formula | 80 / [1,3,2]; 21 / [2,3,1]; formula OK | scratch | — |
 | 2026-10-20 | Analysis A9 | Gate audit G1–G10 | ✅ | see `ANALYSIS_REPORT.md` §2 | **G1, G4, G8 fail; G10 partial** | report | gate remediation |
 | 2026-10-20 | Gate | Gate remediation (G1, G4, G6, G8, G10) | ✅ | fixed dashboard strings, benchmark prose (computed), KNOWN_GAPS, AGENTS; tags `phase-4-done`, `v0.5.1-gated` (local) | tables unchanged; 201 fast passed | branch `gate-fixes` | Milestone 5.1 |
+| 2026-10-20 | 5 / M5.1 | Shared-graph entry point | ✅ | `apply_update` returns old weight; `BudgetedMaintainer.handle_applied(upd, old_w)` and `own_graph=False`; `apply` = apply_update + handle_applied | T5.1-01…08 pass; old 6 slow tests unchanged (699 s) | tag `m5.1`; `tests/test_shared_graph.py` | M5.2 |
+| 2026-10-20 | 5 / M5.2 | `MultiTreeManager` | ✅ | k+1 trees, one graph mutation, per-tree F and budget, `MultiStats` (+`dist_changed_trees`) | T5.2-01…11 pass; differential on 3 families | tag `m5.3` (m5.2 shares the commit; `terminals.py` holds both classes) | M5.3 |
+| 2026-10-20 | 5 / M5.3 | `TerminalMatrix` + monotonicity guard | ✅ | changed set, snapshot, `is_complete`, `matrix_cells` counter | guard fires on injected decrease; matrix = oracle after 5,000 updates ×2 (66–73 s each) | tag `m5.3`; `tests/test_matrix.py` | M5.4 |
+| 2026-10-20 | 5 / M5.4 | Hardening + touched-tree script | ✅ | 3×20,000-update differential, work bound per tree, comb case, `experiments/touched_trees.py` | 5 slow tests passed in 1,077 s; 60,000 updates, 0 mismatches | tag `m5.4`; `tests/test_multitree_slow.py` | **Phase 5 complete — awaiting go-ahead for Phase 6** |
 | 2026-10-20 | Analysis A10 | Documentation | ✅ | created TSoT, logbook, analysis report | — | `docs/` | **await user go-ahead** |
 
 ---
@@ -52,8 +56,8 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | Phase 2 — generators, harness | ✅ | 100 % | `tree_edges`, `partial_comb` modes come in 7.4/7.5 |
 | Phase 3 — repair | ✅ | 100 % | fix `KNOWN_GAPS.md` text |
 | Phase 4 — controller, proofs | 🟡 | 95 % | sign-offs, P2 constant tidy, canonical-state lemma, `phase-4-done` tag |
-| **Gate to second half** | ❌ | 70 % | G1, G4, G8, G10 (+ G6 doc) |
-| Phase 5 — multi-terminal | 🔴 | 0 % | 5.1–5.4 |
+| **Gate to second half** | ✅ | 100 % | closed 2026-10-20 (`v0.5.1-gated`) |
+| Phase 5 — multi-terminal | ✅ | 100 % | merge to `main` + `phase-5-done` tag pending user go-ahead |
 | Phase 6 — routing layer | 🔴 | 0 % | 6.1–6.6 |
 | Phase 7 — experiments | 🔴 | 0 % | 7.1–7.6; data source undecided |
 | Phase 8 — demo, paper, release | 🔴 | 0 % | 8.1–8.4 |
@@ -61,6 +65,8 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 ---
 
 ## 3. Completed
+- Phase 5 (5.1–5.4): multi-terminal engine, matrix, hardening — see TSoT V5.
+- Gate remediation.
 - Phases 0–4 (first-half playbook), tags `m0.1 … m4.3`, `phase-0-done … phase-3-done`, `v0.5-half`.
 - Hardening: 100k differential test, seeded empirical table, test-count reconciliation.
 - Analysis: gate audit; re-validation of test suite and empirical table; three `docs/` documents.
@@ -69,7 +75,7 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 - (none)
 
 ## 5. Remaining
-See `ANALYSIS_REPORT.md` §7 (15-step roadmap). Next: **gate remediation**, then Milestone 5.1.
+See `ANALYSIS_REPORT.md` §7. Next: **Phase 6 (routing layer)** after the user's go-ahead.
 
 ## 6. Blocked
 | Item | Blocked on |
@@ -100,7 +106,8 @@ No algorithmic bug was found.
 | X-1 | 2026-10-18 (re-run 2026-10-20) | Strategy shares and work vs recompute | seed 42, 4 families, 1,000 updates, c=1, p_delete=0.4 | online/rebuild 0.002–0.023; 0 fallbacks | `docs/EMPIRICAL_EVALUATION.md`, byte-identical regen |
 | X-2 | 2026-10-20 | Canonical-state probe | 4 families × c∈{0,½,1,∞} × 3 seeds × 300 updates | 0 / 14,400 differences | scratch (to be committed) |
 | X-3 | 2026-10-20 | 100k differential | 5 seeds × 4 families | 6 passed, 0 mismatches over 100,000 updates | `tests/test_differential_scale.py` |
-| E0–E5 | — | Phase 5.4 and Phase 7 experiments | — | **PENDING EXPERIMENT** | — |
+| X-4 | 2026-10-20 | Multi-tree differential (E0) | 3×20,000 updates + 2×5,000 matrix | 0 mismatches | `test_multitree_slow.py`, `test_matrix.py` |
+| E1–E5 | — | Phase 7 experiments | — | **PENDING EXPERIMENT** | — |
 
 ## 9. Research decisions
 | ID | Decision | Why |
@@ -127,6 +134,10 @@ No algorithmic bug was found.
 
 ## 11. Performance results
 Only X-1 exists (benign workloads, one seed). **No scaling, adversarial, routing or end-to-end numbers exist.** Do not quote any until E1–E5 run.
+
+## 11b. Findings during Phase 5
+- `random_updates` exhausts its edge pool when `p_delete` is high ("2000 updates" gives about 210 on a 6×6 grid). Tests now assert actual counts. A trap for claims, not a generator defect.
+- `m5.2` and `m5.3` share one commit because `terminals.py` holds both classes.
 
 ## 12. Failed approaches / rejected claims
 | What | Why it failed |
