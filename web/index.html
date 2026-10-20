@@ -813,7 +813,7 @@
           <div class="glossary-term">Fallback Rebuild</div>
           <div class="glossary-formula">Abort + Dijkstra(V, E) from scratch</div>
           <div class="glossary-def">
-            If budgeted repair aborts, the copy-on-write overlay is discarded and a full rebuild is executed. Guarantees competitive ratio: total work is strictly bounded by <code>(1 + c) &middot; F + 1</code>.
+            If budgeted repair aborts, the copy-on-write overlay is discarded and a full rebuild is executed. In oracle-F mode, total work for the update is bounded by <code>(1 + c) &middot; F + 2</code> (a work bound; the competitive ratio is a separate result).
           </div>
         </div>
 

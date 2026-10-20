@@ -153,13 +153,21 @@ def generate_markdown_report(metrics: list[FamilyMetrics], seed: int) -> str:
             f"| `{m.family}` | {m.updates:,} | {m.cert_count:,} ({m.cert_hit_rate:.1f}%) | {m.alt_count:,} | {m.repair_count:,} | {m.fallback_count:,} |"
         )
 
+    benign = [m for m in metrics if m.family != "comb_adversarial"]
+    cert_lo = min(m.cert_hit_rate for m in benign)
+    cert_hi = max(m.cert_hit_rate for m in benign)
+    sav_lo = min(m.savings_pct for m in metrics)
+    sav_hi = max(m.savings_pct for m in metrics)
+    total_fallbacks = sum(m.fallback_count for m in metrics)
     lines.extend([
         "",
-        "## Key Empirical Findings",
+        "## Observations (computed from the tables above)",
         "",
-        "1. **Certificate Hit Rates on Real Topologies:** On standard structured graphs (grid, hub-spoke, random sparse), the certificate filters between **70% and 94%** of all updates with strictly 1 SCAN operation.",
-        "2. **Operation Savings:** On benign topologies, `BudgetedMaintainer` achieves **65% to 92% operation savings** compared to full Dijkstra recomputation.",
-        "3. **Adversarial Comb Behavior:** On the adversarial comb, almost every update hits the critical chain edge, triggering bounded repair followed by fallback rebuild. As proven in Proof P2, the worst-case online work is bounded by $(1 + c)F + 2 = 2F + 2$ (at $c=1$), meaning online cost is approximately **1.5x–2.0x rebuild cost**, never exceeding the theoretical bound of $2.0x$.",
+        f"1. **Certificate hit rate** on grid, hub_spoke and random_sparse ranged from {cert_lo:.1f}% to {cert_hi:.1f}% (single seed).",
+        f"2. **Work savings** versus Dijkstra-only recomputation ranged from {sav_lo:.1f}% to {sav_hi:.1f}% across all four families.",
+        f"3. **Fallbacks:** {total_fallbacks} in total. Uniform random updates rarely delete the critical chain edge of `comb_adversarial`, so this run does *not* exercise the worst case of the work bound (1 + c)F + 2; adversarial tightness is a Phase 7 experiment (E4).",
+        "",
+        "**Scope:** one seed, 1,000 uniform random updates per family, c = 1, `f_mode=\"last\"`; the rebuild baseline is Dijkstra only (F additionally includes the tight-edge recount). These are benign-workload measurements, not worst-case guarantees.",
         "",
     ])
 
