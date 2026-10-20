@@ -124,11 +124,13 @@ Update the status column as milestones finish.
 | 7 | Real road data, experiments, ablations, adversarial tightness | (second half) | ☐ |
 | 8 | Demo, final report, release checklist | (second half) | ☐ |
 
-**Current milestone:** `4.3` (completed; 50% checkpoint reached)
-**Last stable tag:** `v0.5-half`
-**Known issues:** None
+**Current milestone:** gate remediation done; Phase 5 (`5.1`) next
+**Last stable tag:** `phase-4-done` (post-gate tag recorded in `PROJECT_LOGBOOK.md`)
+**Known issues:** see `docs/PROJECT_LOGBOOK.md` section 7
 
-Phases 5 to 8 are described here only so you understand the direction. **Do not implement them until the 50% checkpoint is tagged and the team asks.**
+Second-half phases (5 to 8) follow the second-half playbook. The team asked to proceed; stop and ask for approval after each phase.
+
+**Documentation rule:** with every milestone, update `docs/TECHNICAL_SOURCE_OF_TRUTH.md` and `docs/PROJECT_LOGBOOK.md` in the same commit. Never record a number that no seeded script produced.
 
 ## 13. Definition of done (any milestone)
 

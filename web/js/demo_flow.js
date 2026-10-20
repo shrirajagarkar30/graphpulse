@@ -172,7 +172,7 @@ class DemoFlowController {
       },
       {
         title: "11. Performance Tournament: GraphPulse-R vs Rebuild",
-        desc: "Across dynamic update sequences, GraphPulse-R routinely eliminates over 95-99% of total algorithmic operations compared to naive recomputation from scratch, confirming the core theoretical and empirical results."
+        desc: "Across dynamic update sequences, the tournament reports measured operation counts of GraphPulse-R against naive recomputation from scratch for the selected workload; savings depend on the graph and update mix."
       }
     ];
 

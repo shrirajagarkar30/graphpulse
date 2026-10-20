@@ -38,6 +38,7 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | 2026-10-20 | Analysis A7 | Coverage probe | ✅ | `coverage.py` in venv | core 82–100 %; server/__main__ 0 % | local | note in TSoT V1b |
 | 2026-10-20 | Analysis A8 | Playbook value check | ✅ | brute force for T6.1-01/02, HK formula | 80 / [1,3,2]; 21 / [2,3,1]; formula OK | scratch | — |
 | 2026-10-20 | Analysis A9 | Gate audit G1–G10 | ✅ | see `ANALYSIS_REPORT.md` §2 | **G1, G4, G8 fail; G10 partial** | report | gate remediation |
+| 2026-10-20 | Gate | Gate remediation (G1, G4, G6, G8, G10) | ✅ | fixed dashboard strings, benchmark prose (computed), KNOWN_GAPS, AGENTS; tags `phase-4-done`, `v0.5.1-gated` (local) | tables unchanged; 201 fast passed | branch `gate-fixes` | Milestone 5.1 |
 | 2026-10-20 | Analysis A10 | Documentation | ✅ | created TSoT, logbook, analysis report | — | `docs/` | **await user go-ahead** |
 
 ---
@@ -80,12 +81,12 @@ See `ANALYSIS_REPORT.md` §7 (15-step roadmap). Next: **gate remediation**, then
 ## 7. Bugs and defects
 | ID | Severity | Description | Location | Status |
 |---|---|---|---|---|
-| B-1 | Medium (credibility) | Dashboard states "Guarantees competitive ratio … `(1+c)·F + 1`" — wrong term and constant | `web/index.html:816` | open |
-| B-2 | Medium (credibility) | Three empirical findings contradict the table beside them | `docs/EMPIRICAL_EVALUATION.md`, generator `bench_empirical_claims.py:160-162` | open |
-| B-3 | Low | Unsupported "95–99 %" claim in UI | `web/js/demo_flow.js:175` | open |
-| B-4 | Low | `KNOWN_GAPS.md` mis-describes `find_affected` as a superset | `docs/KNOWN_GAPS.md:14` | open |
+| B-1 | Medium (credibility) | Dashboard states "Guarantees competitive ratio … `(1+c)·F + 1`" — wrong term and constant | `web/index.html:816` | fixed (gate-fixes) |
+| B-2 | Medium (credibility) | Three empirical findings contradict the table beside them | `docs/EMPIRICAL_EVALUATION.md`, generator `bench_empirical_claims.py:160-162` | fixed (gate-fixes) |
+| B-3 | Low | Unsupported "95–99 %" claim in UI | `web/js/demo_flow.js:175` | fixed (gate-fixes) |
+| B-4 | Low | `KNOWN_GAPS.md` mis-describes `find_affected` as a superset | `docs/KNOWN_GAPS.md:14` | fixed (gate-fixes) |
 | B-5 | Low | Missing tag `phase-4-done` | git | open |
-| B-6 | Low | P2 proof mixes "+1" and "+2" | `docs/proofs/P2_work_bound.md` | open |
+| B-6 | — | P2 "+1"/"+2": **withdrawn** — the proof is consistent (+1 for integer c·F, +2 in general, as its theorem states) | `docs/proofs/P2_work_bound.md` | not a defect |
 | B-7 | Low (hardening) | Server: global state without lock under `ThreadingHTTPServer`, no body limit, CORS `*`, `startswith` path-prefix check (sibling-dir `web*` would pass), hard-coded `project_progress: 50`, returns 403 not 404 | `src/graphpulse/server.py` | open → 8.1 |
 | B-8 | Info | `check_state` annotated with `Any` but `Any` is not imported (harmless under `from __future__ import annotations`; breaks `typing.get_type_hints`) | `verify.py:130` | open |
 | B-9 | Info | README layout lists only `__init__.py`; says "## 4" twice | `README.md` | open |

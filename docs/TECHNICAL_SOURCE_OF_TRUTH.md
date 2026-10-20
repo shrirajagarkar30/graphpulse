@@ -344,7 +344,7 @@ The brief that started this analysis recalled "≈240 tests". The repository has
 
 **V4 — Playbook worked examples** (scratch brute force): T6.1-01 → cost 80, order [1,3,2]; T6.1-02 → cost 21, order [2,3,1]; Held–Karp transition formula equals k(k−1)2^{k−2} for k=2..7 (k=3 → 12). These confirm the *second-half playbook's expected values are correct*; they are not results about GraphPulse code.
 
-### 10.2 Claims that must **not** be used (found in the repository)
+### 10.2 Claims that must **not** be used (found in the repository; all removed from the repo on branch `gate-fixes` on 2026-10-20 — kept here as a record)
 | Location | Claim | Why rejected |
 |---|---|---|
 | `docs/EMPIRICAL_EVALUATION.md` "Key findings" 1 | "70 % and 94 %" cert hit rate | Own table shows 70.6–97.7 % |

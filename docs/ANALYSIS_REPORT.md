@@ -37,7 +37,9 @@ GraphPulse-R maintains, under edge deletions and weight increases, an **exact sh
 | G9 | `v0.5-half` on `main` | ✅ PASS, with a trap | tag → `c5636be`, an ancestor of `main`; `main` is 7 commits ahead (the hardening commits) | See D-004: add a newer stable tag; never move `v0.5-half` |
 | G10 | `AGENTS.md` status table | 🟡 PARTIAL | `docs/AGENTS.md` §12 says Phase 4 ✅, current `4.3`; correct for the first half but not yet reflecting gate state | Update when the user approves proceeding |
 
-**Verdict: NO-GO for Milestone 5.1 until G1, G4, G8 (and the G6/G10 doc corrections) are done.** These are documentation/tag/string changes and need no algorithmic review.
+**Verdict at analysis time: NO-GO for Milestone 5.1 until G1, G4, G8 (and the G6/G10 doc corrections) were done.**
+
+**Remediation (2026-10-20, branch `gate-fixes`, local):** G1 dashboard string fixed (P2 was in fact consistent: +1 for integer c·F, +2 in general); G4 benchmark findings now computed from the table, dashboard figure removed; G6 `KNOWN_GAPS.md` corrected; G8 tag `phase-4-done` created on `8708835`; G10 `AGENTS.md` updated; stable tag `v0.5.1-gated` created after merge. Fast suite 201 passed after the changes. Gate: **GO**.
 
 ---
 
