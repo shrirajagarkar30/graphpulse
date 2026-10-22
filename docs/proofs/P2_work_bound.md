@@ -1,5 +1,7 @@
 # Proof P2: Per-Update Machine-Independent Work Bound
 
+**Reviewer sign-off:** PENDING (requires two team members other than the author)
+
 **Milestone 4.3: Per-Update Worst-Case Work Analysis**
 
 This document establishes the formal per-update machine-independent work bound for `BudgetedMaintainer` under the operational cost model specified in `SPEC.md`.

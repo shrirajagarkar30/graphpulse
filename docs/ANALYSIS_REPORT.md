@@ -73,12 +73,12 @@ Status key: ✅ COMPLETE · 🟡 PARTIALLY COMPLETE · 🔴 NOT STARTED · ⚠�
 | 5 | `MultiTreeManager` (5.2) | ✅ | `test_multitree` | — |
 | 5 | `TerminalMatrix` + guard (5.3) | ✅ | `test_matrix`; guard seen to fire | — |
 | 5 | Multi-tree hardening, touched-tree stat (5.4) | ✅ | `test_multitree_slow`; 60,000 updates, 0 mismatches | Phase 7 regenerates touched-tree numbers |
-| 6 | Tour cost, brute force (6.1) | 🔴 | worked examples verified by scratch script | |
-| 6 | Held–Karp (6.2) | 🔴 | formula verified combinatorially | |
-| 6 | NN + branch-and-bound (6.3) | 🔴 | | |
-| 6 | Lazy tour certificate (6.4) | 🔴 | | |
-| 6 | `RoutingPipeline` (6.5) | 🔴 | | |
-| 6 | P4 (NP-hardness), P5 (certificate) (6.6) | 🔴 | | |
+| 6 | Tour cost, brute force (6.1) | ✅ | worked examples verified by scratch script | |
+| 6 | Held–Karp (6.2) | ✅ | formula verified combinatorially | |
+| 6 | NN + branch-and-bound (6.3) | ✅ | | |
+| 6 | Lazy tour certificate (6.4) | ✅ | | |
+| 6 | `RoutingPipeline` (6.5) | ✅ | | |
+| 6 | P4 (NP-hardness), P5 (certificate) (6.6) | 🟡 | drafted; reduction test passes | reviewer sign-off |
 | 7 | Road loader (7.1) → experiments E1–E5 (7.2–7.6) | 🔴 | no data source chosen | decide A7 |
 | 8 | API/dashboard routing, claims audit, paper, release | 🔴 | | |
 

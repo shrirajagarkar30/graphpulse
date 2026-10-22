@@ -1,5 +1,7 @@
 # Proof P3: Competitive Ratio Analysis of Budgeted Dynamic Shortest Paths
 
+**Reviewer sign-off:** PENDING (requires two team members other than the author)
+
 **Milestone 4.3: Theoretical Foundation for Deterministic and Randomized Budgets**
 
 This document establishes the competitive analysis of GraphPulse-R's budgeted repair framework against an offline optimum adversary. It proves:

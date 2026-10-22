@@ -1,5 +1,7 @@
 # Proof P1: Correctness of Incremental Shortest-Path Repair
 
+**Reviewer sign-off:** PENDING (requires two team members other than the author)
+
 **Milestone 3.1: Foundation for Incremental Shortest-Path Repair**
 
 This document establishes the mathematical foundations for GraphPulse-R's incremental shortest-path repair algorithms. It proves that the tight-edge subgraph is a Directed Acyclic Graph (DAG) under strictly positive integer weights, and formalizes why vertices retaining alternative tight support do not change distance under edge deletions and weight increases.
