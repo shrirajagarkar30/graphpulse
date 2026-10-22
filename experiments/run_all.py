@@ -31,9 +31,7 @@ def sha256(path: Path) -> str:
     (git autocrlf) verifies against the same manifest as a Linux checkout."""
     data = path.read_bytes()
     if path.suffix in (".csv", ".md", ".json", ".tex"):
-        data = data.replace(b"
-", b"
-")
+        data = data.replace(b"\r\n", b"\n")
     return hashlib.sha256(data).hexdigest()
 
 
