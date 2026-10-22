@@ -46,12 +46,14 @@ class RoutingPipeline:
         f_mode: str = "last",
         verify: bool = False,
         seed: int | None = None,
+        lazy_tour: bool = True,
     ) -> None:
         if isinstance(eps, bool) or not isinstance(eps, (int, float)) or eps < 0 or math.isinf(eps):
             raise ValueError(f"eps must be a finite non-negative number, got {eps!r}")
         self._mgr = MultiTreeManager(g, terminals, c=c, f_mode=f_mode, verify=verify, seed=seed)
         self._mat = TerminalMatrix(self._mgr)
         self._eps = float(eps)
+        self._lazy = bool(lazy_tour)
         cnt = OpCounter()
         cost, order = held_karp(self._mat.D, cnt)          # initial solve: not part of per-update accounting
         self._cert = TourCertificate(self._mat.D, order, cost)
@@ -93,8 +95,15 @@ class RoutingPipeline:
         D = self._mat.D
         hk = 0
 
-        if math.isinf(self._cert.cost):
+        if self._lazy and math.isinf(self._cert.cost):
             action = INFEASIBLE                       # entries only grow: stays infeasible, 0 transitions
+        elif not self._lazy:
+            cnt = OpCounter()                         # lazy_tour off: exact re-solve after every update
+            cost, order = held_karp(D, cnt)
+            hk = cnt.dp
+            self._cert.rebase(D, order, cost)
+            self._cost, self._order = cost, order
+            action = INFEASIBLE if math.isinf(cost) else RESOLVED
         elif not changed:
             action = KEPT                             # skip even the certificate lookup
         elif self._cert.decide(changed, D) == KEEP:
