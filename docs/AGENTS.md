@@ -57,7 +57,7 @@ State writes are not charged separately (each is caused by an already-charged op
 ## 7. Tech stack and dependencies
 
 - Python 3.11+, standard library only for algorithms (`heapq`, `dataclasses`, `random.Random(seed)`).
-- Dev only: `pytest`, `hypothesis` (property-based tests and shrinking), `networkx` (independent Dijkstra oracle, **tests only**).
+- Dev only: `pytest`, `hypothesis` (property-based tests and shrinking), `networkx` (independent Dijkstra oracle, **tests only**), `pandas` and `matplotlib` (result tables and figures, introduced in Phase 7, pinned).
 - **Do not add any library, framework or tool without asking and explaining why it is needed.** Later phases may add `osmnx`, `matplotlib`, and Streamlit or Folium, but only when the playbook reaches that milestone.
 
 ## 8. Repository layout
@@ -118,17 +118,17 @@ Update the status column as milestones finish.
 | 1 | Counted Dijkstra, invariant checker, oracle | 1.1, 1.2, 1.3 | ✅ completed |
 | 2 | Generators, update sequences, differential harness | 2.1, 2.2, 2.3 | ✅ completed |
 | 3 | Incremental repair (tight counters, affected set, deletions, increases) | 3.1 to 3.5 | ✅ completed |
-| 4 | Budgeted controller, competitive-ratio proofs (**50% checkpoint, tag `v0.5-half`**) | 4.1, 4.2, 4.3 | ✅ completed (207 / 207 tests passed) |
-| 5 | Multi-terminal trees and distance matrix | (second half) | ☐ |
-| 6 | Held-Karp, lazy re-solve certificate, baselines, NP-hardness write-up | (second half) | ☐ |
-| 7 | Real road data, experiments, ablations, adversarial tightness | (second half) | ☐ |
-| 8 | Demo, final report, release checklist | (second half) | ☐ |
+| 4 | Budgeted controller, competitive-ratio proofs (**50% checkpoint, tag `v0.5-half`**) | 4.1, 4.2, 4.3 | ✅ completed (all first-half tests passed at the checkpoint) |
+| 5 | Multi-terminal trees and distance matrix | 5.1 to 5.4 | ✅ completed |
+| 6 | Held-Karp, lazy re-solve certificate, baselines, NP-hardness write-up | 6.1 to 6.6 | ✅ completed (proof sign-offs pending) |
+| 7 | Experiments, ablations, adversarial tightness (no real road data used) | 7.1 to 7.6 | ✅ completed |
+| 8 | Demo, final report, release checklist | 8.1 to 8.4 | 🟡 in progress |
 
-**Current milestone:** gate remediation done; Phase 5 (`5.1`) next
+**Current milestone:** Phase 8 (dashboard redesign, release candidate)
 **Last stable tag:** `phase-4-done` (post-gate tag recorded in `PROJECT_LOGBOOK.md`)
 **Known issues:** see `docs/PROJECT_LOGBOOK.md` section 7
 
-Second-half phases (5 to 8) follow the second-half playbook. The team asked to proceed; stop and ask for approval after each phase.
+Second-half phases (5 to 8) follow the second-half playbook. The team asked to complete all phases without stopping between them.
 
 **Documentation rule:** with every milestone, update `docs/TECHNICAL_SOURCE_OF_TRUTH.md` and `docs/PROJECT_LOGBOOK.md` in the same commit. Never record a number that no seeded script produced.
 
@@ -145,7 +145,7 @@ Second-half phases (5 to 8) follow the second-half playbook. The team asked to p
 - Do not use floats for weights, global counters, or wall-clock assertions in tests.
 - Do not claim novelty, speedups or bounds that have not been proven or measured.
 - Do not fake results, hard-code expected values from your own output, or modify golden files to match your code.
-- Do not touch second-half phases early.
+- Second-half phases follow the second-half playbook order.
 
 ## 15. Glossary
 

@@ -47,6 +47,13 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | 2026-10-22 | 6 / M6.4 | Lazy tour certificate | ✅ | `tourcert.py` with accumulated changes and non-ratcheted LB | 11 tests; soundness 500 cases, ε-bound 500 cases | tag `m6.4` | M6.5 |
 | 2026-10-22 | 6 / M6.5 | `RoutingPipeline` | ✅ | trees → matrix → certificate → Held–Karp; reference isolated | 12 fast tests + 20,000-update slow test: 0 cost mismatches | tag `m6.5` | M6.6 |
 | 2026-10-22 | 6 / M6.6 | NP-hardness + certificate proofs | 🟡 | P4, P5 drafted; reduction executable | 5 tests pass; **sign-off PENDING (team)** | tag `m6.6` | Phase 7 |
+| 2026-10-22 | 7 / M7.1 | Road loader | ✅ | `roadnet.py`, `tests/data/tiny.gr`, `data/README.md` | 19 tests; **no real dataset used** (decision: synthetic only) | tag `m7.1` | M7.2 |
+| 2026-10-22 | 7 / M7.2 | Experiment runner | ✅ | seeded runner, cross-variant check, metadata | determinism, injected-fault tests | tag `m7.2` | E1 |
+| 2026-10-22 | 7 / M7.3–7.5 | E1, E2, E3, E4 | ✅ | `e1_budget` … `e4_adversarial`, `partial_comb`, `tree_edges` mode | bound held in all 168 E1 runs; E4 tight for c=0.5, 1 | tags `m7.3`–`m7.5` | E5 |
+| 2026-10-22 | 7 / M7.6 | E5, figures, `run_all`, MANIFEST | ✅ | full run 1,440 s total; manifest verified | 0 cross-variant disagreements | tag `m7.6`; `docs/results/` | Phase 8 |
+| 2026-10-22 | 8 / M8.1 (backend) | Routing API, validation, lock, safe static, local-only | ✅ | `server.py`, `docs/API.md` | 30 API tests incl. traversal, 413, concurrency | commit on `phase-7-experiments` | UI redesign |
+| 2026-10-22 | 8 / M8.2 | Claims audit + lint | ✅ | `CLAIMS.md`, `test_docs_lint.py` | dashboard-text lint expected to fail until redesign (xfail) | | remove xfail after UI |
+| 2026-10-22 | 8 / M8.3 | Paper sources | 🟡 | `paper/`, generated tables, asset tests | not compiled (no LaTeX); bibliography unverified | | team review |
 | 2026-10-20 | Analysis A10 | Documentation | ✅ | created TSoT, logbook, analysis report | — | `docs/` | **await user go-ahead** |
 
 ---
@@ -63,8 +70,8 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | **Gate to second half** | ✅ | 100 % | closed 2026-10-20 (`v0.5.1-gated`) |
 | Phase 5 — multi-terminal | ✅ | 100 % | merged, tag `phase-5-done` |
 | Phase 6 — routing layer | ✅ | 100 % (proof sign-offs pending) | — |
-| Phase 7 — experiments | 🔴 | 0 % | 7.1–7.6; data source undecided |
-| Phase 8 — demo, paper, release | 🔴 | 0 % | 8.1–8.4 |
+| Phase 7 — experiments | ✅ | 100 % | real-data runs not done (no dataset) |
+| Phase 8 — demo, paper, release | 🟡 | 55 % | UI redesign + routing panel, release candidate, human gates |
 
 ---
 
@@ -111,6 +118,7 @@ No algorithmic bug was found.
 | X-1 | 2026-10-18 (re-run 2026-10-20) | Strategy shares and work vs recompute | seed 42, 4 families, 1,000 updates, c=1, p_delete=0.4 | online/rebuild 0.002–0.023; 0 fallbacks | `docs/EMPIRICAL_EVALUATION.md`, byte-identical regen |
 | X-2 | 2026-10-20 | Canonical-state probe | 4 families × c∈{0,½,1,∞} × 3 seeds × 300 updates | 0 / 14,400 differences | scratch (to be committed) |
 | X-3 | 2026-10-20 | 100k differential | 5 seeds × 4 families | 6 passed, 0 mismatches over 100,000 updates | `tests/test_differential_scale.py` |
+| X-5 | 2026-10-22 | E1–E5 full run | see TSoT V7 | all variants agree | `docs/results/` |
 | X-4 | 2026-10-20 | Multi-tree differential (E0) | 3×20,000 updates + 2×5,000 matrix | 0 mismatches | `test_multitree_slow.py`, `test_matrix.py` |
 | E1–E5 | — | Phase 7 experiments | — | **PENDING EXPERIMENT** | — |
 
@@ -149,7 +157,7 @@ Only X-1 exists (benign workloads, one seed). **No scaling, adversarial, routing
 ## 12. Failed approaches / rejected claims
 | What | Why it failed |
 |---|---|
-| "(c+1)-competitive" phrasing | Wrong: work bound ≠ competitive ratio; ratio is `(1+c)/min(c,1)` and equals 2 only at c=1 |
+| The "c-plus-one competitive" phrasing | Wrong: work bound ≠ competitive ratio; ratio is `(1+c)/min(c,1)` and equals 2 only at c=1 |
 | Empirical prose "70–94 %", "65–92 %", "1.5–2.0×" | Not produced by the table; rejected |
 | Treating `find_affected` as a tree-subtree superset (KNOWN_GAPS) | Code is counter-based and exact |
 | Relying on `v0.5-half` as rollback point | Predates hardening; superseded by a new tag after the gate |

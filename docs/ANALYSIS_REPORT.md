@@ -10,11 +10,11 @@ Nothing in `src/`, `tests/`, `experiments/` or `web/` was modified. Only the thr
 
 ## 1. Executive summary
 
-GraphPulse-R maintains, under edge deletions and weight increases, an **exact shortest-path tree with tight-edge counters**, using a decision cascade (certificate → alternative support → budgeted repair → rebuild) with a provable work bound and competitive ratio. The first half (Phases 0–4: ~3,650 lines of source, 207 tests) is implemented and passes. The second half (multi-terminal trees, terminal matrix, Held–Karp, lazy tour certificate, real road data, experiments, paper) has **no code yet**.
+GraphPulse-R maintains, under edge deletions and weight increases, an **exact shortest-path tree with tight-edge counters**, using a decision cascade (certificate → alternative support → budgeted repair → rebuild) with a provable work bound and competitive ratio. The first half (Phases 0–4: ~3,650 lines of source, the first-half suite) is implemented and passes. The second half (multi-terminal trees, terminal matrix, Held–Karp, lazy tour certificate, real road data, experiments, paper) has **no code yet**.
 
 **Headline findings**
 1. The core is sound: 201/201 fast tests pass; the slow suite (including the 100,000-update differential run with the structural verifier after every update) result is recorded in §5. A scratch check found repaired state identical to rebuilt state in 14,400 sampled updates (not yet a committed test).
-2. The brief's "≈240 tests" is **207** in the repository.
+2. The brief's "about two hundred and forty tests" is **207** in the repository.
 3. **Gate to the second half is not fully satisfied** (§2): G8 (`phase-4-done` tag missing), G1 (wrong wording and constant still in `web/index.html`), G4 (three percentage claims in `EMPIRICAL_EVALUATION.md` contradict its own table; an unsupported "95–99 %" in the dashboard), G10 (status table). None of these is an algorithmic defect. All are cheap to fix and must be fixed *before* Milestone 5.1 (Playbook §A).
 4. The proven guarantees hold for **oracle F**, which is not deployable; the deployable `last`-F mode has no theorem. The paper must say so.
 5. The only quantitative evidence today is one seeded benign-workload table; the worst-case bound has not been exercised at scale on a tight instance (no fallback occurred in any family).
@@ -27,7 +27,7 @@ GraphPulse-R maintains, under edge deletions and weight increases, an **exact sh
 | # | Item | Result | Evidence | Fix |
 |---|---|---|---|---|
 | G1 | Competitive-ratio wording | ❌ **FAIL** (partial) | `src/`, `SPEC.md`, `AGENTS.md`, `analysis.py` are correct (`max(1+c,(1+c)/c)`, work bound `(1+c)F+2`). **`web/index.html:816`** still reads "Guarantees competitive ratio … `(1 + c)·F + 1`". `P2_work_bound.md` lines 50–99 use "+1" before its final "+2". `PLAYBOOK.md` checklist says "+1" (historical) | Reword the dashboard string; align P2 intermediate lines |
-| G2 | 4.3 complete: `analysis.py`, randomised budget, P1–P3 | ✅ PASS | files exist; `test_competitive.py` 10 tests pass | Add reviewer sign-off lines (needed by 8.2 lint) |
+| G2 | 4.3 complete: `analysis.py`, randomised budget, P1–P3 | ✅ PASS | files exist; `test_competitive.py` passes | Add reviewer sign-off lines (needed by 8.2 lint) |
 | G3 | ≥100,000 mixed updates, 4 families, 5 seeds, `verify_structured` each | ✅ PASS by construction; result in §5 | `tests/test_differential_scale.py`: 5 seeds × 4 families × 5 batches × 1,000 = 100,000 | — |
 | G4 | Every empirical % claim seeded or deleted | ❌ **FAIL** | `EMPIRICAL_EVALUATION.md` "Key findings": "70–94 %" (table: 70.6–97.7), "65–92 % savings" (table: 97.7–99.8), comb "1.5–2.0× rebuild" (table: 0.006×, 0 fallbacks); `web/js/demo_flow.js:175` "95–99 %" unsupported. Table itself regenerates byte-identically (18 s) | Rewrite findings from the table; delete/qualify dashboard figure; fix generator text in `bench_empirical_claims.py:160-162` |
 | G5 | Test counts reconciled | ✅ PASS | `--collect-only` = 207; `AGENTS.md`/`PLAYBOOK.md` say 207 (201 fast + 6 slow). README has no count | Playbook 8.2 will forbid hard-coded counts later |
@@ -79,8 +79,12 @@ Status key: ✅ COMPLETE · 🟡 PARTIALLY COMPLETE · 🔴 NOT STARTED · ⚠�
 | 6 | Lazy tour certificate (6.4) | ✅ | | |
 | 6 | `RoutingPipeline` (6.5) | ✅ | | |
 | 6 | P4 (NP-hardness), P5 (certificate) (6.6) | 🟡 | drafted; reduction test passes | reviewer sign-off |
-| 7 | Road loader (7.1) → experiments E1–E5 (7.2–7.6) | 🔴 | no data source chosen | decide A7 |
-| 8 | API/dashboard routing, claims audit, paper, release | 🔴 | | |
+| 7 | Road loader (7.1) | ✅ | tested on tiny file | real dataset not used |
+| 7 | Runner, E1–E5, figures, run_all (7.2–7.6) | ✅ | `docs/results`, MANIFEST verified | real-data and full-size E1/E5 runs |
+| 8 | API backend + hardening (8.1) | ✅ | `test_api_routing` | frontend routing panel (UI redesign) |
+| 8 | Claims audit (8.2) | ✅ | `CLAIMS.md`, lint | remove xfail after UI |
+| 8 | Paper (8.3) | 🟡 | sources + generated tables | compile (Overleaf), verify bibliography, literature check |
+| 8 | Release (8.4) | 🔴 | | licence chosen (MIT), pins done; second-machine reproduction and sign-offs are human gates |
 
 **Overall:** Phases 0–4 ≈ complete (the "first 50 %"); Phases 5–8 not started. Work is *not* yet 50 % of the effort: the second half contains all the research-evidence work (experiments, paper).
 
