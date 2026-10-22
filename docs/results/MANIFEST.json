@@ -1,0 +1,30 @@
+{
+  "figures": {
+    "figures/fig_a_ratio_vs_rho.pdf": "22e21298261dd1694c4b416363ca64d1c1c6ee6557bd27cd39096326dfd1c78b",
+    "figures/fig_a_ratio_vs_rho.png": "d48b91443437275acad4be311c431b6f18c805865044a1212a52ab5cccc18283",
+    "figures/fig_b_strategy_shares.pdf": "7c1af51696378f05ffd2bf2160dc6fcafc172f53f0e7913ac0e421e2caf000f8",
+    "figures/fig_b_strategy_shares.png": "559f299832b3344c8325a2bace97a2c2d495fc9c1fd292beb66fa02e01b86aa9",
+    "figures/fig_c_scaling.pdf": "5e7052940905ff1bd545eb556667b1ef735bebbb96665625b663b97027c260bd",
+    "figures/fig_c_scaling.png": "611d95f8df98aadc672436cc39ca60bc34f6ebaad78894509943a247a1a9ec81",
+    "figures/fig_d_adversarial.pdf": "b315e19fe89645ab57cfd77886f9d92b731cc2aca0b137ea9efbeed820041024",
+    "figures/fig_d_adversarial.png": "9ae206e025d7799194e533cc60de5eb29060e8da81d2bc805f9b1a8bf1c8a8c8",
+    "figures/fig_e_endtoend.pdf": "aae9396b324e226c0ce2c7c6367a063801e27ad4440ff6b4b76203d6affe29e8",
+    "figures/fig_e_endtoend.png": "c73cca13e716ba150fc283b2cc10ab95a701bfa583f43f905c82aeceffbc3b30"
+  },
+  "files": {
+    "results/e1_budget.csv": "8b646ff4bdc5438224a4183c3656375ad2d96b73c3d359d6ec6d329573b3f62f",
+    "results/e1_budget.md": "3514103ddc90d0a156ff76349650c206d41c87a60187cdae6cdd4c02e79784dc",
+    "results/e2_ablation.csv": "577801a0ebd67c4afbdd7c4ad99f883b35fe8c4aacd82ea61699defc5e98a14e",
+    "results/e2_shares.csv": "e15273e863d84ba3b93a4deb99cfd2e8056d96ed35699a1d3d6d0a32b0c5ff94",
+    "results/e2_skip.csv": "372b1fad83e9ccd6292c122f95a9c5434cbbcb149fe0653ba52ae8d4050270b8",
+    "results/e2_touched_k.csv": "78b38c505bd56b5f92e1298757b0c739404e7f470c69bb5d8db9e3e1e18bfc6e",
+    "results/e3_k.csv": "ae9ca56658031e50e865bd89b23383b9b95059b784588ac417f5f5eafaaa1169",
+    "results/e3_scaling.csv": "f8b65aba9532f0c7c10eee491db35e9ae2ad0a008c9dbbece0fb6cbfa5d903f0",
+    "results/e3_slopes.csv": "a83cbb9c89576eee0c3b1b45fc87101aa6bed02a8f807684e95fb8ee2dfe3a2c",
+    "results/e4_adversarial.csv": "70c1630db5809969d98520434b09dcffce1b8cb8dbe447a2310bdb3bac572422",
+    "results/e4_summary.csv": "e29dde76276eaa32d29e4f97fde1f0c9f6aa8a66c45f36a2289e960240994daa",
+    "results/e5_endtoend.csv": "ed3541a91bf875f88cdeb6c5e84b06c164befde362f68acca6bd2503fab69b80"
+  },
+  "git_hash": "fde3885",
+  "mode": "full"
+}

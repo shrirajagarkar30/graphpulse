@@ -1,0 +1,17 @@
+family,mode,k,T_actual,mean_touched,mean_dist_changed,touched_fraction
+grid,uniform,4,400,1.35,1.235,0.27
+grid,uniform,8,400,2.4325,2.215,0.270278
+grid,uniform,12,400,3.59,3.2425,0.276154
+grid,uniform,16,400,4.72,4.26,0.277647
+grid,tree_edges,4,400,4.325,3.945,0.865
+grid,tree_edges,8,400,6.5825,5.985,0.731389
+grid,tree_edges,12,400,9.26,8.42,0.712308
+grid,tree_edges,16,400,11.7175,10.6625,0.689265
+random_sparse,uniform,4,400,1.135,0.945,0.227
+random_sparse,uniform,8,400,2.0275,1.6925,0.225278
+random_sparse,uniform,12,400,2.9875,2.5025,0.229808
+random_sparse,uniform,16,400,3.8925,3.26,0.228971
+random_sparse,tree_edges,4,400,2.91,2.5075,0.582
+random_sparse,tree_edges,8,400,4.995,4.3525,0.555
+random_sparse,tree_edges,12,400,7.0325,6.15,0.540962
+random_sparse,tree_edges,16,400,9.0775,7.98,0.533971
