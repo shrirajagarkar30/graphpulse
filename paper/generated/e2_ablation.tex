@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{E2 ablation on the grid (identical updates, exact tours): total tree operations and Held--Karp transitions.}
+\label{tab:e2abl}
+\small
+\begin{tabular}{lrrrr}
+\hline
+variant & lazy tour & tree work & HK transitions & fallbacks \\
+\hline
+rebuild\_always & 1 & 10\,857\,296 & 1\,075\,200 & 0 \\
+repair\_always & 1 & 185\,036 & 57\,344 & 0 \\
+repair\_always & 0 & 185\,036 & 1\,075\,200 & 0 \\
+cert\_only & 1 & 2\,777\,989 & 57\,344 & 690 \\
+cert\_only & 0 & 2\,777\,989 & 1\,075\,200 & 690 \\
+gp & 1 & 202\,478 & 57\,344 & 7 \\
+gp & 0 & 202\,478 & 1\,075\,200 & 7 \\
+gp\_random & 1 & 256\,595 & 57\,344 & 25 \\
+gp\_random & 0 & 256\,595 & 1\,075\,200 & 25 \\
+\hline
+\end{tabular}
+\end{table}
