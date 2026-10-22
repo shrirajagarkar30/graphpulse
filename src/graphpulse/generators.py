@@ -234,6 +234,41 @@ def comb_adversarial(
     return g
 
 
+def partial_comb(n: int, frac: float, K: int | None = None) -> DiGraph:
+    """Comb whose edge (0,1) deletion changes the distance of exactly vertices 1..m-1.
+
+    Chain 0->1->...->n-1 and back edges (weight 1); heavy shortcuts 0->i of
+    weight i+K for i >= 2, except the *protecting* shortcut 0->m of weight m,
+    where m = ceil(frac*(n-1)) + 1.  Deleting (0,1) then leaves every vertex
+    i >= m at its old distance (reached via 0->m and the chain) and strictly
+    increases the distance of 1..m-1, so the affected count is m-1 and r/F can
+    be tuned continuously with `frac`.
+
+    Requires 0 < frac <= 1 (so 2 <= m <= n).  For m = n there is no vertex n to
+    protect, so no protecting shortcut exists and all n-1 vertices are affected.
+    """
+    import math as _math
+
+    if not isinstance(n, int) or isinstance(n, bool) or n < 3:
+        raise ValueError(f"n must be an integer >= 3, got {n!r}")
+    if not isinstance(frac, (int, float)) or isinstance(frac, bool) or not (0.0 <= frac <= 1.0):
+        raise ValueError(f"frac must be in [0, 1], got {frac!r}")
+    m = _math.ceil(frac * (n - 1)) + 1
+    if m < 2:
+        raise ValueError(f"frac={frac!r} gives m={m} < 2: no protecting shortcut exists")
+    if K is None:
+        K = n
+    if not isinstance(K, int) or isinstance(K, bool) or K <= 0:
+        raise ValueError(f"K must be a positive integer, got {K!r}")
+    g = DiGraph(n)
+    for i in range(n - 1):
+        g.add_edge(i, i + 1, 1)
+        g.add_edge(i + 1, i, 1)
+    for i in range(2, n):
+        g.add_edge(0, i, m if i == m else i + K)
+    return g
+
+
 # ---------------------------------------------------------------------------
 # Update model (Milestone 2.2)
 # ---------------------------------------------------------------------------
@@ -350,6 +385,9 @@ def random_updates(
                     "clustered"  — sample edges near a randomly chosen centre
                                    vertex (within *radius* undirected hops).
                     "near_source"— sample edges within *radius* hops of vertex 0.
+                    "tree_edges" — sample only edges that are tight in the shortest-path
+                                   tree of vertex 0 on the working copy at that step
+                                   (a stress case: every update hits a tree edge).
     p_delete      : probability that a chosen edge is deleted (vs. increased).
     radius        : hop radius for "clustered" and "near_source" modes.
     w_increase_max: maximum additional weight added on an "increase" (≥1).
@@ -362,7 +400,7 @@ def random_updates(
         raise ValueError(f"count must be non-negative, got {count!r}")
     if not (0.0 <= p_delete <= 1.0):
         raise ValueError(f"p_delete must be in [0, 1], got {p_delete!r}")
-    if mode not in ("uniform", "clustered", "near_source"):
+    if mode not in ("uniform", "clustered", "near_source", "tree_edges"):
         raise ValueError(f"Unknown mode {mode!r}")
     if w_increase_max < 1:
         raise ValueError(f"w_increase_max must be >= 1, got {w_increase_max!r}")
@@ -387,6 +425,16 @@ def random_updates(
                 (u, v, w)
                 for u, v, w in _all_edges(working)
                 if u in cluster and v in cluster
+            ]
+        elif mode == "tree_edges":
+            from graphpulse.dijkstra import INF as _INF, dijkstra as _dijkstra
+            from graphpulse.opcount import OpCounter as _OpCounter
+
+            dist0, _ = _dijkstra(working, 0, _OpCounter())
+            candidates = [
+                (u, v, w)
+                for u, v, w in _all_edges(working)
+                if dist0[u] != _INF and dist0[u] + w == dist0[v]
             ]
         else:  # near_source
             cluster = _bfs_within(working, 0, radius)

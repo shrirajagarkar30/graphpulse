@@ -4,7 +4,7 @@
 > It describes what the repository *actually* does, what has been *verified*, and what is still *planned*.
 > It is a living document: it is updated in the same commit as any change to methodology, code, tests or results (Rule 4).
 >
-> **Synchronised with:** branch `phase-6-routing` (Phase 6 complete, 2026-10-22); baseline analysis on `main` @ `0e02495`.
+> **Synchronised with:** branch `phase-7-experiments` (Phases 6 and 7 complete, 2026-10-22); baseline analysis on `main` @ `0e02495`.
 > **Companion documents:** [`PROJECT_LOGBOOK.md`](PROJECT_LOGBOOK.md) (chronology, decisions, experiments) · [`ANALYSIS_REPORT.md`](ANALYSIS_REPORT.md) (gate audit, status audit, roadmap) · [`SPEC.md`](SPEC.md) (frozen model and cost model) · [`proofs/`](proofs/) (P1–P3).
 
 ## Status labels (used everywhere in this document)
@@ -193,7 +193,7 @@ Notation: n=|V|, m=|E|, deg⁺/deg⁻ out/in-degree, A = affected set, vol(S)=Σ
 ### Alg-6 Budgeted controller — VALIDATED
 - **Method:** Alg-3 cascade, then Alg-5 under cap B; on `BudgetExceeded`, rebuild (Alg-2) and set F←new F.
 - **Work bound (P2, oracle-F):** total ≤ (1+c)·F_true + 2. The "+2" absorbs the one-unit abort slack and ⌈·⌉ rounding.
-- **Competitive ratio (P3):** R(c) = max(1+c, (1+c)/c) = (1+c)/min(c,1); unique minimum R(1)=2. Not "(c+1)-competitive".
+- **Competitive ratio (P3):** R(c) = max(1+c, (1+c)/c) = (1+c)/min(c,1); unique minimum R(1)=2. Not a "c-plus-one competitive" ratio.
 - **Mapping:** `controller.py:BudgetedMaintainer`. **Limitations:** L1, L2, L3.
 
 ### Alg-7 Randomised budget — VALIDATED (distribution) / measured only in simulation
@@ -283,7 +283,7 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Analysis | `analysis.py` | `measure`, `theoretical_competitive_ratio` | P3 | `test_competitive` | VALIDATED |
 | Differential at scale | `tests/test_differential_scale.py` | 100k updates, `verify_structured` each | Alg-9 | itself (slow) | VALIDATED |
 | Benchmark | `experiments/bench_empirical_claims.py` | Seeded table → `docs/EMPIRICAL_EVALUATION.md` | — | none | EXPERIMENTALLY VERIFIED (table), prose **REJECTED** |
-| Dashboard | `server.py`, `web/`, `run_ui.py`, `__main__.py` | Local demo | — | **none (0 % coverage)** | PARTIAL (see L9) |
+| Dashboard | `server.py`, `web/`, `run_ui.py` | Local demo and UI | — | `test_api_routing`, `test_web_assets`, `tests/ui/smoke.js` (manual, in a browser) | VALIDATED (API); UI regression run manually |
 | Shared-graph entry | `controller.py` (`handle_applied`, `own_graph`), `generators.py` (`apply_update` returns old weight) | split mutate/handle | Alg-6 | `test_shared_graph` | VALIDATED |
 | Multi-terminal | `terminals.py` (`MultiTreeManager`, `TerminalMatrix`) | one budgeted tree per terminal on a shared graph; matrix + changed set + guard | Alg-10/11 | `test_multitree`, `test_matrix`, `test_multitree_slow` | VALIDATED |
 | Touched-tree script | `experiments/touched_trees.py` | stdout-only distribution (not for documents) | — | `test_t54_07` | IMPLEMENTED |
@@ -291,7 +291,11 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Lazy tour certificate | `tourcert.py` | keep / keep_eps / resolve; accumulated changes; non-ratcheted LB | Alg-14 | `test_tourcert` | VALIDATED |
 | Routing pipeline | `pipeline.py` (`RoutingPipeline`, `RecomputeEverything`, `run_differential`) | trees → matrix → certificate → Held–Karp | Alg-15 | `test_pipeline` | VALIDATED |
 | NP-hardness / certificate proofs | `docs/proofs/P4_np_hardness.md`, `P5_lazy_certificate.md`, `tests/test_np_reduction.py` | reduction from directed Hamiltonian cycle; Lemma 5/6 | — | `test_np_reduction` | VALIDATED (tests); sign-off PENDING |
-| Road data / experiments | `roadnet.py`, `experiments/e1…e5` | — | — | — | PLANNED |
+| Road loader | `roadnet.py` | DIMACS `.gr` parsing, iterative Tarjan SCC, BFS-ball subgraphs | — | `test_roadnet` | VALIDATED (tiny file only; no real dataset used) |
+| Experiments | `experiments/runner.py`, `e1_budget.py` … `e5_endtoend.py`, `make_figures.py`, `run_all.py`, `make_tables_tex.py` | seeded runner with cross-variant checks; tables, figures, MANIFEST | — | `test_runner`, `test_e1_bound`, `test_e2`, `test_partial_comb`, `test_run_all` | EXPERIMENTALLY VERIFIED |
+| Dashboard API | `server.py`, `docs/API.md` | routing endpoints, strict validation, lock, safe static serving | — | `test_api_routing` | VALIDATED |
+| Paper | `paper/main.tex`, `refs.bib`, `generated/` | tables generated from CSVs | — | `test_paper_assets` | PARTIAL (not compiled: no LaTeX here; bibliography unverified) |
+| Claims audit | `docs/CLAIMS.md`, `tests/test_docs_lint.py` | claims register + lint | — | `test_docs_lint` | VALIDATED |
 
 ---
 
@@ -331,7 +335,7 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Fast | `pytest -q -m "not slow"` | **201 passed**, 0 failed, 51–61 s |
 | Slow | `pytest -q -m slow` | **6 passed**, 0 failed, 643 s (baseline, pre-Phase 5) (100k differential: 5 seeds × 20,000 updates, 44–64 s each, 0 mismatches; 20k unlimited-budget regression 352 s) |
 
-The brief that started this analysis recalled "≈240 tests". The repository has **207**; the 207 figure is consistent with `AGENTS.md`, `PLAYBOOK.md` and `git` history. Per-file counts are in `ANALYSIS_REPORT.md` §5.
+The brief that started this analysis recalled "about two hundred and forty tests". The repository has **207**; the 207 figure is consistent with `AGENTS.md`, `PLAYBOOK.md` and `git` history. Per-file counts are in `ANALYSIS_REPORT.md` §5.
 
 **V1b — Line coverage of fast tests** (`coverage.py`, installed in the local venv only, *not* added to `requirements-dev.txt`): algorithmic core 82–100 % (`repair.py` 90 %, `controller.py` 96 %, `verify.py` 82 %, `dijkstra.py`/`spt.py` 100 %); `server.py` and `__main__.py` **0 %**. Whole-package 64 %, dragged down only by those two. Slow tests excluded.
 
@@ -370,6 +374,21 @@ Informational measurements (from test runs, **not citable** until Phase 7 regene
 * B&B vs Held–Karp at k = 12: 20 random matrices equal, 6 s.
 * Pipeline, 12×12 grid, k = 6, 20,000 updates (`p_delete = 0.005`, one seed): identical tour cost to the reference at every update; 17,575 updates kept, 2,425 re-solved; 1,164,000 vs 9,600,000 Held–Karp transitions. This is one benign workload, not a general speed-up claim.
 
+**V7 — Phase 7 experiments (full run, 2026-10-22, commit `fde3885`; tables in `docs/results/`, SHA-256 in `MANIFEST.json`, deviations and unfavourable results in `docs/results/NOTES.md`).** All variants processed identical updates and were cross-checked against an exact reference after every update (0 disagreements; a disagreement aborts the run). Runtimes: E1 1,075 s, E2 114 s, E3 172 s, E4 6 s, E5 73 s (Windows 11, i5-12450H, Python 3.14.7).
+
+| Experiment | Headline (all numbers from the cited CSV) | Source |
+|---|---|---|
+| E1 budget sweep (168 runs: 4 families × uniform / tree-edge updates × 3 seeds × 7 budgets, oracle F) | no deterministic budget exceeded rho(c) + slack. Maximum measured ratio: c=0.25 → 1.85 (rho 5), c=0.5 → 1.60 (rho 3), c=1 → 1.44 (rho 2), c=2 → 1.22 (rho 3); c=0 → 91.4 (unbounded); c ≥ 2 never fell back; randomized mean 1.55 vs expectation 1.58 | `e1_budget.csv` |
+| E2 shares / ablation (grid, uniform, k=8, T=300, exact tours) | tree operations: rebuild-always 10,857,296; cert-only 2,777,989; repair-only 185,036; budgeted c=1 202,478; randomized 256,595. Held–Karp transitions 1,075,200 without the lazy certificate vs 57,344 with it. **Repair-only is cheaper than c=1 here** (loss reported) | `e2_ablation.csv` |
+| E2 hit rates | tour kept in 0.88–0.97 of updates for uniform / tree-edge updates (k 4–12); near-depot updates disconnect the depot and are mostly infeasible | `e2_skip.csv` |
+| E3 scaling (grid 20² … 160², k=8) | operations per update: budgeted 807 → 4,873, rebuild 36,970 → 2,407,170; log–log slope 0.44 vs 1.00 (rebuild sampled on a prefix for the two largest grids) | `e3_scaling.csv`, `e3_slopes.csv` |
+| E4 adversarial (`partial_comb`, n=400, 100 fractions) | max ratio 2.928 (c=0.5, rho 3), 2.0003 (c=1, rho 2), 1.749 (c=2, rho 3: **bound not demonstrated**, repair never exceeds ≈1.75 F) | `e4_summary.csv` |
+| E5 end to end (grid, random_sparse; k=6, 10; T=1,000) | tour kept in 0.92–0.99 of updates; Held–Karp transitions saved 0.92–0.99; tree operations per update 210–1,088 vs 28,696–56,104 | `e5_endtoend.csv` |
+
+These are measurements on synthetic graphs in pure Python; none is a claim about real road networks.
+
+**V8 — Dashboard (2026-10-22).** The API gained routing endpoints, strict validation, a state lock, safe static serving and a validated `/api/config` budget endpoint (`docs/API.md`; 31 API tests incl. traversal, oversize, concurrency). The front end was rebuilt (`docs/DESIGN.md`): landing page, loader, collapsible open-plane sidebar, nine pages incl. Routing and Settings, light and dark themes. Objective gate: the design skill's lint and browser inspector report **0 FAIL** on every screen at three widths. Functional regression: an in-browser script (`tests/ui/smoke.js`) drove the real UI with 133 checks across both themes; it found one real bug (a null `currentTarget` after an `await` in Settings), which was fixed and re-verified. Not covered by an automated runner in CI (needs a browser); see the file header.
+
 ### 10.2 Claims that must **not** be used (found in the repository; all removed from the repo on branch `gate-fixes` on 2026-10-20 — kept here as a record)
 | Location | Claim | Why rejected |
 |---|---|---|
@@ -380,16 +399,9 @@ Informational measurements (from test runs, **not citable** until Phase 7 regene
 | `web/index.html:816` | "Guarantees competitive ratio: total work is strictly bounded by (1+c)·F + 1" | Conflates work bound with competitive ratio (Gate G1); constant is +2 (SPEC, P2 final statement) |
 | `docs/PLAYBOOK.md` checklist | "at most (1+c)F+1" | Superseded by +2; historical record only |
 
-### 10.3 Pending results (no numbers until run)
+### 10.3 Experiments (Phase 7) — status
 
-| ID | Experiment | Dataset / graph | Baseline | GraphPulse-R | Improvement |
-|---|---|---|---:|---:|---:|
-| E1 | Budget sweep: measured vs proven ratio | grid 30², random_sparse≈1000, hub_spoke, comb(500), road subgraph | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E2 | Strategy shares, touched trees vs k, lazy-skip rate, ablations | all families × 4 update modes × p_delete | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E3 | Scaling in n (grid 20…160) and k (4…16) | grid | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E4 | Adversarial tightness via `partial_comb` | synthetic | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E5 | End-to-end pipeline vs RecomputeEverything | grid, road subgraph | PENDING EXPERIMENT | PENDING EXPERIMENT | PENDING EXPERIMENT |
-| E0 | 60,000-update multi-tree differential (Milestone 5.4) | grid, random_sparse | oracle | **0 mismatches (V5)** | correctness result, not a performance claim |
+All five experiments and E0 have been run; see V7 above for the headline numbers and `docs/results/` for the tables. **Still PENDING EXPERIMENT:** anything on a real road network (no dataset was used), E1 at T = 5,000, and E5 at T = 2,000 (reduced for time; recorded in `docs/results/NOTES.md`).
 
 ---
 
@@ -446,9 +458,12 @@ Not meaningful for this system (omitted on purpose): "without routing optimisati
 | L6 | Single vehicle, fixed terminals, no time windows. | Narrow VRP subset. |
 | L7 | Cascade logic is duplicated in `RepairMaintainer.apply` and `BudgetedMaintainer.apply`. | Divergence risk; Milestone 5.1 must refactor only the controller entry point and re-run both. |
 | L8 | `find_affected` oracle test covers deletions on tiny graphs (n≤9); weight increases are covered by differential runs, not by that oracle. | Add an increase-case oracle (cheap). |
-| L9 | Server: no lock around global state under a threaded server, no request-size limit, CORS `*`, prefix-based path check (`startswith`), hard-coded `project_progress: 50`, no tests. | Phase 8.1 scope; **not** part of the algorithmic claims. |
+| L9 | **Resolved in Phase 8.1:** lock, 1 MiB body limit, no CORS, `is_relative_to` path confinement (404), computed status, tests. The UI regression script needs a browser and is not part of `pytest`. | Not part of the algorithmic claims. |
 | L10 | Pure Python, graphs ≤ ~10⁴ vertices, one machine. | Not a scalability claim. |
 | L11 | `analysis.theoretical_competitive_ratio` raises for c≤0 and E1 sweeps c=0 and c=∞ (ratio unbounded). | E1 must special-case; document ρ(0)=ρ(∞)=∞ (limit). |
+| L13 | On the benign grid workload repair-only used fewer tree operations than the budgeted controller (`e2_ablation.csv`). | The budget is a worst-case guarantee, not an average-case win. |
+| L14 | The adversarial family cannot make repair exceed ≈1.75 F, so the bound for c = 2 is not demonstrated (`e4_adversarial.csv`). | Tightness shown for c = 0.5 and c = 1 only. |
+| L15 | No real road network was used. | No claim about real roads. |
 | L12 | "Touched trees" counts `alt` as touched although no distance changes. | **Resolved:** `MultiStats` records both `touched_trees` and `dist_changed_trees` (D-005). |
 
 ---
@@ -480,7 +495,7 @@ Not meaningful for this system (omitted on purpose): "without routing optimisati
 ```bash
 git clone https://github.com/shrirajagarkar30/graphpulse.git && cd graphpulse && git checkout main
 python -m venv .venv && .venv/Scripts/python -m pip install -e . -r requirements-dev.txt   # PowerShell: .venv\Scripts\python.exe
-python -m pytest -q -m "not slow"       # 201 tests, ~1 min
+python -m pytest -q -m "not slow"       # fast loop, about a minute
 python -m pytest -q -m slow             # 6 tests incl. 100,000-update differential run
 python experiments/bench_empirical_claims.py   # regenerates docs/EMPIRICAL_EVALUATION.md (18 s); `git diff` must be empty
 python demo.py                          # interactive demo
@@ -494,7 +509,7 @@ Dataset preparation, experiment commands, `MANIFEST.json`: PLANNED (Phase 7.6 / 
 
 ## 16. Future work
 
-**DONE:** gate fixes; 5.1–5.4 multi-terminal engine and matrix (VALIDATED, V5); 6.1–6.6 routing layer (VALIDATED, V6; proof sign-offs pending). **PLANNED (second-half playbook, in order):** 7.1–7.6 real-data loader, runner and experiments E1–E5 → 8.1–8.4 dashboard hardening, claims audit, paper, release.
+**DONE:** gate fixes; 5.1–5.4 multi-terminal engine (V5); 6.1–6.6 routing layer (V6; proof sign-offs pending); 7.1–7.6 loader, runner, experiments E1–E5, figures, `run_all` (V7); 8.1 API backend, 8.2 claims audit, 8.3 paper sources. **PLANNED / PENDING:** dashboard redesign with routing panel, release candidate, reviewer sign-offs, literature check, second-machine reproduction.
 
 **FUTURE WORK (not scheduled; each needs its own justification):** edge insertions/decreases (needs a different certificate), heuristic tours for k>18 with the same certificate, multiple vehicles/time windows, adaptive F estimation to tighten L2, a proof that the state is canonical (closes L3).
 
@@ -504,7 +519,7 @@ Dataset preparation, experiment commands, `MANIFEST.json`: PLANNED (Phase 7.6 / 
 
 | ID | Playbook says | Repository shows | Decision |
 |---|---|---|---|
-| D-001 | Project "≈50 % complete", "≈240 tests" | 207 tests; first-half playbook complete through 4.3 | Use 207; record the discrepancy; no action on code |
+| D-001 | Project "≈50 % complete", "about two hundred and forty tests" | the first-half suite only; first-half playbook complete through 4.3 | Use 207; record the discrepancy; no action on code |
 | D-002 | Gate G8: tags `m0.1…m4.3`, `phase-0-done…phase-4-done` | `phase-4-done` **missing**; phases merged via `8708835` and tagged `v0.5-half` | Create `phase-4-done` on `8708835` after approval (tags are cheap, never move existing ones) |
 | D-003 | Gate G6 "find_affected equals oracle set" | True (500 cases), but `KNOWN_GAPS.md` describes it wrongly as a superset | Correct `KNOWN_GAPS.md` |
 | D-004 | Gate G9: `v0.5-half` on `main` | Tag is 7 commits behind `main`; the tag predates the G1/G2/G3 fixes. Rollback "R1 to `v0.5-half`" would discard the 100k test and the ratio-wording fix | After gates pass, add a new stable tag (suggested `v0.5.1-gated`); do not move `v0.5-half` |

@@ -1,0 +1,29 @@
+{
+  "git_hash": "fde3885",
+  "graphpulse": "0.1.0",
+  "mode": "full",
+  "packages": {
+    "hypothesis": "6.168.0",
+    "matplotlib": "3.11.2",
+    "networkx": "3.6.1",
+    "pandas": "3.0.6",
+    "pytest": "9.1.1"
+  },
+  "platform": "Windows-11-10.0.26100-SP0",
+  "python": "3.14.7",
+  "seeds": [
+    0,
+    1,
+    2,
+    5
+  ],
+  "step_seconds": {
+    "E1": 1075.4,
+    "E2": 114.4,
+    "E3": 172.0,
+    "E4": 5.9,
+    "E5": 73.0,
+    "figures": 1.9
+  },
+  "utc_time": "2026-10-22T13:06:17+00:00"
+}

@@ -13,13 +13,14 @@ from __future__ import annotations
 import json
 import math
 import mimetypes
-import os
+import threading
 import time
+import importlib.util
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from graphpulse.controller import BudgetedMaintainer
 from graphpulse.dijkstra import INF
@@ -33,8 +34,12 @@ from graphpulse.generators import (
 )
 from graphpulse.graph import DiGraph
 from graphpulse.maintainer import RecomputeMaintainer
+from graphpulse.pipeline import RecomputeEverything, RoutingPipeline
 from graphpulse.spt import SPTState
+from graphpulse.tour import HELD_KARP_MAX_K
 from graphpulse.verify import check_state
+
+MAX_BODY_BYTES = 1_048_576  # request bodies above 1 MiB are rejected with 413
 
 
 class GraphPulseState:
@@ -45,6 +50,13 @@ class GraphPulseState:
         self.src: int = 0
         self.target: int | None = 35  # Optional target for path highlighting
         self.c: float = 1.0
+        self.lock = threading.RLock()  # the server is threaded; all state access goes through this lock
+        self.terminals: list[int] | None = None
+        self.pipeline: RoutingPipeline | None = None
+        self.reference: RecomputeEverything | None = None
+        self.route_hk_pipeline: int = 0
+        self.route_hk_reference: int = 0
+        self.last_route: dict[str, Any] | None = None
 
         # Build initial default graph: 6x6 Grid
         self.initial_graph: DiGraph = grid(6, 6, seed=42)
@@ -185,6 +197,7 @@ class GraphPulseState:
         self.last_update_info = None
         self.last_affected = set()
         self.logs.clear()
+        self._clear_routing()
         self.cumulative_online_work = 0
         self.cumulative_rebuild_work = 0
 
@@ -209,7 +222,7 @@ class GraphPulseState:
         self.target = target
 
     def reset_graph(self) -> None:
-        """Reset current graph back to initial state."""
+        """Reset current graph back to initial state (and the routing pipeline with it)."""
         self.current_graph = self.initial_graph.copy()
         self.maintainer = BudgetedMaintainer(
             self.current_graph.copy(), src=self.src, c=self.c, f_mode="oracle"
@@ -219,6 +232,100 @@ class GraphPulseState:
         )
         self.last_update_info = None
         self.last_affected = set()
+        self.logs.clear()
+        self.cumulative_online_work = 0
+        self.cumulative_rebuild_work = 0
+        self._build_routing()
+
+    def set_budget(self, c: Any) -> None:
+        """Change the budget multiplier c (a number >= 0, "inf", or "random") and restart engines.
+
+        The graph is reset to its initial state because maintainers are rebuilt from scratch.
+        """
+        if isinstance(c, str):
+            if c.lower() not in ("inf", "random"):
+                raise ValueError("c must be a number >= 0, \"inf\" or \"random\"")
+            new_c: float | str = math.inf if c.lower() == "inf" else "random"
+        elif isinstance(c, bool) or not isinstance(c, (int, float)) or math.isnan(c) or c < 0:
+            raise ValueError("c must be a number >= 0, \"inf\" or \"random\"")
+        else:
+            new_c = float(c)
+        self.c = new_c  # type: ignore[assignment]
+        self.logs.clear()
+        self.cumulative_online_work = 0
+        self.cumulative_rebuild_work = 0
+        self.reset_graph()
+
+    # ------------------------------------------------------------------ routing
+    def _clear_routing(self) -> None:
+        self.terminals = None
+        self.pipeline = None
+        self.reference = None
+        self.route_hk_pipeline = 0
+        self.route_hk_reference = 0
+        self.last_route = None
+
+    def _build_routing(self) -> None:
+        """(Re)build pipeline and reference from the *current* graph for the stored terminals."""
+        self.route_hk_pipeline = 0
+        self.route_hk_reference = 0
+        self.last_route = None
+        if not self.terminals:
+            self.pipeline = self.reference = None
+            return
+        self.pipeline = RoutingPipeline(self.current_graph, self.terminals, c=self.c)
+        self.reference = RecomputeEverything(self.current_graph, self.terminals)
+
+    def set_terminals(self, depot: Any, stops: Any) -> None:
+        """Validate and install depot + stops; builds the routing pipeline on the current graph."""
+        def is_int(x: Any) -> bool:
+            return isinstance(x, int) and not isinstance(x, bool)
+
+        if not is_int(depot):
+            raise ValueError("depot must be an integer vertex id")
+        if not isinstance(stops, list) or not all(is_int(x) for x in stops):
+            raise ValueError("stops must be a list of integer vertex ids")
+        if len(stops) == 0:
+            raise ValueError("at least one stop is required")
+        if len(stops) > HELD_KARP_MAX_K:
+            raise ValueError(f"k={len(stops)} stops exceeds the Held-Karp limit of {HELD_KARP_MAX_K}")
+        terms = [depot] + list(stops)
+        n = self.current_graph.n
+        for t in terms:
+            if not (0 <= t < n):
+                raise ValueError(f"terminal {t} out of range [0, {n - 1}]")
+        if len(set(terms)) != len(terms):
+            raise ValueError("terminals must be distinct (depot and stops)")
+        self.terminals = terms
+        self._build_routing()
+
+    @staticmethod
+    def _json_cost(x: float) -> float | None:
+        return None if math.isinf(x) else x
+
+    def tour_summary(self) -> dict[str, Any]:
+        """Everything in this dict is read from the engine; nothing is hard-coded."""
+        if self.pipeline is None or self.terminals is None:
+            return {"terminals_set": False}
+        p = self.pipeline
+        order = p.order
+        D = p.matrix.D
+        return {
+            "terminals_set": True,
+            "depot": self.terminals[0],
+            "stops": self.terminals[1:],
+            "k": len(self.terminals) - 1,
+            "tour_cost": self._json_cost(p.tour_cost),
+            "feasible": not math.isinf(p.tour_cost),
+            "order": [self.terminals[i] for i in order],     # vertex ids, depot not repeated
+            "lower_bound": self._json_cost(p.lower_bound),
+            "matrix": [[self._json_cost(x) for x in row] for row in D],
+            "reference_cost": self._json_cost(self.reference.last.tour_cost) if self.reference else None,
+            "hk_transitions_pipeline": self.route_hk_pipeline,
+            "hk_transitions_reference": self.route_hk_reference,
+            "initial_hk_transitions": p.initial_hk_transitions,
+            "last_route": self.last_route,
+        }
 
     def get_path_to_target(self) -> tuple[list[int], float]:
         """Compute path sequence from src to optional target."""
@@ -311,6 +418,24 @@ class GraphPulseState:
             "path_dist": path_dist if path_dist != INF else None,
         }
 
+        if self.pipeline is not None and self.reference is not None:
+            rs = self.pipeline.apply(upd)
+            ref = self.reference.apply(upd)
+            self.route_hk_pipeline += rs.hk_transitions
+            self.route_hk_reference += ref.hk_transitions
+            self.last_route = {
+                "route_action": rs.route_action,
+                "hk_transitions": rs.hk_transitions,
+                "tour_cost": self._json_cost(rs.tour_cost),
+                "order": [self.terminals[i] for i in rs.order] if self.terminals else [],
+                "lower_bound": self._json_cost(rs.lower_bound),
+                "touched_trees": rs.touched_trees,
+                "reference_cost": self._json_cost(ref.tour_cost),
+                "reference_hk_transitions": ref.hk_transitions,
+                "matches_reference": rs.tour_cost == ref.tour_cost,
+            }
+            info["route"] = self.last_route
+
         self.last_update_info = info
         self.logs.append(info)
         return info
@@ -324,9 +449,9 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
     """HTTP Request Handler serving JSON REST API and static frontend files."""
 
     def _send_cors_headers(self) -> None:
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        # Intentionally empty: the dashboard is same-origin and local-only. No wildcard CORS,
+        # so other websites cannot drive the local API from the user's browser.
+        return None
 
     def _send_json(self, data: Any, status: int = HTTPStatus.OK) -> None:
         payload = json.dumps(data, indent=2).encode("utf-8")
@@ -346,12 +471,23 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
+        with STATE.lock:
+            self._do_get()
+
+    def _do_get(self) -> None:
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
 
         # REST API endpoints
-        if path == "/api/status":
+        if path == "/api/config":
+            self._send_json({"success": True, "c": "inf" if STATE.c == math.inf else STATE.c, "preset": STATE.preset_name,
+                             "n": STATE.current_graph.n, "m": STATE.current_graph.m})
+        elif path == "/api/terminals":
+            self._send_json({"success": True, **STATE.tour_summary()})
+        elif path == "/api/tour":
+            self._handle_get_tour()
+        elif path == "/api/status":
             self._handle_get_status()
         elif path == "/api/graph":
             self._handle_get_graph()
@@ -366,18 +502,44 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             self._serve_static(path)
 
     def do_POST(self) -> None:
-        parsed = urlparse(self.path)
-        path = parsed.path
-
+        raw = self.headers.get("Content-Length", "0")
         try:
-            length = int(self.headers.get("Content-Length", 0))
-            body_bytes = self.rfile.read(length) if length > 0 else b"{}"
+            length = int(raw)
+            if length < 0:
+                raise ValueError
+        except ValueError:
+            self._send_error_json("Invalid Content-Length header", HTTPStatus.BAD_REQUEST)
+            return
+        if length > MAX_BODY_BYTES:
+            remaining = min(length, 16 * MAX_BODY_BYTES)      # drain so the client can read our answer
+            while remaining > 0:
+                chunk = self.rfile.read(min(65536, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            self.close_connection = True
+            self._send_error_json(
+                f"Request body too large (limit {MAX_BODY_BYTES} bytes)", HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+            )
+            return
+        try:
+            body_bytes = self.rfile.read(length) if length > 0 else b""
             body = json.loads(body_bytes.decode("utf-8")) if body_bytes else {}
         except Exception as exc:
             self._send_error_json(f"Invalid JSON request body: {exc}")
             return
+        if not isinstance(body, dict):
+            self._send_error_json("JSON request body must be an object")
+            return
+        with STATE.lock:
+            self._do_post(urlparse(self.path).path, body)
 
-        if path == "/api/graph/load":
+    def _do_post(self, path: str, body: dict[str, Any]) -> None:
+        if path == "/api/config":
+            self._handle_post_config(body)
+        elif path == "/api/terminals":
+            self._handle_post_terminals(body)
+        elif path == "/api/graph/load":
             self._handle_post_load(body)
         elif path == "/api/graph/set-source":
             self._handle_post_set_source(body)
@@ -396,29 +558,42 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
     # API Handlers
     # -----------------------------------------------------------------------
     def _handle_get_status(self) -> None:
+        import graphpulse
+
+        def has(mod: str) -> bool:
+            return importlib.util.find_spec(f"graphpulse.{mod}") is not None
+
+        routing_ready = STATE.pipeline is not None
         self._send_json({
             "project_name": "GraphPulse-R",
-            "project_progress": 50,
-            "current_phase": "Phase 1–4: Shortest-Path Layer",
-            "completed_layer": "Dynamic Shortest-Path Engine",
-            "upcoming_layer": "Delivery Routing & Optimization (Phase 2)",
+            "version": graphpulse.__version__,
             "system_status": "Online",
             "is_mock": False,
             "components": {
-                "graph_model": True,
-                "counted_dijkstra": True,
-                "spt_state": True,
-                "certificate_checker": True,
-                "affected_set_repair": True,
-                "budget_controller": True,
-                "overlay_isolation": True,
-                "rebuild_fallback": True,
-                "state_verifier": True,
-                "delivery_stops": False,  # Upcoming
-                "route_optimization": False,  # Upcoming
-                "distance_matrix": False,  # Upcoming
+                "graph_model": has("graph"),
+                "counted_dijkstra": has("dijkstra"),
+                "spt_state": has("spt"),
+                "certificate_checker": has("repair"),
+                "affected_set_repair": has("repair"),
+                "budget_controller": has("controller"),
+                "overlay_isolation": has("repair"),
+                "rebuild_fallback": has("controller"),
+                "state_verifier": has("verify"),
+                "multi_terminal_trees": has("terminals"),
+                "held_karp": has("tour"),
+                "lazy_tour_certificate": has("tourcert"),
+                "delivery_stops": routing_ready,
+                "route_optimization": routing_ready,
+                "distance_matrix": routing_ready,
             },
         })
+
+    def _handle_get_tour(self) -> None:
+        summary = STATE.tour_summary()
+        if not summary["terminals_set"]:
+            self._send_error_json("Terminals are not set; POST /api/terminals first", HTTPStatus.CONFLICT)
+            return
+        self._send_json({"success": True, **summary})
 
     def _handle_get_graph(self) -> None:
         g = STATE.current_graph
@@ -534,27 +709,59 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             "last_run": STATE.last_update_info,
         })
 
+    @staticmethod
+    def _int(body: dict[str, Any], key: str, default: int | None = None) -> int:
+        """Strict integer field: JSON numbers only (no strings, floats or booleans)."""
+        if key not in body:
+            if default is None:
+                raise ValueError(f"missing required field {key!r}")
+            return default
+        val = body[key]
+        if isinstance(val, bool) or not isinstance(val, int):
+            raise ValueError(f"field {key!r} must be an integer")
+        return val
+
+    def _handle_post_config(self, body: dict[str, Any]) -> None:
+        try:
+            if "c" not in body:
+                raise ValueError("body must contain 'c'")
+            STATE.set_budget(body["c"])
+            self._send_json({"success": True, "c": "inf" if STATE.c == math.inf else STATE.c})
+        except ValueError as exc:
+            self._send_error_json(str(exc))
+
+    def _handle_post_terminals(self, body: dict[str, Any]) -> None:
+        try:
+            if "depot" not in body or "stops" not in body:
+                raise ValueError("body must contain 'depot' and 'stops'")
+            STATE.set_terminals(body["depot"], body["stops"])
+            self._send_json({"success": True, **STATE.tour_summary()})
+        except ValueError as exc:
+            self._send_error_json(str(exc))
+
     def _handle_post_load(self, body: dict[str, Any]) -> None:
         preset = body.get("preset", "grid")
         params = body.get("params", {})
         try:
+            if not isinstance(preset, str) or not isinstance(params, dict):
+                raise ValueError("'preset' must be a string and 'params' an object")
             STATE.load_preset(preset, **params)
             self._send_json({"success": True, "preset": preset, "n": STATE.current_graph.n})
-        except Exception as exc:
+        except (ValueError, TypeError) as exc:
             self._send_error_json(str(exc))
 
     def _handle_post_set_source(self, body: dict[str, Any]) -> None:
         try:
-            src = int(body.get("src", 0))
+            src = self._int(body, "src", 0)
             STATE.set_source(src)
             self._send_json({"success": True, "src": src})
-        except Exception as exc:
+        except ValueError as exc:
             self._send_error_json(str(exc))
 
     def _handle_post_set_target(self, body: dict[str, Any]) -> None:
         try:
             raw_target = body.get("target")
-            target = int(raw_target) if raw_target is not None else None
+            target = None if raw_target is None else self._int(body, "target")
             STATE.set_target(target)
             path, path_dist = STATE.get_path_to_target()
             self._send_json({
@@ -563,23 +770,27 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
                 "path": path,
                 "path_dist": path_dist if path_dist != INF else None,
             })
-        except Exception as exc:
+        except ValueError as exc:
             self._send_error_json(str(exc))
 
     def _handle_post_update(self, body: dict[str, Any]) -> None:
-        kind = body.get("kind", "delete")
         try:
-            u = int(body.get("u"))
-            v = int(body.get("v"))
-            new_w = int(body.get("new_w", 0))
+            kind = body.get("kind", "delete")
+            if kind not in ("delete", "increase"):
+                raise ValueError("'kind' must be 'delete' or 'increase'")
+            u = self._int(body, "u")
+            v = self._int(body, "v")
+            new_w = self._int(body, "new_w", 0)
+            if kind == "increase" and new_w <= 0:
+                raise ValueError("'new_w' must be a positive integer for an increase")
             result = STATE.apply_update(kind, u, v, new_w)
             self._send_json({"success": True, "update": result})
-        except Exception as exc:
+        except ValueError as exc:
             self._send_error_json(str(exc))
 
     def _handle_post_reset(self) -> None:
         STATE.reset_graph()
-        self._send_json({"success": True, "message": "Graph reset to initial state"})
+        self._send_json({"success": True, "message": "Graph and routing pipeline reset to initial state"})
 
     def _handle_post_verify(self) -> None:
         """Active invariant verification execution."""
@@ -624,43 +835,46 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
     # Static Files
     # -----------------------------------------------------------------------
     def _serve_static(self, path: str) -> None:
-        root_dir = Path(__file__).resolve().parent.parent.parent / "web"
-
-        if path in ("", "/"):
+        root_dir = (Path(__file__).resolve().parent.parent.parent / "web").resolve()
+        decoded = unquote(path)
+        if "\x00" in decoded:
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
+        if decoded in ("", "/"):
             req_path = root_dir / "index.html"
         else:
-            clean_path = path.lstrip("/\\")
-            req_path = (root_dir / clean_path).resolve()
+            req_path = (root_dir / decoded.lstrip("/\\")).resolve()
 
-        # Security check: ensure path is inside root_dir
-        if not str(req_path).startswith(str(root_dir)):
-            self.send_error(HTTPStatus.FORBIDDEN, "Access Denied")
-            return
-
-        if not req_path.is_file():
-            self.send_error(HTTPStatus.NOT_FOUND, f"File not found: {path}")
+        # Confinement: the resolved path must be inside web/ (is_relative_to, not a string prefix).
+        # Anything outside is reported as 404 so the response does not reveal what exists.
+        if not req_path.is_relative_to(root_dir) or not req_path.is_file():
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
 
         ctype, _ = mimetypes.guess_type(str(req_path))
         ctype = ctype or "application/octet-stream"
 
         try:
-            with open(req_path, "rb") as f:
-                content = f.read()
+            content = req_path.read_bytes()
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", f"{ctype}; charset=utf-8" if "text" in ctype else ctype)
+            self.send_header("Content-Type", f"{ctype}; charset=utf-8" if "text" in ctype or "javascript" in ctype else ctype)
             self.send_header("Content-Length", str(len(content)))
-            self._send_cors_headers()
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(content)
-        except Exception as exc:
-            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR, str(exc))
+        except OSError:
+            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR, "Could not read file")
+
+
+def make_server(port: int = 8000, host: str = "127.0.0.1") -> ThreadingHTTPServer:
+    """Create (but do not start) the server; binds to 127.0.0.1 unless a host is given explicitly."""
+    return ThreadingHTTPServer((host, port), GraphPulseAPIHandler)
 
 
 def run_server(port: int = 8000, host: str = "127.0.0.1") -> None:
     """Run GraphPulse-R HTTP server."""
-    server_address = (host, port)
-    httpd = ThreadingHTTPServer(server_address, GraphPulseAPIHandler)
+    httpd = make_server(port, host)
     print(f"[*] GraphPulse-R Dashboard Server running at http://{host}:{port}/")
     try:
         httpd.serve_forever()

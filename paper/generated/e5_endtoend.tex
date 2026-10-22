@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{E5: end-to-end pipeline versus recompute-everything (synthetic graphs only).}
+\label{tab:e5}
+\small
+\begin{tabular}{lrrrrrr}
+\hline
+family & $k$ & updates & ops/update GP & ops/update rebuild & HK saved & tour kept \\
+\hline
+grid & 6 & 1\,000 & 722.775 & 28\,696 & 0.935 & 0.935 \\
+grid & 10 & 1\,000 & 1087.97 & 45088.8 & 0.923 & 0.923 \\
+random\_sparse & 6 & 1\,000 & 210.014 & 35693.7 & 0.986 & 0.986 \\
+random\_sparse & 10 & 1\,000 & 341.206 & 56103.3 & 0.983 & 0.983 \\
+\hline
+\end{tabular}
+\end{table}

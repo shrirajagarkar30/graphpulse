@@ -1,0 +1,111 @@
+/* Loader and landing page. One motif: a route that survives a closed road. */
+
+/* ---- loader ----------------------------------------------------------------------------- */
+#loader {
+  position: fixed; inset: 0; z-index: 200; background: var(--ground); display: grid; place-items: center;
+  transition: opacity var(--dur-slow) var(--ease), visibility var(--dur-slow);
+}
+#loader.done { opacity: 0; visibility: hidden; }
+.loader-inner { display: grid; justify-items: center; gap: 18px; }
+.loader-mark { width: 120px; height: 72px; overflow: visible; }
+.loader-mark .route { fill: none; stroke: var(--data); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 260; stroke-dashoffset: 260; animation: draw 900ms var(--ease) 80ms forwards; }
+.loader-mark .node { fill: var(--surface); stroke: var(--text); stroke-width: 3; opacity: 0; animation: fade 240ms var(--ease) forwards; }
+.loader-mark .node:nth-of-type(2) { animation-delay: 160ms; }
+.loader-mark .node:nth-of-type(3) { animation-delay: 420ms; }
+.loader-mark .node:nth-of-type(4) { animation-delay: 700ms; }
+.loader-word { font-weight: 600; font-size: 18px; letter-spacing: -0.01em; opacity: 0; animation: fade 400ms var(--ease) 500ms forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* ---- landing ---------------------------------------------------------------------------- */
+#landing { --lp: clamp(20px, 5vw, 72px); }
+.l-nav { position: sticky; top: 0; z-index: 20; background: var(--ground); display: flex; align-items: center; gap: 24px; height: 64px; padding: 0 var(--lp); }
+.l-nav .brand { font-size: 16px; flex: none; }
+.l-links { display: flex; gap: 24px; margin-left: auto; }
+.l-links a { text-decoration: none; color: var(--muted); font-weight: 500; }
+.l-links a:hover { color: var(--text); }
+.l-nav .btn-icon { flex: none; }
+
+.l-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); align-items: center; min-height: min(62vh, 600px); padding: 32px 0 48px var(--lp); }
+.l-hero-copy { position: relative; z-index: 2; max-width: 880px; padding-right: var(--lp); }
+.l-h1 { font-size: clamp(34px, 4.9vw, 92px); line-height: 1; letter-spacing: -0.04em; font-weight: 600; }
+.l-h1 span { display: block; }
+.l-lede { margin-top: 28px; font-size: 22px; line-height: 1.5; max-width: 38em; color: var(--text); }
+.l-actions { margin-top: 32px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.btn-lg { height: 52px; padding: 0 28px; font-size: 16px; border-radius: 8px; }
+.l-motif { position: relative; align-self: stretch; min-height: 320px; }
+.l-motif svg { position: absolute; left: -34%; top: 50%; width: 190%; height: auto; transform: translateY(-50%); overflow: visible; }
+.motif-route { fill: none; stroke: var(--data); stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1400; stroke-dashoffset: 1400; }
+.motif-detour { fill: none; stroke: var(--text); stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 700; stroke-dashoffset: 700; }
+.motif-closed { fill: var(--raised); }
+.motif-node { fill: var(--surface); stroke: var(--text); stroke-width: 12; }
+.is-ready .motif-route { animation: draw-long 1400ms var(--ease) 100ms forwards; }
+.is-ready .motif-detour { animation: draw-long 900ms var(--ease) 1100ms forwards; }
+@keyframes draw-long { to { stroke-dashoffset: 0; } }
+
+.l-section { padding: clamp(72px, 10vw, 160px) var(--lp); }
+.l-band { background: var(--surface); }
+.l-h2 { font-size: clamp(30px, 4.6vw, 64px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; max-width: 18em; }
+.l-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(40px, 6vw, 96px) clamp(32px, 6vw, 112px); margin-top: clamp(40px, 6vw, 88px); }
+.l-block h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.l-block p { margin-top: 10px; font-size: 16px; line-height: 1.55; color: var(--muted); max-width: 32em; }
+.l-wide { margin-top: clamp(40px, 6vw, 80px); font-size: 22px; line-height: 1.45; max-width: 36em; }
+
+.l-live { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 80px); align-items: center; }
+.l-live .l-h2 { max-width: 11em; }
+.l-live p { margin-top: 20px; font-size: 16px; color: var(--muted); max-width: 28em; }
+.l-live .btn { margin-top: 28px; }
+.l-fragment { background: var(--cv-bg); border-radius: var(--radius-card); overflow: hidden; border: 1px solid var(--border); }
+.l-fragment .graph-stage { height: clamp(300px, 42vw, 480px); }
+
+.l-stmts { display: grid; gap: 40px; margin-top: clamp(40px, 6vw, 80px); max-width: 44em; }
+.l-stmt { font-size: 22px; line-height: 1.5; }
+.l-stmt b { font-weight: 600; }
+
+.l-faq { margin-top: clamp(32px, 5vw, 64px); max-width: 52em; }
+.l-faq details { background: var(--surface); border-radius: var(--radius-card); padding: 0 20px; }
+.l-faq details + details { margin-top: 8px; }
+.l-faq summary { cursor: pointer; list-style: none; padding: 20px 0; font-size: 16px; font-weight: 500; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.l-faq summary::-webkit-details-marker { display: none; }
+.l-faq summary::after { content: "+"; font-size: 22px; font-weight: 400; color: var(--muted); transition: transform var(--dur) var(--ease); }
+.l-faq details[open] summary::after { transform: rotate(45deg); }
+.l-faq details p { padding-bottom: 20px; color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 44em; }
+
+.l-cta { background: var(--primary); color: var(--on-primary); }
+.l-cta .l-h2 { max-width: 12em; }
+.l-cta .btn { background: var(--on-primary); color: var(--primary); border-color: var(--on-primary); margin-top: 36px; }
+.l-cta .btn:hover { background: var(--on-primary); opacity: 0.9; }
+
+.l-foot { padding: 56px var(--lp) 40px; background: var(--ground); overflow: hidden; }
+.l-foot-name { font-size: clamp(48px, 15.5vw, 240px); line-height: 0.9; letter-spacing: -0.05em; font-weight: 600; white-space: nowrap; }
+.l-foot-meta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px 32px; color: var(--muted); }
+.l-foot-meta a { color: var(--text); }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+.no-js .reveal { opacity: 1; transform: none; }
+
+@media (max-width: 900px) {
+  .l-hero { grid-template-columns: 1fr; padding: 24px var(--lp) 0; min-height: 0; }
+  .l-hero-copy { padding-right: 0; }
+  .l-motif { min-height: 260px; margin: 40px calc(var(--lp) * -1) 0 0; }
+  .l-motif svg { width: 150%; left: -10%; }
+  .l-two, .l-live { grid-template-columns: 1fr; }
+  .l-links a:not(.keep) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motif-route, .motif-detour { stroke-dashoffset: 0 !important; }
+  .reveal { opacity: 1; transform: none; }
+  .loader-mark .route { stroke-dashoffset: 0; }
+  .loader-mark .node, .loader-word { opacity: 1; }
+}
+:root[data-motion="reduced"] .motif-route, :root[data-motion="reduced"] .motif-detour { stroke-dashoffset: 0 !important; }
+:root[data-motion="reduced"] .reveal { opacity: 1; transform: none; }
+
+.l-lead { margin-top: 20px; font-size: 22px; line-height: 1.45; max-width: 30em; color: var(--muted); }
+.l-q { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.l-q .l-faq { margin-top: 0; max-width: none; }
+.l-frags { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin-top: clamp(32px, 4vw, 56px); }
+.l-frag { background: var(--surface); padding: 20px; display: grid; gap: 12px; align-content: start; min-height: 220px; }
+.l-frag h3 { font-size: 16px; font-weight: 500; }
+.l-frag .muted { font-size: 14px; }
+@media (max-width: 900px) { .l-q, .l-frags { grid-template-columns: 1fr; } }

@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{E3: mean tree operations per update on $s\times s$ grids. The rebuild baseline is measured on the first $T_{\mathrm{rebuild}}$ updates only.}
+\label{tab:e3}
+\small
+\begin{tabular}{lrrrrr}
+\hline
+side & $n$ & GraphPulse-R ops/update & rebuild ops/update & $T\_{\mathrm{rebuild}}$ & ratio \\
+\hline
+20 & 400 & 807.405 & 36969.5 & 1\,000 & 0.022 \\
+40 & 1\,600 & 1416.49 & 148\,671 & 1\,000 & 0.01 \\
+80 & 6\,400 & 3063.97 & 598\,452 & 100 & 0.005 \\
+160 & 25\,600 & 4873.48 & 2\,407\,170 & 20 & 0.002 \\
+\hline
+\end{tabular}
+\end{table}

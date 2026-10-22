@@ -1,110 +1,44 @@
-/**
- * GraphPulse-R API Client Service Layer
- * Connects frontend directly to the Python HTTP server endpoints.
- */
-
-const API_BASE_URL = window.GRAPH_PULSE_API_URL || '';
-
-class GraphPulseAPI {
-  static async _request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.headers || {}),
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        let errMessage = `HTTP error ${response.status}`;
-        try {
-          const errData = await response.json();
-          if (errData.error) errMessage = errData.error;
-        } catch (_) {}
-        throw new Error(errMessage);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
-      throw error;
-    }
-  }
-
-  // 1. Status & Phase info
-  static async getStatus() {
-    return this._request('/api/status');
-  }
-
-  // 2. Active graph topology & node coordinates
-  static async getGraph() {
-    return this._request('/api/graph');
-  }
-
-  // 3. Load graph generator preset (grid, comb, hub_spoke, random_sparse)
-  static async loadPreset(preset, params = {}) {
-    return this._request('/api/graph/load', {
-      method: 'POST',
-      body: JSON.stringify({ preset, params }),
-    });
-  }
-
-  // 4. Set single-source vertex root
-  static async setSource(src) {
-    return this._request('/api/graph/set-source', {
-      method: 'POST',
-      body: JSON.stringify({ src: parseInt(src, 10) }),
-    });
-  }
-
-  // 5. Set optional target vertex for path highlighting
-  static async setTarget(target) {
-    return this._request('/api/graph/set-target', {
-      method: 'POST',
-      body: JSON.stringify({ target: target !== null ? parseInt(target, 10) : null }),
-    });
-  }
-
-  // 6. Apply dynamic edge update (delete or increase weight)
-  static async applyUpdate(kind, u, v, new_w = 0) {
-    return this._request('/api/update', {
-      method: 'POST',
-      body: JSON.stringify({
-        kind,
-        u: parseInt(u, 10),
-        v: parseInt(v, 10),
-        new_w: parseInt(new_w, 10),
-      }),
-    });
-  }
-
-  // 7. Reset graph to initial pre-update state
-  static async resetGraph() {
-    return this._request('/api/reset', { method: 'POST' });
-  }
-
-  // 8. State inspector table query
-  static async getState(search = '') {
-    const q = search ? `?search=${encodeURIComponent(search)}` : '';
-    return this._request(`/api/state${q}`);
-  }
-
-  // 9. Active invariant verification execution
-  static async verifyState() {
-    return this._request('/api/verify', { method: 'POST' });
-  }
-
-  // 10. Audit logs query
-  static async getLogs(filter = 'all') {
-    return this._request(`/api/logs?filter=${encodeURIComponent(filter)}`);
-  }
-
-  // 11. Performance & empirical metrics
-  static async getMetrics() {
-    return this._request('/api/metrics');
-  }
+// Thin client for the local GraphPulse-R API (see docs/API.md). Every value shown in the UI comes from here.
+export class ApiError extends Error {
+  constructor(message, status = 0) { super(message); this.name = 'ApiError'; this.status = status; }
 }
 
-window.GraphPulseAPI = GraphPulseAPI;
+async function request(path, options = {}) {
+  let res;
+  try {
+    res = await fetch(path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    });
+  } catch (err) {
+    throw new ApiError('Cannot reach the engine. Start it with python run_ui.py and retry.', 0);
+  }
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON body */ }
+  if (!res.ok || (data && data.success === false)) {
+    throw new ApiError((data && data.error) || `Request failed (${res.status})`, res.status);
+  }
+  return data;
+}
+
+const post = (path, body = {}) => request(path, { method: 'POST', body });
+
+export const Api = {
+  status: () => request('/api/status'),
+  graph: () => request('/api/graph'),
+  metrics: () => request('/api/metrics'),
+  logs: (filter = 'all') => request(`/api/logs?filter=${encodeURIComponent(filter)}`),
+  state: (search = '') => request(`/api/state${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  config: () => request('/api/config'),
+  setConfig: (c) => post('/api/config', { c }),
+  terminals: () => request('/api/terminals'),
+  setTerminals: (depot, stops) => post('/api/terminals', { depot, stops }),
+  tour: () => request('/api/tour'),
+  loadGraph: (preset, params = {}) => post('/api/graph/load', { preset, params }),
+  setSource: (src) => post('/api/graph/set-source', { src }),
+  setTarget: (target) => post('/api/graph/set-target', { target }),
+  update: (kind, u, v, new_w = 0) => post('/api/update', kind === 'increase' ? { kind, u, v, new_w } : { kind, u, v }),
+  reset: () => post('/api/reset'),
+  verify: () => post('/api/verify'),
+};

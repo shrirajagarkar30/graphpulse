@@ -1,0 +1,10 @@
+mode,k,T_actual,kept,resolved,infeasible,skip_rate
+uniform,4,300,288,12,0,0.96
+uniform,8,300,290,10,0,0.966667
+uniform,12,300,284,16,0,0.946667
+near_source,4,175,60,59,56,0.342857
+near_source,8,175,62,57,56,0.354286
+near_source,12,175,62,57,56,0.354286
+tree_edges,4,300,273,27,0,0.91
+tree_edges,8,300,266,34,0,0.886667
+tree_edges,12,300,265,35,0,0.883333
