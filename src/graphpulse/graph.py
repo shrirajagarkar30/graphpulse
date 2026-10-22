@@ -117,6 +117,16 @@ class DiGraph:
         self._validate_vertex(v, "Target vertex")
         return list(self._inn[v].items())
 
+    def out_degree(self, u: int) -> int:
+        """Return the number of outgoing edges from vertex u."""
+        self._validate_vertex(u, "Source vertex")
+        return len(self._out[u])
+
+    def in_degree(self, v: int) -> int:
+        """Return the number of incoming edges to vertex v."""
+        self._validate_vertex(v, "Target vertex")
+        return len(self._inn[v])
+
     def copy(self) -> DiGraph:
         """Create a deep copy of the graph with independent adjacency mappings."""
         new_graph = DiGraph(self._n)
