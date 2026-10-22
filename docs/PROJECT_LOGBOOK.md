@@ -54,6 +54,10 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | 2026-10-22 | 8 / M8.1 (backend) | Routing API, validation, lock, safe static, local-only | ✅ | `server.py`, `docs/API.md` | 30 API tests incl. traversal, 413, concurrency | commit on `phase-7-experiments` | UI redesign |
 | 2026-10-22 | 8 / M8.2 | Claims audit + lint | ✅ | `CLAIMS.md`, `test_docs_lint.py` | dashboard-text lint expected to fail until redesign (xfail) | | remove xfail after UI |
 | 2026-10-22 | 8 / M8.3 | Paper sources | 🟡 | `paper/`, generated tables, asset tests | not compiled (no LaTeX); bibliography unverified | | team review |
+| 2026-10-22 | 8 / M8.1 | Dashboard redesign + routing panel | ✅ | landing, loader, sidebar, 9 pages, light/dark, `/api/config`; legacy UI removed | skill lint + inspector 0 FAIL; in-browser regression 133 checks both themes; 1 bug found and fixed | tag `m8.1`; `docs/DESIGN.md`, `tests/ui/smoke.js` | M8.2 |
+| 2026-10-22 | 8 / M8.2 | Claims audit | ✅ | dashboard-text lint now passes (xfail removed) | lint green | tag `m8.2` | M8.3 |
+| 2026-10-22 | 8 / M8.3 | Paper | 🟡 | sources + generated tables | not compiled, bibliography unverified | tag `m8.3` | team |
+| 2026-10-22 | 8 / M8.4 | Release candidate | 🟡 | secrets/size/pin scans clean; licence MIT; REPRODUCE | full fast + slow suites green; **v1.0 not tagged** (human gates open) | tag `v1.0-rc1`, `phase-8-done` | team review |
 | 2026-10-20 | Analysis A10 | Documentation | ✅ | created TSoT, logbook, analysis report | — | `docs/` | **await user go-ahead** |
 
 ---
@@ -71,7 +75,7 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | Phase 5 — multi-terminal | ✅ | 100 % | merged, tag `phase-5-done` |
 | Phase 6 — routing layer | ✅ | 100 % (proof sign-offs pending) | — |
 | Phase 7 — experiments | ✅ | 100 % | real-data runs not done (no dataset) |
-| Phase 8 — demo, paper, release | 🟡 | 55 % | UI redesign + routing panel, release candidate, human gates |
+| Phase 8 — demo, paper, release | 🟡 | 90 % | human gates: sign-offs, literature check, paper build, second-machine reproduction |
 
 ---
 
@@ -105,7 +109,7 @@ See `ANALYSIS_REPORT.md` §7. Next: Phase 7 (experiments).
 | B-4 | Low | `KNOWN_GAPS.md` mis-describes `find_affected` as a superset | `docs/KNOWN_GAPS.md:14` | fixed (gate-fixes) |
 | B-5 | Low | Missing tag `phase-4-done` | git | open |
 | B-6 | — | P2 "+1"/"+2": **withdrawn** — the proof is consistent (+1 for integer c·F, +2 in general, as its theorem states) | `docs/proofs/P2_work_bound.md` | not a defect |
-| B-7 | Low (hardening) | Server: global state without lock under `ThreadingHTTPServer`, no body limit, CORS `*`, `startswith` path-prefix check (sibling-dir `web*` would pass), hard-coded `project_progress: 50`, returns 403 not 404 | `src/graphpulse/server.py` | open → 8.1 |
+| B-7 (fixed in 8.1) | Low (hardening) | Server: global state without lock under `ThreadingHTTPServer`, no body limit, CORS `*`, `startswith` path-prefix check (sibling-dir `web*` would pass), hard-coded `project_progress: 50`, returns 403 not 404 | `src/graphpulse/server.py` | fixed |
 | B-8 | Info | `check_state` annotated with `Any` but `Any` is not imported (harmless under `from __future__ import annotations`; breaks `typing.get_type_hints`) | `verify.py:130` | open |
 | B-9 | Info | README layout lists only `__init__.py`; says "## 4" twice | `README.md` | open |
 | B-10 | Info | Bare checkout: `pytest` fails to collect until `pip install -e . -r requirements-dev.txt` | README/pyproject | doc fix |
@@ -153,6 +157,9 @@ Only X-1 exists (benign workloads, one seed). **No scaling, adversarial, routing
 - `m5.2` and `m5.3` share one commit because `terminals.py` holds both classes.
 
 - A first design of the certificate used only the per-update `changed` set; an ε-keep followed by an update touching nothing would then wrongly report exact KEEP. Fixed by accumulating changes since the last rebase (test `test_t64_accumulated_changes_after_eps_keep`, P5 §2).
+
+- UI regression found a null `currentTarget` read after `await` (Settings engine budget never applied); fixed and re-verified. Preview browser cached an old stylesheet: static files are now sent with `Cache-Control: no-store`.
+- `reset` did not clear the activity log although the UI promised it; the server now clears logs and counters on reset (test added).
 
 ## 12. Failed approaches / rejected claims
 | What | Why it failed |

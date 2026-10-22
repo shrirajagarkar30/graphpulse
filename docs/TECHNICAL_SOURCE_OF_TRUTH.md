@@ -283,7 +283,7 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Analysis | `analysis.py` | `measure`, `theoretical_competitive_ratio` | P3 | `test_competitive` | VALIDATED |
 | Differential at scale | `tests/test_differential_scale.py` | 100k updates, `verify_structured` each | Alg-9 | itself (slow) | VALIDATED |
 | Benchmark | `experiments/bench_empirical_claims.py` | Seeded table → `docs/EMPIRICAL_EVALUATION.md` | — | none | EXPERIMENTALLY VERIFIED (table), prose **REJECTED** |
-| Dashboard | `server.py`, `web/`, `run_ui.py`, `__main__.py` | Local demo | — | **none (0 % coverage)** | PARTIAL (see L9) |
+| Dashboard | `server.py`, `web/`, `run_ui.py` | Local demo and UI | — | `test_api_routing`, `test_web_assets`, `tests/ui/smoke.js` (manual, in a browser) | VALIDATED (API); UI regression run manually |
 | Shared-graph entry | `controller.py` (`handle_applied`, `own_graph`), `generators.py` (`apply_update` returns old weight) | split mutate/handle | Alg-6 | `test_shared_graph` | VALIDATED |
 | Multi-terminal | `terminals.py` (`MultiTreeManager`, `TerminalMatrix`) | one budgeted tree per terminal on a shared graph; matrix + changed set + guard | Alg-10/11 | `test_multitree`, `test_matrix`, `test_multitree_slow` | VALIDATED |
 | Touched-tree script | `experiments/touched_trees.py` | stdout-only distribution (not for documents) | — | `test_t54_07` | IMPLEMENTED |
@@ -387,6 +387,8 @@ Informational measurements (from test runs, **not citable** until Phase 7 regene
 
 These are measurements on synthetic graphs in pure Python; none is a claim about real road networks.
 
+**V8 — Dashboard (2026-10-22).** The API gained routing endpoints, strict validation, a state lock, safe static serving and a validated `/api/config` budget endpoint (`docs/API.md`; 31 API tests incl. traversal, oversize, concurrency). The front end was rebuilt (`docs/DESIGN.md`): landing page, loader, collapsible open-plane sidebar, nine pages incl. Routing and Settings, light and dark themes. Objective gate: the design skill's lint and browser inspector report **0 FAIL** on every screen at three widths. Functional regression: an in-browser script (`tests/ui/smoke.js`) drove the real UI with 133 checks across both themes; it found one real bug (a null `currentTarget` after an `await` in Settings), which was fixed and re-verified. Not covered by an automated runner in CI (needs a browser); see the file header.
+
 ### 10.2 Claims that must **not** be used (found in the repository; all removed from the repo on branch `gate-fixes` on 2026-10-20 — kept here as a record)
 | Location | Claim | Why rejected |
 |---|---|---|
@@ -456,7 +458,7 @@ Not meaningful for this system (omitted on purpose): "without routing optimisati
 | L6 | Single vehicle, fixed terminals, no time windows. | Narrow VRP subset. |
 | L7 | Cascade logic is duplicated in `RepairMaintainer.apply` and `BudgetedMaintainer.apply`. | Divergence risk; Milestone 5.1 must refactor only the controller entry point and re-run both. |
 | L8 | `find_affected` oracle test covers deletions on tiny graphs (n≤9); weight increases are covered by differential runs, not by that oracle. | Add an increase-case oracle (cheap). |
-| L9 | Server: no lock around global state under a threaded server, no request-size limit, CORS `*`, prefix-based path check (`startswith`), hard-coded `project_progress: 50`, no tests. | Phase 8.1 scope; **not** part of the algorithmic claims. |
+| L9 | **Resolved in Phase 8.1:** lock, 1 MiB body limit, no CORS, `is_relative_to` path confinement (404), computed status, tests. The UI regression script needs a browser and is not part of `pytest`. | Not part of the algorithmic claims. |
 | L10 | Pure Python, graphs ≤ ~10⁴ vertices, one machine. | Not a scalability claim. |
 | L11 | `analysis.theoretical_competitive_ratio` raises for c≤0 and E1 sweeps c=0 and c=∞ (ratio unbounded). | E1 must special-case; document ρ(0)=ρ(∞)=∞ (limit). |
 | L13 | On the benign grid workload repair-only used fewer tree operations than the budgeted controller (`e2_ablation.csv`). | The budget is a worst-case guarantee, not an average-case win. |

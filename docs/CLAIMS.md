@@ -31,6 +31,7 @@ Experiment tables were produced by `python -m experiments.run_all` at commit `fd
 | First-half benign-workload table: certificate hit rates and work savings for four families, one seed | measured | `docs/EMPIRICAL_EVALUATION.md` | b4fece1 | OK |
 | Repair writes to an overlay, so an aborted repair leaves the state unchanged | design | `src/graphpulse/repair.py` | m4.1 | OK |
 | The dashboard server binds to 127.0.0.1 by default, rejects bodies over 1 MiB, confines static files to web/, and serialises state access | design | `src/graphpulse/server.py` | fde3885 | OK |
+| The dashboard passed an in-browser regression (133 checks) across all pages in the light and dark themes, after one bug was fixed | measured | `tests/ui/smoke.js` | fde3885 | OK |
 | The algorithms use only the standard library | design | `pyproject.toml` | 0e02495 | OK |
 | "(c+1)-competitive" (work bound confused with competitive ratio) | design | `docs/SPEC.md` | 42f9258 | REJECTED |
 | "70% to 94% certificate hit rate" and "65% to 92% operation savings" as universal claims | measured | `docs/EMPIRICAL_EVALUATION.md` | 2606a8c | REJECTED |

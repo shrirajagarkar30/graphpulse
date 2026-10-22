@@ -81,10 +81,10 @@ Status key: ✅ COMPLETE · 🟡 PARTIALLY COMPLETE · 🔴 NOT STARTED · ⚠�
 | 6 | P4 (NP-hardness), P5 (certificate) (6.6) | 🟡 | drafted; reduction test passes | reviewer sign-off |
 | 7 | Road loader (7.1) | ✅ | tested on tiny file | real dataset not used |
 | 7 | Runner, E1–E5, figures, run_all (7.2–7.6) | ✅ | `docs/results`, MANIFEST verified | real-data and full-size E1/E5 runs |
-| 8 | API backend + hardening (8.1) | ✅ | `test_api_routing` | frontend routing panel (UI redesign) |
-| 8 | Claims audit (8.2) | ✅ | `CLAIMS.md`, lint | remove xfail after UI |
+| 8 | API + dashboard redesign (8.1) | ✅ | `test_api_routing`, `test_web_assets`, `tests/ui/smoke.js`, skill inspector 0 FAIL | — |
+| 8 | Claims audit (8.2) | ✅ | `CLAIMS.md`, lint (all green) | — |
 | 8 | Paper (8.3) | 🟡 | sources + generated tables | compile (Overleaf), verify bibliography, literature check |
-| 8 | Release (8.4) | 🔴 | | licence chosen (MIT), pins done; second-machine reproduction and sign-offs are human gates |
+| 8 | Release (8.4) | 🟡 | scans clean, MIT, pins, `v1.0-rc1` | second-machine reproduction, proof sign-offs, literature check, paper build → then `v1.0` |
 
 **Overall:** Phases 0–4 ≈ complete (the "first 50 %"); Phases 5–8 not started. Work is *not* yet 50 % of the effort: the second half contains all the research-evidence work (experiments, paper).
 

@@ -26,7 +26,7 @@ The algorithms use only the standard library. `requirements-dev.txt` (all pinned
 python -m pytest -q -m "not slow"          # fast tests
 python -m pytest -q                        # everything (includes long differential runs)
 python demo.py                             # console demo
-python run_ui.py --port 8000               # dashboard at http://127.0.0.1:8000 (local-only by default)
+python run_ui.py --port 8000               # landing page and dashboard at http://127.0.0.1:8000 (local-only by default)
 python -m experiments.run_all --quick      # tiny experiment run (seconds)
 python -m experiments.run_all              # full experiments -> docs/results, docs/figures
 python -m experiments.run_all --verify     # check docs/results/MANIFEST.json
@@ -43,7 +43,7 @@ Full instructions and expected runtimes: `docs/REPRODUCE.md`.
 | Routing | `tour`, `tourcert`, `pipeline` | brute force, Held-Karp (k <= 18), nearest neighbour, branch-and-bound; lazy tour certificate (+ epsilon mode); end-to-end `RoutingPipeline` |
 | Data | `roadnet` | DIMACS `.gr` loader, SCC extraction, subgraph sampling (no real dataset is bundled or used; see `data/README.md`) |
 | Experiments | `experiments/` | seeded runner with cross-variant checks, experiments E1-E5, figures, one-command `run_all` |
-| Dashboard | `server`, `web/` | local HTTP API (`docs/API.md`) and web UI |
+| Dashboard | `server`, `web/` | local HTTP API (`docs/API.md`), landing page and application UI with light and dark themes (`docs/DESIGN.md`) |
 
 ## Repository map
 

@@ -103,7 +103,6 @@ def test_t82_06_every_claim_sourced():
         assert cells[4] in ("OK", "REJECTED", "PENDING"), f"bad Status in: {l[:80]}"
 
 
-@pytest.mark.xfail(reason="legacy dashboard still has hard-coded percentages; removed by the UI redesign (remove this mark then)")
 def test_t82_07_dashboard_strings_have_no_unsourced_numbers():
     """No hard-coded percentages or counts in user-facing dashboard text (numbers are computed at runtime)."""
     pat = re.compile(r"\b\d+(\.\d+)?(-\d+(\.\d+)?)?\s?%|\b\d{2,4} (automated )?tests\b")

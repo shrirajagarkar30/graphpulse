@@ -52,6 +52,8 @@ python experiments/bench_empirical_claims.py   # regenerates docs/EMPIRICAL_EVAL
 
 ## 5. Dashboard and demo
 
+The dashboard UI regression (`tests/ui/smoke.js`) needs a browser; its header explains how to run it against a running dashboard.
+
 ```bash
 python demo.py                    # console demo
 python run_ui.py --port 8000      # dashboard on http://127.0.0.1:8000
