@@ -27,7 +27,14 @@ STEPS = [("E1", e1_budget.run), ("E2", e2_stages.run), ("E3", e3_scaling.run), (
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """SHA-256 of the file; text files are hashed with LF line endings so a Windows checkout
+    (git autocrlf) verifies against the same manifest as a Linux checkout."""
+    data = path.read_bytes()
+    if path.suffix in (".csv", ".md", ".json", ".tex"):
+        data = data.replace(b"
+", b"
+")
+    return hashlib.sha256(data).hexdigest()
 
 
 def run_all(quick: bool, results: Path, figures: Path, log=print) -> Path:

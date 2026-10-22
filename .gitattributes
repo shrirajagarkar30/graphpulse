@@ -1,0 +1,5 @@
+# Generated tables, manifests and TeX snippets must be byte-stable across platforms.
+docs/results/** text eol=lf
+paper/generated/** text eol=lf
+*.csv text eol=lf
+*.sh text eol=lf
