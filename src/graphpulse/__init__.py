@@ -22,10 +22,14 @@ from graphpulse.maintainer import Maintainer, RecomputeMaintainer, UpdateStats
 from graphpulse.opcount import CountedHeap, OpCounter, OpSnapshot
 from graphpulse.repair import RepairMaintainer, find_affected
 from graphpulse.spt import SPTState
+from graphpulse.terminals import MultiStats, MultiTreeManager, TerminalMatrix
 from graphpulse.verify import InvariantViolation, StateViolation, check_spt, check_state
 
 __version__ = "0.1.0"
 __all__ = [
+    "MultiStats",
+    "MultiTreeManager",
+    "TerminalMatrix",
     "DiGraph",
     "OpCounter",
     "OpSnapshot",

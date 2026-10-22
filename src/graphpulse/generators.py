@@ -255,8 +255,8 @@ class Update:
     new_w: int = 0
 
 
-def apply_update(g: "DiGraph", upd: Update) -> None:  # noqa: F821
-    """Apply *upd* to graph *g* in-place.
+def apply_update(g: "DiGraph", upd: Update) -> int:  # noqa: F821
+    """Apply *upd* to graph *g* in-place and return the weight the edge had before.
 
     Raises
     ------
@@ -271,7 +271,9 @@ def apply_update(g: "DiGraph", upd: Update) -> None:  # noqa: F821
             raise ValueError(
                 f"apply_update(delete): edge ({upd.u}, {upd.v}) does not exist"
             )
+        old_w = g.weight(upd.u, upd.v)
         g.remove_edge(upd.u, upd.v)
+        return old_w
 
     elif upd.kind == "increase":
         if not g.has_edge(upd.u, upd.v):
@@ -285,6 +287,7 @@ def apply_update(g: "DiGraph", upd: Update) -> None:  # noqa: F821
                 f"for edge ({upd.u}, {upd.v})"
             )
         g.increase_weight(upd.u, upd.v, upd.new_w)
+        return old_w
 
     else:
         raise ValueError(f"apply_update: unknown kind {upd.kind!r}")

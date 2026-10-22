@@ -72,6 +72,7 @@ class BudgetedMaintainer:
         f_mode: str = "last",
         verify: bool = False,
         seed: int | None = None,
+        own_graph: bool = True,
     ) -> None:
         """Initialize BudgetedMaintainer.
 
@@ -84,6 +85,11 @@ class BudgetedMaintainer:
         f_mode : Rebuild cost estimation mode: 'last' or 'oracle'.
         verify : If True, runs check_state after every single update.
         seed   : Optional RNG seed when c='random'.
+        own_graph : If True (default) the maintainer works on a private copy of *g*
+                 and `apply()` mutates it.  If False the maintainer shares *g* with
+                 other maintainers: the caller mutates the graph exactly once per
+                 update (via `apply_update`) and then calls `handle_applied()` on
+                 every maintainer.
         """
         if isinstance(src, bool) or not isinstance(src, int) or not (0 <= src < g.n):
             raise ValueError(f"Source vertex {src!r} out of range [0, {g.n - 1}]")
@@ -105,7 +111,7 @@ class BudgetedMaintainer:
         if f_mode not in ("last", "oracle"):
             raise ValueError(f"Unknown f_mode {f_mode!r}; expected 'last' or 'oracle'")
 
-        self._g: DiGraph = g.copy()
+        self._g: DiGraph = g.copy() if own_graph else g
         self._src: int = src
         self._f_mode: str = f_mode
         self._verify: bool = verify
@@ -173,13 +179,15 @@ class BudgetedMaintainer:
         """Return stats from most recent apply() call."""
         return self._last_stats
 
-    def _compute_f(self, update: Update) -> int:
-        """Compute the F work value to use for calculating the budget."""
+    def _compute_f(self) -> int:
+        """Compute the F work value to use for calculating the budget.
+
+        Called after the graph already reflects the update, so oracle mode
+        rebuilds on a scratch copy of the current (updated) graph.
+        """
         if self._f_mode == "oracle":
-            scratch_g = self._g.copy()
-            apply_update(scratch_g, update)
             scratch_counter = OpCounter()
-            SPTState.build(scratch_g, self._src, scratch_counter)
+            SPTState.build(self._g.copy(), self._src, scratch_counter)
             return scratch_counter.work
         return self._F
 
@@ -192,25 +200,42 @@ class BudgetedMaintainer:
         return math.ceil(self._c * F_val)
 
     def apply(self, update: Update) -> UpdateStats:
-        """Apply an edge deletion or weight increase in-place.
+        """Apply an edge deletion or weight increase to the maintainer's own graph.
+
+        Equivalent to `old_w = apply_update(g, update)` followed by
+        `handle_applied(update, old_w)`.  Raises ValueError (graph and state
+        untouched) if the update is invalid.
+        """
+        old_w = apply_update(self._g, update)
+        return self.handle_applied(update, old_w)
+
+    def handle_applied(self, update: Update, old_w: int) -> UpdateStats:
+        """Process an update that the graph already reflects.
 
         Follows the strict decision order:
         1. Certificate check -> 'cert' (1 SCAN)
         2. Alternative support -> 'alt' (at most 1 + indeg(v) SCANs)
         3. Budgeted repair -> 'repair' (work cap B = ceil(c * F))
         4. Rebuild on BudgetExceeded -> 'fallback'
+
+        *old_w* is the weight the edge had before the update; tightness is
+        tested against it.  Raises RuntimeError (state untouched) if the graph
+        does not reflect *update*.
         """
         u, v = update.u, update.v
-        if not self._g.has_edge(u, v):
-            apply_update(self._g, update)
-        old_w = self._g.weight(u, v)
+        if update.kind == "delete":
+            if self._g.has_edge(u, v):
+                raise RuntimeError(f"handle_applied: edge ({u}, {v}) still present; update not applied")
+        elif update.kind == "increase":
+            if not self._g.has_edge(u, v) or self._g.weight(u, v) != update.new_w:
+                raise RuntimeError(f"handle_applied: edge ({u}, {v}) does not have weight {update.new_w}; update not applied")
+            if old_w >= update.new_w:
+                raise RuntimeError(f"handle_applied: old_w={old_w} is not below new_w={update.new_w}")
+        else:
+            raise RuntimeError(f"handle_applied: unknown update kind {update.kind!r}")
 
-        # Precompute budget using chosen f_mode before mutating main graph
-        F_val = self._compute_f(update)
+        F_val = self._compute_f()
         budget = self._compute_budget(F_val)
-
-        # Apply update to the maintainer's graph
-        apply_update(self._g, update)
 
         # Decision 1: Certificate (non-tight edge or into source)
         if (
