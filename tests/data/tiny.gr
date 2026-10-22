@@ -1,0 +1,13 @@
+c Hand-made 6-vertex test file for the DIMACS loader (Milestone 7.1).
+c Contains a self-loop (2 2), a duplicate arc (1 2 with weights 4 and 7),
+c and one-way vertices 5 and 6 (reachable but cannot return).
+p sp 6 9
+a 1 2 4
+a 2 3 3
+a 3 1 5
+a 1 2 7
+a 2 2 9
+a 3 4 2
+a 4 3 2
+a 4 5 1
+a 5 6 1
