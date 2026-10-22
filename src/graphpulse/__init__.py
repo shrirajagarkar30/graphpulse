@@ -22,13 +22,24 @@ from graphpulse.maintainer import Maintainer, RecomputeMaintainer, UpdateStats
 from graphpulse.opcount import CountedHeap, OpCounter, OpSnapshot
 from graphpulse.repair import RepairMaintainer, find_affected
 from graphpulse.spt import SPTState
+from graphpulse.pipeline import RecomputeEverything, RoutingPipeline
 from graphpulse.terminals import MultiStats, MultiTreeManager, TerminalMatrix
+from graphpulse.tour import branch_and_bound, brute_force_tour, held_karp, nearest_neighbor, tour_cost
+from graphpulse.tourcert import TourCertificate
 from graphpulse.verify import InvariantViolation, StateViolation, check_spt, check_state
 
 __version__ = "0.1.0"
 __all__ = [
     "MultiStats",
     "MultiTreeManager",
+    "RecomputeEverything",
+    "RoutingPipeline",
+    "TourCertificate",
+    "branch_and_bound",
+    "brute_force_tour",
+    "held_karp",
+    "nearest_neighbor",
+    "tour_cost",
     "TerminalMatrix",
     "DiGraph",
     "OpCounter",
