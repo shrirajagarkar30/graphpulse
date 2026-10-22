@@ -38,3 +38,9 @@ experiments/output/
 data/raw/
 *.gr
 !tests/data/*.gr
+
+# Third-party design skill and its working files (not part of the project)
+.agents/
+.claude/
+skills-lock.json
+.taste-skill/

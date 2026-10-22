@@ -1,0 +1,134 @@
+/* GraphPulse-R design tokens.
+   Style: ink-first chrome, one data hue, flat surfaces (no shadows at rest, no gradients).
+   Ground is a blue-grey tint (a ledger / meter ground); dark theme uses true neutral darks. */
+
+:root {
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, Arial, sans-serif;
+
+  /* light */
+  --ground: #f2f4f7;
+  --surface: #ffffff;
+  --raised: #e9ecf1;
+  --active: #e4e8ee;
+  --border: #e1e5ea;
+  --rule: #edf0f3;
+  --control: #c9cfd8;
+  --text: #0a0a0a;
+  --muted: #5b626d;
+  --faint: #6b7280;
+  --primary: #141414;
+  --on-primary: #ffffff;
+  --data: #1d5fbf;            /* the one chart hue: the main data element */
+  --data-soft: rgba(29, 95, 191, 0.12);
+  --positive: #247b50;
+  --negative: #c4242a;
+  --warning: #92400e;
+  --pill-positive-bg: #dcfae5;  --pill-positive-ink: #04250e;
+  --pill-negative-bg: #ffedea;  --pill-negative-ink: #831c1e;
+  --pill-warning-bg: #fffbeb;   --pill-warning-ink: #92400e;  --pill-warning-line: #fde68a;
+  --pill-neutral-bg: #e9ecf1;   --pill-neutral-ink: #343a44;
+  --pill-data-bg: #e3edfb;      --pill-data-ink: #123c7a;
+  --grid: #e3e6eb;
+  --focus: #1d5fbf;
+  --scrim: rgba(10, 10, 10, 0.4);
+
+  /* canvas (graph) palette, read by JS */
+  --cv-bg: #ffffff;
+  --cv-grid: #eef1f5;
+  --cv-edge: #c3cad4;
+  --cv-edge-tree: #7fa6dc;
+  --cv-path: #1d5fbf;
+  --cv-node: #ffffff;
+  --cv-node-ink: #0a0a0a;
+  --cv-node-line: #8b94a1;
+  --cv-unreachable: #eef0f3;
+  --cv-source: #247b50;
+  --cv-target: #c4242a;
+  --cv-affected: #b7791f;
+  --cv-label: #5b626d;
+  --cv-tip-bg: #141414;
+  --cv-tip-ink: #ffffff;
+  --cv-tip-muted: #b4b4b4;
+
+  /* geometry */
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
+  --gap: 12px;
+  --pad: 24px;
+  --card-pad: 20px;
+  --control-height: 36px;
+  --row-height: 44px;
+  --sidebar-width: 248px;
+  --sidebar-rail: 60px;
+
+  /* type */
+  --fs-title: 28px;
+  --fs-section: 16px;
+  --fs-kpi: 24px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+  --lh-body: 1.5;
+
+  /* motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 360ms;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --ground: #0a0a0a;
+  --surface: #141414;
+  --raised: #1f1f1f;
+  --active: #262626;
+  --border: #2a2a2a;
+  --rule: #1d1d1d;
+  --control: #444444;
+  --text: #f5f5f5;
+  --muted: #a8a8a8;
+  --faint: #949494;
+  --primary: #f5f5f5;
+  --on-primary: #0a0a0a;
+  --data: #6ea8ff;
+  --data-soft: rgba(110, 168, 255, 0.16);
+  --positive: #3fc07a;
+  --negative: #ee6a80;
+  --warning: #e0a458;
+  --pill-positive-bg: #172a1d;  --pill-positive-ink: #5ed596;
+  --pill-negative-bg: #2c1a20;  --pill-negative-ink: #f08a9b;
+  --pill-warning-bg: #2b2212;   --pill-warning-ink: #e0a458;  --pill-warning-line: #4a3a1c;
+  --pill-neutral-bg: #232323;   --pill-neutral-ink: #cfcfcf;
+  --pill-data-bg: #14233b;      --pill-data-ink: #9cc2ff;
+  --grid: #2b2b2b;
+  --focus: #6ea8ff;
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  --cv-bg: #101010;
+  --cv-grid: #1a1a1a;
+  --cv-edge: #3d3d3d;
+  --cv-edge-tree: #4a79b8;
+  --cv-path: #6ea8ff;
+  --cv-node: #1b1b1b;
+  --cv-node-ink: #f5f5f5;
+  --cv-node-line: #6b6b6b;
+  --cv-unreachable: #1a1a1a;
+  --cv-source: #3fc07a;
+  --cv-target: #ee6a80;
+  --cv-affected: #e0a458;
+  --cv-label: #a8a8a8;
+  --cv-tip-bg: #f5f5f5;
+  --cv-tip-ink: #0a0a0a;
+  --cv-tip-muted: #4a4a4a;
+
+  color-scheme: dark;
+}
+
+@media (max-width: 640px) {
+  :root { --pad: 16px; --card-pad: 16px; --fs-title: 24px; }
+}
+
+/* compact density */
+:root[data-density="compact"] { --row-height: 36px; --control-height: 32px; --card-pad: 16px; --gap: 10px; }

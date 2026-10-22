@@ -80,3 +80,11 @@ Resets the graph **and** the routing pipeline (terminals are kept; counters clea
 | `GET /api/logs?filter=all\|cert\|alt\|repair\|fallback\|delete\|increase` | — | `{logs, total_count}` |
 | `GET /api/metrics` | — | cumulative online vs rebuild work, strategy counts |
 | `POST /api/verify` | — | invariant verification of the live state against a Dijkstra oracle |
+
+## Engine configuration
+
+### `GET /api/config`
+Response: `{success, c, preset, n, m}`; `c` is a number, `"inf"` or `"random"`.
+
+### `POST /api/config`
+Request: `{"c": number >= 0 | "inf" | "random"}`. Sets the budget multiplier of the shortest-path maintainers and the routing pipeline, then restarts them from the initial graph (logs and counters are cleared). `400` for anything else.

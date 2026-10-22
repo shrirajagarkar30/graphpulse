@@ -195,5 +195,29 @@ def test_t81_12_regression_existing_endpoints_and_reset(api):
     st, after, _ = api("GET", "/api/tour")
     assert after["tour_cost"] == before["tour_cost"]
     assert after["hk_transitions_pipeline"] == 0 and after["last_route"] is None
-    st, js, _ = api("POST", "/api/update", {"kind": "delete", "u": 0, "v": 1})   # still works without terminals? (they remain)
+    st, m, _ = api("GET", "/api/metrics")
+    assert m["total_updates"] == 0 and m["cumulative_online_work"] == 0          # reset clears the log and counters
+    st, js, _ = api("POST", "/api/update", {"kind": "delete", "u": 0, "v": 1})
     assert st == 200
+
+
+def test_config_budget_get_set_and_validation(api):
+    st, js, _ = api("GET", "/api/config")
+    assert st == 200 and js["c"] == 1.0 and js["n"] == 36
+    api("POST", "/api/terminals", {"depot": 0, "stops": [5, 12]})
+    api("POST", "/api/update", {"kind": "increase", "u": 0, "v": 1, "new_w": 50})
+    st, js, _ = api("POST", "/api/config", {"c": 0.5})
+    assert st == 200 and js["c"] == 0.5
+    st, m, _ = api("GET", "/api/metrics")
+    assert m["total_updates"] == 0                       # engines restarted from the initial graph
+    for good in ("inf", "random", 0, 2):
+        st, js, _ = api("POST", "/api/config", {"c": good})
+        assert st == 200
+        st, up, _ = api("POST", "/api/update", {"kind": "delete", "u": 0, "v": 1})
+        assert st == 200
+        api("POST", "/api/reset")
+    for bad in ("x", -1, True, None, [1], {"a": 1}):
+        st, js, _ = api("POST", "/api/config", {"c": bad})
+        assert st == 400 and js["success"] is False
+    st, js, _ = api("POST", "/api/config", {})
+    assert st == 400

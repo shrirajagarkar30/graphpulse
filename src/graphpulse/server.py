@@ -232,7 +232,29 @@ class GraphPulseState:
         )
         self.last_update_info = None
         self.last_affected = set()
+        self.logs.clear()
+        self.cumulative_online_work = 0
+        self.cumulative_rebuild_work = 0
         self._build_routing()
+
+    def set_budget(self, c: Any) -> None:
+        """Change the budget multiplier c (a number >= 0, "inf", or "random") and restart engines.
+
+        The graph is reset to its initial state because maintainers are rebuilt from scratch.
+        """
+        if isinstance(c, str):
+            if c.lower() not in ("inf", "random"):
+                raise ValueError("c must be a number >= 0, \"inf\" or \"random\"")
+            new_c: float | str = math.inf if c.lower() == "inf" else "random"
+        elif isinstance(c, bool) or not isinstance(c, (int, float)) or math.isnan(c) or c < 0:
+            raise ValueError("c must be a number >= 0, \"inf\" or \"random\"")
+        else:
+            new_c = float(c)
+        self.c = new_c  # type: ignore[assignment]
+        self.logs.clear()
+        self.cumulative_online_work = 0
+        self.cumulative_rebuild_work = 0
+        self.reset_graph()
 
     # ------------------------------------------------------------------ routing
     def _clear_routing(self) -> None:
@@ -458,7 +480,10 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
 
         # REST API endpoints
-        if path == "/api/terminals":
+        if path == "/api/config":
+            self._send_json({"success": True, "c": "inf" if STATE.c == math.inf else STATE.c, "preset": STATE.preset_name,
+                             "n": STATE.current_graph.n, "m": STATE.current_graph.m})
+        elif path == "/api/terminals":
             self._send_json({"success": True, **STATE.tour_summary()})
         elif path == "/api/tour":
             self._handle_get_tour()
@@ -510,7 +535,9 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             self._do_post(urlparse(self.path).path, body)
 
     def _do_post(self, path: str, body: dict[str, Any]) -> None:
-        if path == "/api/terminals":
+        if path == "/api/config":
+            self._handle_post_config(body)
+        elif path == "/api/terminals":
             self._handle_post_terminals(body)
         elif path == "/api/graph/load":
             self._handle_post_load(body)
@@ -694,6 +721,15 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             raise ValueError(f"field {key!r} must be an integer")
         return val
 
+    def _handle_post_config(self, body: dict[str, Any]) -> None:
+        try:
+            if "c" not in body:
+                raise ValueError("body must contain 'c'")
+            STATE.set_budget(body["c"])
+            self._send_json({"success": True, "c": "inf" if STATE.c == math.inf else STATE.c})
+        except ValueError as exc:
+            self._send_error_json(str(exc))
+
     def _handle_post_terminals(self, body: dict[str, Any]) -> None:
         try:
             if "depot" not in body or "stops" not in body:
@@ -824,6 +860,7 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", f"{ctype}; charset=utf-8" if "text" in ctype or "javascript" in ctype else ctype)
             self.send_header("Content-Length", str(len(content)))
             self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(content)
         except OSError:
