@@ -53,7 +53,7 @@ class OpCounter:
     - queue: FIFO queue enqueues and dequeues during affected-set propagation
     """
 
-    __slots__ = ("_scan", "_push", "_pop", "_queue", "budget", "start_work")
+    __slots__ = ("_scan", "_push", "_pop", "_queue", "budget", "start_work", "dp")
 
     def __init__(
         self,
@@ -70,6 +70,8 @@ class OpCounter:
         self._queue: int = queue
         self.budget: int | None = budget
         self.start_work: int = start_work
+        # Held-Karp DP transitions: counted separately, excluded from work / dijkstra_work.
+        self.dp: int = 0
 
     @property
     def scan(self) -> int:

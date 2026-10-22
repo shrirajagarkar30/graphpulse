@@ -4,7 +4,7 @@
 > It describes what the repository *actually* does, what has been *verified*, and what is still *planned*.
 > It is a living document: it is updated in the same commit as any change to methodology, code, tests or results (Rule 4).
 >
-> **Synchronised with:** branch `phase-5-terminals` (Phase 5 complete, 2026-10-20); baseline analysis on `main` @ `0e02495`.
+> **Synchronised with:** branch `phase-6-routing` (Phase 6 complete, 2026-10-22); baseline analysis on `main` @ `0e02495`.
 > **Companion documents:** [`PROJECT_LOGBOOK.md`](PROJECT_LOGBOOK.md) (chronology, decisions, experiments) · [`ANALYSIS_REPORT.md`](ANALYSIS_REPORT.md) (gate audit, status audit, roadmap) · [`SPEC.md`](SPEC.md) (frozen model and cost model) · [`proofs/`](proofs/) (P1–P3).
 
 ## Status labels (used everywhere in this document)
@@ -211,10 +211,10 @@ Notation: n=|V|, m=|E|, deg⁺/deg⁻ out/in-degree, A = affected set, vol(S)=Σ
 |---|---|---|---|---|
 | Alg-10 | `MultiTreeManager`: k+1 `BudgetedMaintainer`s on one graph — **VALIDATED (Phase 5)** | 5.1–5.2 | O(k) × single-tree; space O(k·n) | Per-tree P2 bound holds per tree; graph mutated once |
 | Alg-11 | `TerminalMatrix` with changed-set and monotonicity guard — **VALIDATED (Phase 5)** | 5.3 | O(k²) bookkeeping per update (counted separately as `matrix_cells`) | Guard fires iff a distance decreased |
-| Alg-12 | Held–Karp (k ≤ 18) | 6.2 | Θ(k²2ᵏ) transitions, exactly k(k−1)2^{k−2} (verified combinatorially for k=2..7 in a scratch script); space Θ(k2ᵏ) | Standard DP |
-| Alg-13 | Nearest neighbour; branch-and-bound with NN initial bound | 6.3 | NN O(k²); B&B worst O(k!) | Prune rule `partial ≥ best` safe for non-negative entries |
-| Alg-14 | **Lazy tour certificate** (+ε mode, stored LB) | 6.4 | O(k) per decision | **P5 (to be written):** keep ⇒ optimal; ε-keep ⇒ cost′ ≤ (1+ε)·OPT′ provided LB is *not* ratcheted |
-| Alg-15 | `RoutingPipeline` + `RecomputeEverything` reference | 6.5 | — | Pipeline cost = reference cost after every update |
+| Alg-12 | Held–Karp (k ≤ 18) — **VALIDATED (Phase 6)** | 6.2 | Θ(k²2ᵏ) transitions, exactly k(k−1)2^{k−2} (verified combinatorially for k=2..7 in a scratch script); space Θ(k2ᵏ) | Standard DP |
+| Alg-13 | Nearest neighbour; branch-and-bound with NN initial bound — **VALIDATED (Phase 6)** | 6.3 | NN O(k²); B&B worst O(k!) | Prune rule `partial ≥ best` safe for non-negative entries |
+| Alg-14 | **Lazy tour certificate** (+ε mode, stored LB) — **VALIDATED (Phase 6); proof P5 drafted, sign-off PENDING** | 6.4 | O(k) per decision | **P5 (to be written):** keep ⇒ optimal; ε-keep ⇒ cost′ ≤ (1+ε)·OPT′ provided LB is *not* ratcheted |
+| Alg-15 | `RoutingPipeline` + `RecomputeEverything` reference — **VALIDATED (Phase 6)** | 6.5 | — | Pipeline cost = reference cost after every update |
 
 Pseudocode for Alg-14 (design intent):
 ```
@@ -287,7 +287,11 @@ Cascade in §5.2; the only non-local control transfer is the `BudgetExceeded` ex
 | Shared-graph entry | `controller.py` (`handle_applied`, `own_graph`), `generators.py` (`apply_update` returns old weight) | split mutate/handle | Alg-6 | `test_shared_graph` | VALIDATED |
 | Multi-terminal | `terminals.py` (`MultiTreeManager`, `TerminalMatrix`) | one budgeted tree per terminal on a shared graph; matrix + changed set + guard | Alg-10/11 | `test_multitree`, `test_matrix`, `test_multitree_slow` | VALIDATED |
 | Touched-tree script | `experiments/touched_trees.py` | stdout-only distribution (not for documents) | — | `test_t54_07` | IMPLEMENTED |
-| Tour / certificate / pipeline / road data / experiments | `tour.py`, `tourcert.py`, `pipeline.py`, `roadnet.py`, `experiments/e1…e5` | — | Alg-12…15 | — | PLANNED |
+| Tour solvers | `tour.py` (brute force k≤8, Held–Karp k≤18 with exact `dp` transition count, nearest neighbour, branch-and-bound) | exact + baseline tours | Alg-12/13 | `test_tour_basic`, `test_heldkarp`, `test_tour_baselines` | VALIDATED |
+| Lazy tour certificate | `tourcert.py` | keep / keep_eps / resolve; accumulated changes; non-ratcheted LB | Alg-14 | `test_tourcert` | VALIDATED |
+| Routing pipeline | `pipeline.py` (`RoutingPipeline`, `RecomputeEverything`, `run_differential`) | trees → matrix → certificate → Held–Karp | Alg-15 | `test_pipeline` | VALIDATED |
+| NP-hardness / certificate proofs | `docs/proofs/P4_np_hardness.md`, `P5_lazy_certificate.md`, `tests/test_np_reduction.py` | reduction from directed Hamiltonian cycle; Lemma 5/6 | — | `test_np_reduction` | VALIDATED (tests); sign-off PENDING |
+| Road data / experiments | `roadnet.py`, `experiments/e1…e5` | — | — | — | PLANNED |
 
 ---
 
@@ -358,6 +362,13 @@ The brief that started this analysis recalled "≈240 tests". The repository has
 Total 60,000 multi-tree updates + 10,000 matrix updates, **0 mismatches**. Per-tree work ≤ (1+c)F_true+2 was verified in oracle mode for c∈{0.5,1,2} (T5.4-04). The monotonicity guard was seen to fire on an injected decrease (T5.3-06). The comb case behaves as specified (T5.4-06). Sampling every 50th update on large graphs is acceptable only because T5.4-01 checks every update on a small graph. Touched-tree distributions printed by `experiments/touched_trees.py` are **not recorded here** (stdout-only until Phase 7 regenerates them).
 
 **Finding (test-design hazard):** `random_updates` removes deleted edges from its pool, so with `p_delete=0.5` the pool exhausts early: "2000 updates" on a 6×6 grid yields about 210–240 updates, on an 8×8 grid about 400–490. Phase 5 tests therefore (a) use low deletion shares wherever a count is claimed and assert `len(updates) == N`, and (b) run a deletion-heavy variant separately with the actual count asserted. Any future "N updates" claim must be backed by such an assertion (the pre-existing 100k test already is).
+
+**V6 — Phase 6 (routing layer), 2026-10-22, branch `phase-6-routing`.** Collected **325** tests (254 + 71 new). Fast: **311 passed**, 0 failed (86 s). New tests: tour basics (T6.1), Held–Karp incl. brute-force agreement on 300 random asymmetric matrices and the exact transition formula `k(k−1)2^{k−2}` for k = 2…10 (T6.2), nearest neighbour / branch-and-bound vs Held–Karp on 300 matrices (T6.3), certificate soundness on 500 and ε-bound on 500 random cases (T6.4), pipeline = recompute-everything reference at every update on grid, random_sparse, hub_spoke, in ε-mode, with k = 0/1 and disconnection (T6.5), and the Hamiltonian-cycle reduction on 300 + 100 + 100 digraphs (T6.6).
+
+Informational measurements (from test runs, **not citable** until Phase 7 regenerates them with the seeded runner and committed tables):
+* Held–Karp k = 14: exactly 745,472 transitions (= 14·13·2¹²), peak 5.5 MiB (`tracemalloc`), 0.19 s; k = 16 slow test 0.55 s. (Python 3.14, this machine.)
+* B&B vs Held–Karp at k = 12: 20 random matrices equal, 6 s.
+* Pipeline, 12×12 grid, k = 6, 20,000 updates (`p_delete = 0.005`, one seed): identical tour cost to the reference at every update; 17,575 updates kept, 2,425 re-solved; 1,164,000 vs 9,600,000 Held–Karp transitions. This is one benign workload, not a general speed-up claim.
 
 ### 10.2 Claims that must **not** be used (found in the repository; all removed from the repo on branch `gate-fixes` on 2026-10-20 — kept here as a record)
 | Location | Claim | Why rejected |
@@ -483,7 +494,7 @@ Dataset preparation, experiment commands, `MANIFEST.json`: PLANNED (Phase 7.6 / 
 
 ## 16. Future work
 
-**DONE:** gate fixes; 5.1–5.4 multi-terminal engine and matrix (VALIDATED, V5). **PLANNED (second-half playbook, in order):** 6.1–6.3 tour baselines (parallelisable) → 6.4 lazy certificate → 6.5 pipeline → 6.6 proofs P4 (NP-hardness by reduction from directed Hamiltonian cycle, restricted to the tour problem on a metric closure) and P5 (lazy certificate) → 7.1–7.6 real-data experiments → 8.1–8.4 dashboard hardening, claims audit, paper, release.
+**DONE:** gate fixes; 5.1–5.4 multi-terminal engine and matrix (VALIDATED, V5); 6.1–6.6 routing layer (VALIDATED, V6; proof sign-offs pending). **PLANNED (second-half playbook, in order):** 7.1–7.6 real-data loader, runner and experiments E1–E5 → 8.1–8.4 dashboard hardening, claims audit, paper, release.
 
 **FUTURE WORK (not scheduled; each needs its own justification):** edge insertions/decreases (needs a different certificate), heuristic tours for k>18 with the same certificate, multiple vehicles/time windows, adaptive F estimation to tighten L2, a proof that the state is canonical (closes L3).
 

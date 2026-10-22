@@ -43,6 +43,10 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | 2026-10-20 | 5 / M5.2 | `MultiTreeManager` | ✅ | k+1 trees, one graph mutation, per-tree F and budget, `MultiStats` (+`dist_changed_trees`) | T5.2-01…11 pass; differential on 3 families | tag `m5.3` (m5.2 shares the commit; `terminals.py` holds both classes) | M5.3 |
 | 2026-10-20 | 5 / M5.3 | `TerminalMatrix` + monotonicity guard | ✅ | changed set, snapshot, `is_complete`, `matrix_cells` counter | guard fires on injected decrease; matrix = oracle after 5,000 updates ×2 (66–73 s each) | tag `m5.3`; `tests/test_matrix.py` | M5.4 |
 | 2026-10-20 | 5 / M5.4 | Hardening + touched-tree script | ✅ | 3×20,000-update differential, work bound per tree, comb case, `experiments/touched_trees.py` | 5 slow tests passed in 1,077 s; 60,000 updates, 0 mismatches | tag `m5.4`; `tests/test_multitree_slow.py` | **Phase 5 complete — awaiting go-ahead for Phase 6** |
+| 2026-10-22 | 6 / M6.1–6.3 | Tour cost, brute force, Held–Karp, NN, branch-and-bound | ✅ | `tour.py`; `OpCounter.dp` excluded from work | 40 tests; HK = brute force on 300 matrices; B&B = HK; formula exact | tags `m6.1`,`m6.2`,`m6.3` (one commit) | M6.4 |
+| 2026-10-22 | 6 / M6.4 | Lazy tour certificate | ✅ | `tourcert.py` with accumulated changes and non-ratcheted LB | 11 tests; soundness 500 cases, ε-bound 500 cases | tag `m6.4` | M6.5 |
+| 2026-10-22 | 6 / M6.5 | `RoutingPipeline` | ✅ | trees → matrix → certificate → Held–Karp; reference isolated | 12 fast tests + 20,000-update slow test: 0 cost mismatches | tag `m6.5` | M6.6 |
+| 2026-10-22 | 6 / M6.6 | NP-hardness + certificate proofs | 🟡 | P4, P5 drafted; reduction executable | 5 tests pass; **sign-off PENDING (team)** | tag `m6.6` | Phase 7 |
 | 2026-10-20 | Analysis A10 | Documentation | ✅ | created TSoT, logbook, analysis report | — | `docs/` | **await user go-ahead** |
 
 ---
@@ -57,14 +61,15 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 | Phase 3 — repair | ✅ | 100 % | fix `KNOWN_GAPS.md` text |
 | Phase 4 — controller, proofs | 🟡 | 95 % | sign-offs, P2 constant tidy, canonical-state lemma, `phase-4-done` tag |
 | **Gate to second half** | ✅ | 100 % | closed 2026-10-20 (`v0.5.1-gated`) |
-| Phase 5 — multi-terminal | ✅ | 100 % | merge to `main` + `phase-5-done` tag pending user go-ahead |
-| Phase 6 — routing layer | 🔴 | 0 % | 6.1–6.6 |
+| Phase 5 — multi-terminal | ✅ | 100 % | merged, tag `phase-5-done` |
+| Phase 6 — routing layer | ✅ | 100 % (proof sign-offs pending) | — |
 | Phase 7 — experiments | 🔴 | 0 % | 7.1–7.6; data source undecided |
 | Phase 8 — demo, paper, release | 🔴 | 0 % | 8.1–8.4 |
 
 ---
 
 ## 3. Completed
+- Phase 6 (6.1–6.6): tours, lazy certificate, pipeline, proofs P4/P5 — see TSoT V6.
 - Phase 5 (5.1–5.4): multi-terminal engine, matrix, hardening — see TSoT V5.
 - Gate remediation.
 - Phases 0–4 (first-half playbook), tags `m0.1 … m4.3`, `phase-0-done … phase-3-done`, `v0.5-half`.
@@ -75,14 +80,14 @@ Statuses: ✅ complete · 🟡 partial · 🔴 not started · ⚠️ needs valid
 - (none)
 
 ## 5. Remaining
-See `ANALYSIS_REPORT.md` §7. Next: **Phase 6 (routing layer)** after the user's go-ahead.
+See `ANALYSIS_REPORT.md` §7. Next: Phase 7 (experiments).
 
 ## 6. Blocked
 | Item | Blocked on |
 |---|---|
 | Phase 7.1 (real road data) | Choice and permission to download a DIMACS `.gr` / OSM extract (Playbook A7) |
 | Tags `phase-4-done`, new stable tag; any push | User approval (outward-facing / shared repo) |
-| Proof sign-offs (G2 / 8.2) | Two team members actually reviewing; cannot be done by tooling |
+| Proof sign-offs P1–P5 (G2 / 8.2) | Two team members actually reviewing; every proof file carries `Reviewer sign-off: PENDING` |
 
 ## 7. Bugs and defects
 | ID | Severity | Description | Location | Status |
@@ -138,6 +143,8 @@ Only X-1 exists (benign workloads, one seed). **No scaling, adversarial, routing
 ## 11b. Findings during Phase 5
 - `random_updates` exhausts its edge pool when `p_delete` is high ("2000 updates" gives about 210 on a 6×6 grid). Tests now assert actual counts. A trap for claims, not a generator defect.
 - `m5.2` and `m5.3` share one commit because `terminals.py` holds both classes.
+
+- A first design of the certificate used only the per-update `changed` set; an ε-keep followed by an update touching nothing would then wrongly report exact KEEP. Fixed by accumulating changes since the last rebase (test `test_t64_accumulated_changes_after_eps_keep`, P5 §2).
 
 ## 12. Failed approaches / rejected claims
 | What | Why it failed |
