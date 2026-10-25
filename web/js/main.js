@@ -13,14 +13,15 @@ import inspector from './pages/inspector.js';
 import guide from './pages/guide.js';
 import glossary from './pages/glossary.js';
 import settings from './pages/settings.js';
+import pune from './pages/pune.js';
 import { runSampleScenario } from './scenario.js';
 import { lineChart } from './charts.js';
 import { fmt, fmtCost, DASH, strategyPill, strategyText, routePill, withBusy, toast } from './ui.js';
 
-const PAGES = { overview, network, routing, activity, verification, state: inspector, guide, glossary, settings };
-const TITLES = { overview: 'Overview', network: 'Network', routing: 'Routing', activity: 'Activity', verification: 'Verification', state: 'State inspector', guide: 'Guide', glossary: 'Glossary', settings: 'Settings' };
+const PAGES = { overview, network, routing, activity, verification, state: inspector, guide, glossary, settings, pune };
+const TITLES = { overview: 'Overview', network: 'Network', routing: 'Routing', activity: 'Activity', verification: 'Verification', state: 'State inspector', guide: 'Guide', glossary: 'Glossary', settings: 'Settings', pune: 'Pune Map Demo' };
 const NAV = [
-  { group: 'Workspace', items: [['overview', 'Overview', 'overview'], ['network', 'Network', 'network'], ['routing', 'Routing', 'route']] },
+  { group: 'Workspace', items: [['overview', 'Overview', 'overview'], ['network', 'Network', 'network'], ['routing', 'Routing', 'route'], ['pune', 'Pune Map Demo', 'map']] },
   { group: 'Analysis', items: [['activity', 'Activity', 'list'], ['verification', 'Verification', 'shield'], ['state', 'State inspector', 'table']] },
   { group: 'Learn', items: [['guide', 'Guide', 'book'], ['glossary', 'Glossary', 'info']] },
 ];
@@ -118,7 +119,7 @@ function route() {
   $('#mobile-title').textContent = TITLES[name];
   const view = $('#view');
   view.innerHTML = '';
-  view.className = `page${['settings', 'guide', 'glossary', 'verification'].includes(name) ? ' page-narrow' : ''}`;
+  view.className = `page${['settings', 'guide', 'glossary', 'verification'].includes(name) ? ' page-narrow' : ''}${name === 'pune' ? ' page-full' : ''}`;
   cleanup = PAGES[name](view, { param }) || null;
   Store.refresh();
   window.scrollTo(0, 0);

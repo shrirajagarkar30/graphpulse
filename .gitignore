@@ -44,3 +44,6 @@ data/raw/
 .claude/
 skills-lock.json
 .taste-skill/
+
+# Extraction and audit artifacts
+research_extraction/

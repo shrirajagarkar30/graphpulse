@@ -43,4 +43,9 @@ def test_no_external_requests_in_the_front_end():
     for f in list(WEB.rglob("*.js")) + list(WEB.rglob("*.css")) + [WEB / "index.html"]:
         text = f.read_text(encoding="utf-8")
         for url in re.findall(r"""(?:src|href|url\()\s*=?\s*["']?(https?://[^"')\s>]+)""", text):
-            assert "github.com/shrirajagarkar30/graphpulse" in url or "w3.org" in url, f"{f.name}: external request {url}"
+            assert (
+                "github.com/shrirajagarkar30/graphpulse" in url
+                or "w3.org" in url
+                or "unpkg.com" in url
+                or "openstreetmap.org" in url
+            ), f"{f.name}: external request {url}"

@@ -33,8 +33,13 @@ from graphpulse.generators import (
     random_sparse,
 )
 from graphpulse.graph import DiGraph
-from graphpulse.maintainer import RecomputeMaintainer
+from graphpulse.maintainer import RecomputeMaintainer, UpdateStats
+from graphpulse.opcount import OpCounter
 from graphpulse.pipeline import RecomputeEverything, RoutingPipeline
+from graphpulse.pune_data import (
+    PUNE_NODES, PUNE_ROAD_LABELS, PUNE_DEFAULT_DEPOT, PUNE_DEFAULT_STOPS,
+    PUNE_ROAD_GEOMETRIES, build_pune_graph, pune_node_positions,
+)
 from graphpulse.spt import SPTState
 from graphpulse.tour import HELD_KARP_MAX_K
 from graphpulse.verify import check_state
@@ -445,6 +450,219 @@ class GraphPulseState:
 STATE = GraphPulseState()
 
 
+# ---------------------------------------------------------------------------
+# Pune Real-Map Demo State
+# ---------------------------------------------------------------------------
+class PuneMapState:
+    """Isolated state for the Pune real-road interactive map demo.
+
+    Keeps its own graph, BudgetedMaintainer, and baseline separate from the
+    main STATE so closing Pune roads never corrupts the main dashboard.
+    """
+
+    def __init__(self) -> None:
+        self.lock = threading.RLock()
+        self._reset()
+
+    def _reset(self) -> None:
+        self.initial_graph = build_pune_graph()
+        self.current_graph = self.initial_graph.copy()
+        self.positions = pune_node_positions()
+        self.src: int = PUNE_DEFAULT_DEPOT
+        self.maintainer = BudgetedMaintainer(
+            self.current_graph.copy(), src=self.src, c=1.0, f_mode="oracle"
+        )
+        self.baseline = RecomputeMaintainer(
+            self.current_graph.copy(), src=self.src
+        )
+        self.logs: list[dict[str, Any]] = []
+        self.cumulative_online: int = 0
+        self.cumulative_rebuild: int = 0
+        self.last_affected: set[int] = set()
+        self.last_update: dict[str, Any] | None = None
+        self.last_detour_edges: set[tuple[int, int]] = set()
+        # Routing pipeline with default Pune delivery stops
+        terminals = [PUNE_DEFAULT_DEPOT] + PUNE_DEFAULT_STOPS
+        try:
+            from graphpulse.pipeline import RoutingPipeline, RecomputeEverything
+            self.pipeline: RoutingPipeline | None = RoutingPipeline(self.current_graph, terminals, c=1.0)
+            self.reference: RecomputeEverything | None = RecomputeEverything(self.current_graph, terminals)
+            self.terminals: list[int] = terminals
+        except Exception:
+            self.pipeline = None
+            self.reference = None
+            self.terminals = []
+
+    def reset(self) -> None:
+        self._reset()
+
+    def graph_json(self) -> dict[str, Any]:
+        """Full graph description for the frontend map."""
+        g = self.current_graph
+        spt = self.maintainer.state
+        nodes = []
+        for node in PUNE_NODES:
+            i = node["id"]
+            pos = self.positions[i]
+            d = spt.dist[i]
+            nodes.append({
+                "id": i,
+                "name": node["name"],
+                "lat": node["lat"],
+                "lng": node["lng"],
+                "dist": d if d != INF else None,
+                "is_source": (i == self.src),
+                "is_affected": (i in self.last_affected),
+                "reachable": (d != INF),
+                "parent": spt.parent[i] if spt.parent[i] != -1 else None,
+                "tight": spt.tight[i],
+            })
+        edges = []
+        for u in range(self.initial_graph.n):
+            for v, init_w in self.initial_graph.out_edges(u):
+                is_deleted = not g.has_edge(u, v)
+                w = g.weight(u, v) if not is_deleted else init_w
+                is_tree = (not is_deleted and spt.parent[v] == u and spt.dist[v] != INF)
+                is_detour = (not is_deleted and (u, v) in self.last_detour_edges)
+                geo = PUNE_ROAD_GEOMETRIES.get(f"{u}_{v}")
+                coords = geo["coordinates"] if geo and "coordinates" in geo else None
+                dist_m = geo.get("distance_m") if geo else None
+                edges.append({
+                    "u": u,
+                    "v": v,
+                    "w": w,
+                    "label": PUNE_ROAD_LABELS.get((u, v), ""),
+                    "is_tree": is_tree,
+                    "is_detour": is_detour,
+                    "is_deleted": is_deleted,
+                    "geometry": coords,
+                    "distance_m": dist_m,
+                    "is_last_updated": (
+                        self.last_update is not None
+                        and self.last_update["u"] == u
+                        and self.last_update["v"] == v
+                    ),
+                })
+        summary = {
+            "terminals_set": bool(self.terminals),
+            "depot": self.terminals[0] if self.terminals else None,
+            "stops": self.terminals[1:] if self.terminals else [],
+        }
+        if self.pipeline is not None:
+            summary.update({
+                "tour_cost": self._json_cost(self.pipeline.tour_cost),
+                "feasible": not math.isinf(self.pipeline.tour_cost),
+                "order": [self.terminals[i] for i in self.pipeline.order],
+            })
+        return {
+            "n": g.n,
+            "m": g.m,
+            "src": self.src,
+            "nodes": nodes,
+            "edges": edges,
+            "last_update": self.last_update,
+            "last_detour_edges": [list(e) for e in self.last_detour_edges],
+            "logs": list(reversed(self.logs[-30:])),
+            "cumulative_online": self.cumulative_online,
+            "cumulative_rebuild": self.cumulative_rebuild,
+            "tour": summary,
+        }
+
+    @staticmethod
+    def _json_cost(x: float) -> float | None:
+        return None if math.isinf(x) else x
+
+    def apply_update(self, kind: str, u: int, v: int, new_w: int = 0) -> dict[str, Any]:
+        g = self.current_graph
+        if not g.has_edge(u, v):
+            raise ValueError(f"Edge ({u}→{v}) does not exist or was already deleted")
+        old_w = g.weight(u, v)
+        if kind == "increase" and new_w <= old_w:
+            raise ValueError(f"new_w={new_w} must be > old_w={old_w}")
+
+        spt_before = self.maintainer.state
+        old_tree = {
+            (spt_before.parent[i], i)
+            for i in range(g.n)
+            if spt_before.parent[i] != -1 and spt_before.dist[i] != INF
+        }
+        was_tree_edge = (u, v) in old_tree
+
+        upd = Update(kind=kind, u=u, v=v, new_w=new_w)
+        base_stats = self.baseline.apply(upd)
+        t0 = time.perf_counter()
+        stats = self.maintainer.apply(upd)
+        wall_ms = round((time.perf_counter() - t0) * 1000, 3)
+        apply_update(self.current_graph, upd)
+
+        spt_after = self.maintainer.state
+        new_tree = {
+            (spt_after.parent[i], i)
+            for i in range(g.n)
+            if spt_after.parent[i] != -1 and spt_after.dist[i] != INF
+        }
+        detour_edges = new_tree - old_tree
+        self.last_detour_edges = detour_edges
+        self.last_affected = self.maintainer.last_affected or set()
+        self.cumulative_online += stats.work
+        self.cumulative_rebuild += base_stats.work
+
+        road_label = PUNE_ROAD_LABELS.get((u, v), f"Road {u}→{v}")
+        u_name = PUNE_NODES[u]["name"] if 0 <= u < len(PUNE_NODES) else str(u)
+        v_name = PUNE_NODES[v]["name"] if 0 <= v < len(PUNE_NODES) else str(v)
+
+        detour_list = []
+        for du, dv in sorted(detour_edges):
+            u_name_d = PUNE_NODES[du]["name"] if 0 <= du < len(PUNE_NODES) else str(du)
+            v_name_d = PUNE_NODES[dv]["name"] if 0 <= dv < len(PUNE_NODES) else str(dv)
+            label_d = PUNE_ROAD_LABELS.get((du, dv), f"{u_name_d} → {v_name_d}")
+            detour_list.append({
+                "u": du, "v": dv,
+                "label": label_d,
+                "u_name": u_name_d,
+                "v_name": v_name_d,
+            })
+
+        info: dict[str, Any] = {
+            "id": len(self.logs) + 1,
+            "time": time.strftime("%H:%M:%S"),
+            "kind": kind,
+            "u": u, "v": v,
+            "u_name": u_name, "v_name": v_name,
+            "road_label": road_label or f"{u_name} → {v_name}",
+            "old_w": old_w,
+            "new_w": new_w if kind == "increase" else 0,
+            "strategy": stats.strategy,
+            "work": stats.work,
+            "baseline_work": base_stats.work,
+            "repair_work": stats.repair_work,
+            "fallback_work": stats.fallback_work,
+            "budget": stats.budget,
+            "wall_ms": wall_ms,
+            "affected_nodes": sorted(self.last_affected),
+            "affected_size": len(self.last_affected),
+            "was_tree_edge": was_tree_edge,
+            "detour_edges": detour_list,
+        }
+
+        if self.pipeline is not None and self.reference is not None:
+            from graphpulse.pipeline import RecomputeEverything
+            rs = self.pipeline.apply(upd)
+            ref = self.reference.apply(upd)
+            info["route_action"] = rs.route_action
+            info["tour_cost"] = self._json_cost(rs.tour_cost)
+            info["tour_order"] = [self.terminals[i] for i in rs.order]
+            info["reference_cost"] = self._json_cost(ref.tour_cost)
+            info["hk_transitions"] = rs.hk_transitions
+
+        self.last_update = info
+        self.logs.append(info)
+        return info
+
+
+PUNE_STATE = PuneMapState()
+
+
 class GraphPulseAPIHandler(BaseHTTPRequestHandler):
     """HTTP Request Handler serving JSON REST API and static frontend files."""
 
@@ -497,6 +715,9 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             self._handle_get_logs(query)
         elif path == "/api/metrics":
             self._handle_get_metrics()
+        elif path == "/api/pune/graph":
+            with PUNE_STATE.lock:
+                self._send_json(PUNE_STATE.graph_json())
         else:
             # Static file serving
             self._serve_static(path)
@@ -531,8 +752,13 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
         if not isinstance(body, dict):
             self._send_error_json("JSON request body must be an object")
             return
-        with STATE.lock:
-            self._do_post(urlparse(self.path).path, body)
+        path = urlparse(self.path).path
+        # Pune endpoints use their own lock; avoid holding STATE.lock for them.
+        if path in ("/api/pune/update", "/api/pune/reset", "/api/pune/scenario"):
+            self._do_post(path, body)
+        else:
+            with STATE.lock:
+                self._do_post(path, body)
 
     def _do_post(self, path: str, body: dict[str, Any]) -> None:
         if path == "/api/config":
@@ -551,6 +777,12 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
             self._handle_post_reset()
         elif path == "/api/verify":
             self._handle_post_verify()
+        elif path == "/api/pune/update":
+            self._handle_post_pune_update(body)
+        elif path == "/api/pune/reset":
+            self._handle_post_pune_reset()
+        elif path == "/api/pune/scenario":
+            self._handle_post_pune_scenario(body)
         else:
             self._send_error_json(f"Unknown POST endpoint: {path}", HTTPStatus.NOT_FOUND)
 
@@ -791,6 +1023,64 @@ class GraphPulseAPIHandler(BaseHTTPRequestHandler):
     def _handle_post_reset(self) -> None:
         STATE.reset_graph()
         self._send_json({"success": True, "message": "Graph and routing pipeline reset to initial state"})
+
+    def _handle_post_pune_update(self, body: dict[str, Any]) -> None:
+        try:
+            kind = body.get("kind", "delete")
+            if kind not in ("delete", "increase"):
+                raise ValueError("'kind' must be 'delete' or 'increase'")
+            u = self._int(body, "u")
+            v = self._int(body, "v")
+            new_w = self._int(body, "new_w", 0)
+            if kind == "increase" and new_w <= 0:
+                raise ValueError("'new_w' must be a positive integer for an increase")
+            with PUNE_STATE.lock:
+                result = PUNE_STATE.apply_update(kind, u, v, new_w)
+                graph = PUNE_STATE.graph_json()
+            self._send_json({"success": True, "update": result, "graph": graph})
+        except ValueError as exc:
+            self._send_error_json(str(exc))
+
+    def _handle_post_pune_reset(self) -> None:
+        with PUNE_STATE.lock:
+            PUNE_STATE.reset()
+            graph = PUNE_STATE.graph_json()
+        self._send_json({"success": True, "message": "Pune map reset to initial road network", "graph": graph})
+
+    def _handle_post_pune_scenario(self, body: dict[str, Any]) -> None:
+        try:
+            scenario = body.get("scenario", "local_repair")
+            with PUNE_STATE.lock:
+                PUNE_STATE.reset()
+                if scenario == "local_repair":
+                    # Scenario 1: Local Road Disruption (Nal Stop -> Karve Road)
+                    # Affected branch is tiny (|A|=1 << 25). GraphPulse-R automatically
+                    # runs Local Repair (15 ops vs 115 recompute, saving 87%).
+                    upd = PUNE_STATE.apply_update("delete", 4, 5)
+                    upd["scenario_title"] = "Scenario 1: Local Disruption (Local Repair Wins)"
+                    upd["scenario_desc"] = (
+                        "Localized blockage on Karve Road. Only 1 intersection affected (|A|=1). "
+                        "GraphPulse-R automatically chose Local Repair (15 ops vs 115 recompute, saving 87%)."
+                    )
+                elif scenario == "recompute_wins":
+                    # Scenario 2: Catastrophic Multi-Corridor Severance
+                    # Severing Station -> Swargate (11->9) AND FC Road (1->2).
+                    # Local repair on entangled subtrees blows past competitive budget B,
+                    # so GraphPulse-R automatically aborts local search and rebuilds via full Dijkstra!
+                    PUNE_STATE.apply_update("delete", 11, 9)
+                    upd = PUNE_STATE.apply_update("delete", 1, 2)
+                    upd["scenario_title"] = "Scenario 2: Corridor Severance (Recomputing Whole Dijkstra Wins)"
+                    upd["scenario_desc"] = (
+                        "Major dual-corridor cut (Station-Swargate & FC Road). Local repair would cost >220 ops. "
+                        f"GraphPulse-R automatically detected budget exhaustion (budget B={upd.get('budget', 170)} ops), "
+                        f"aborted local repair, and recomputed the whole Dijkstra from scratch ({upd.get('fallback_work', 170)} ops)!"
+                    )
+                else:
+                    raise ValueError(f"Unknown scenario: {scenario}")
+                graph = PUNE_STATE.graph_json()
+            self._send_json({"success": True, "scenario": scenario, "update": upd, "graph": graph})
+        except ValueError as exc:
+            self._send_error_json(str(exc))
 
     def _handle_post_verify(self) -> None:
         """Active invariant verification execution."""

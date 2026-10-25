@@ -81,6 +81,7 @@ html[data-sidebar="collapsed"] .foot-row { display: block; }
 .mobile-bar { display: none; }
 .page { max-width: 1240px; margin: 0 auto; padding: 32px var(--pad) 72px; }
 .page-narrow { max-width: 940px; }
+.page-full { max-width: 100%; padding: 0; overflow: hidden; }
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
 .page-head > div:first-child { flex: 1 1 320px; min-width: 0; }
 .page-title { font-size: var(--fs-title); font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
@@ -251,4 +252,16 @@ dl.facts dd { text-align: right; font-variant-numeric: tabular-nums; min-width: 
   .btn-sm { height: 34px; }
   .input, .select { height: 40px; }
   .nav-item { height: 40px; }
+}
+
+/* Pune interactive map animation & popup styles */
+.pune-tip { font-family: inherit; font-size: 12px; }
+.leaflet-popup-content { font-family: inherit; }
+@keyframes detour-pulse {
+  0%   { stroke-opacity: 1.0; stroke-width: 5px; }
+  50%  { stroke-opacity: 0.55; stroke-width: 8px; }
+  100% { stroke-opacity: 1.0; stroke-width: 5px; }
+}
+.pune-detour-line path {
+  animation: detour-pulse 1.4s ease-in-out infinite;
 }
